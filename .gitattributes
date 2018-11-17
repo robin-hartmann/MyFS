@@ -1,0 +1,2 @@
+# normalize eol characters of all non-binary files to lf
+* text=auto eol=lf
