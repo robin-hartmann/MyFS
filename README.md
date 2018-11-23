@@ -21,7 +21,7 @@ To be able to build and run this project, the following software has to be insta
 
 #### Part 1a: definition of the file system's structure and of the software architecture
 
-#### Part 1b: creation and initialization of the block device using `mkfs.myfs <CONTAINER> [FILE1, FILE2, ...]`
+#### Part 1b: creation and initialization of the block device using `mkfs.myfs <container-file> [file1, file2, ...]`
 - selected files are added to the root directory no matter from which directory they originate
     - multiple files with the same name should cause an error
     - most attributes (name, size, `atime`, `mtime`, `ctime`) can be copied from the original files
