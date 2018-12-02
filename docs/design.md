@@ -37,17 +37,16 @@ Array der Folgeblöcke. So viele Einträge, wie es Datenblöcke gibt.
 // get a data block's following relative address
 nextRelativeAddress = fat[currentRelativeAddress];
 
+// check if there is no following relative address
+isEndBlock = currentRelativeAddress == fat[currentRelativeAddress];
+// the end block references itself
+
 // determine a data block's absolute address
 absoluteAddress = dataStartAddress + relativeAddress;
 
 // calculate amount of blocks occupied by FAT
 dataBlockCount = roundUp(DATA_SIZE / BLOCK_SIZE);
 addressBitCount = size(dataBlockCount);
-
-if (pow(2, addressBitCount - 1) == dataBlockCount) {
-    addressBitCount++; // pow(2, addressBitCount - 1) is interpreted as null
-}
-
 fatSize = dataBlockCount * addressBitCount * 1/8;
 fatBlockCount = roundUp(fatSize / BLOCK_SIZE));
 ```
@@ -72,7 +71,7 @@ dataBlockCount = roundUp(DATA_SIZE / BLOCK_SIZE);
 -Dblock: 1 belegt, 0 frei
 
 -Fat: nicht verwendete Areale mit NULL beschriften
--Fat: NULL besteht aus 1…..1
+-Fat: NULL besteht aus 1…..1 -> alternativ: Block referenziert sich selbst
 -Fat: immer Zahlen
 
 -Daten sind immer UTF8
