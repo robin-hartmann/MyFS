@@ -65,3 +65,46 @@ Rohdaten.
 // calculate amount of block occupied by data
 dataBlockCount = roundUp(DATA_SIZE / BLOCK_SIZE);
 ```
+-Max 4 GB großes Dateisystem
+
+
+-Dblock: nicht verwendete Bits werden auf 1 gesetzt
+-Dblock: 1 belegt, 0 frei
+
+-Fat: nicht verwendete Areale mit NULL beschriften
+-Fat: NULL besteht aus 1…..1
+-Fat: immer Zahlen
+
+-Daten sind immer UTF8
+
+-Root: 9 Bit Dateinamen länge
+	Dateinamen (max 255 byte)
+	Dateigröße: 28 Bit (Bei max Dateigröße von 30 MB)
+	Benutzer/Gruppen ID 16 Bit
+	Dateirechte 10 Bit
+	Zugriff: (	1 Byte Tag
+			1 Byte Monat
+			2 Byte Jahr
+			1 Byte Stunde
+			1 Byte Sekunde
+		) x3 			(Überprüfe!!!!!)
+	8 Bit Zeigerlänge
+	Zeiger
+
+-Sblock:	4 Byte Name des Dateisystems/100
+		4 Byte Größe des Dateisystems
+		4 Byte Gesamt Datasize
+		3 Byte Anzahl der freien Blöcke
+		Datum letzte Änderung:
+			(	1 Byte Tag
+				1 Byte Monat
+				2 Byte Jahr
+				1 Byte Stunde
+				1 Byte Sekunde
+			)
+		Startadressen: 8 Byte Dmap
+				8 Byte FAT
+				8 Byte Root
+				8 Byte Daten
+				
+				
