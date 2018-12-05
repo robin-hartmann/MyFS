@@ -1,37 +1,65 @@
+# Design
+
+## Vorgaben
+
+### "Offiziell"
+
+Konstante Werte, von denen wir ausgehen:
+
+- NAME_LENGTH
+	- 255 Zeichen
+- BLOCK_SIZE
+	- 512 Bytes
+- NUM_DIR_ENTRIES
+	- 64 Einträge
+- NUM_OPEN_FILES
+	- 64 Einträge
+
+### Selbst definiert
+
+- Texte werden in UTF-8 (de)kodiert
+
+Konstante Werte, von denen wir ausgehen:
+
+- NUM_DATA_BLOCKS
+	- 2^16 Blöcke
+
 ## S-Block
 Informationen über das Dateisystem.
 
-- Namen des Dateisystems
-- vorgegebene Parameter
-    - NAME_LENGTH = 255 Zeichen
-    - BLOCK_SIZE = 512 Bytes
-    - NUM_DIR_ENTRIES = 64
-    - NUM_OPEN_FILES = 64
-- weitere Parameter
-    - DATA_SIZE = mind. 30 MB
-    - Datenvolumen = DATA_SIZE + Metadaten
-    - Startadressen
-        - D-Map
-        - FAT
-        - Root-Verzeichnis
-        - Daten
-- @todo
+- Namen des Dateisystems = "MYFS"
+	- 4 Byte = 4 * sizeof(char)
+- Anzahl gespeicherter Dateien bzw. belegter Inodes
+	- 7 Bit = log2(1 (für 0) + 64 (max. Anzahl Dateien) + 1 (max. Anzahl Verzeichnisse))
+- Anzahl belegter Blöcke
+	- 17 Bit = log2(1 (für 0) + 2^16 (für Anzahl Blöcke))
+- Anzahl belegter Bytes
+	- 25 Byte + 1 Bit = log2(1 (für 0) + 2^16 * 512)
+
+### Größe
+
+1 Block
 
 ## D-Map
-Array von Bits zur Angabe, ob Block frei ist. So viele Einträge, wie es Datenblöcke gibt.
+Array von Bits zur Angabe, ob Block frei ist. So viele Einträge, wie es Datenblöcke gibt. 1 = belegt, 0 = frei. Nicht verwendete Bits werden auf 1 gesetzt.
 
 ```
 // determine if block is used
 isBlockUsed = (bool) dMap[relativeAddress];
-
-// calculate amount of blocks occupied by D-Map
-dataBlockCount = roundUp(DATA_SIZE / BLOCK_SIZE);
-dMapSize = dataBlockCount * 1/8;
-dMapBlockCount = roundUp(dMapSize / BLOCK_SIZE);
 ```
 
+### Größe
+
+```
+// calculate amount of blocks occupied by D-Map
+dMapSize = NUM_DATA_BLOCKS * 1/8;
+dMapBlockCount = roundUp(dMapSize / BLOCK_SIZE);
+```
+ 
+16 Blöcke
+
 ## FAT
-Array der Folgeblöcke. So viele Einträge, wie es Datenblöcke gibt.
+Array der Folgeblöcke. So viele Einträge, wie es Datenblöcke gibt. Wenn ein Block keinen Folgeblock hat, referenziert er sich selbst.
 
 ```
 // get a data block's following relative address
@@ -43,67 +71,42 @@ isEndBlock = currentRelativeAddress == fat[currentRelativeAddress];
 
 // determine a data block's absolute address
 absoluteAddress = dataStartAddress + relativeAddress;
+```
 
+### Größe
+```
 // calculate amount of blocks occupied by FAT
-dataBlockCount = roundUp(DATA_SIZE / BLOCK_SIZE);
-addressBitCount = size(dataBlockCount);
-fatSize = dataBlockCount * addressBitCount * 1/8;
+addressByteCount = sizeof(NUM_DATA_BLOCKS);
+fatSize = NUM_DATA_BLOCKS * addressByteCount;
 fatBlockCount = roundUp(fatSize / BLOCK_SIZE));
 ```
 
-## Root-Verzeichnis
-Inode (NUM_DIR_ENTRIES viele)
+256 Blöcke
 
-- Dateinamen (NAME_LENGTH viele Zeichen)
-- @todo
+## Root-Verzeichnis
+65 Inodes, jeweils in einem Block. 64 für Dateien, 1 für Root-Verzeichnis. Root-Verzeichnis liegt in erstem Block und wird über "." und ".." referenziert. Wenn Größe 0 ist, wird der Zeiger auf den ersten Datenblock ignoriert.
+
+Je Inode:
+- Dateiname
+	- 255 Byte
+- Dateigröße (Bei max. Dateigröße von 32 MiB)
+	- 25 Byte + 1 Bit = log2(1 (für 0) + 2^16 (Anzahl der Blöcke) * 512 (Bytes pro Block))
+- Benutzer ID
+	- 1 Byte (überprüfen)
+- Gruppen ID
+	- 1 Byte (überprüfen)
+- Zugriffsrechte
+	- 10 Bit
+- 3x Zugriffs-Timestamps
+	- 3x 6 Byte
+- Zeiger auf ersten Datenblock (relativ zur Startadresse der Daten-Blöcke)
+	- 2 Byte
+
+### Größe
+65 Blöcke (NUM_DIR_ENTRIES + 1)
 
 ## Daten
 Rohdaten.
 
-```
-// calculate amount of block occupied by data
-dataBlockCount = roundUp(DATA_SIZE / BLOCK_SIZE);
-```
--Max 4 GB großes Dateisystem
-
-
--Dblock: nicht verwendete Bits werden auf 1 gesetzt
--Dblock: 1 belegt, 0 frei
-
--Fat: nicht verwendete Areale mit NULL beschriften
--Fat: NULL besteht aus 1…..1 -> alternativ: Block referenziert sich selbst
--Fat: immer Zahlen
-
--Daten sind immer UTF8
-
--Root: 9 Bit Dateinamen länge
-	Dateinamen (max 255 byte)
-	Dateigröße: 28 Bit (Bei max Dateigröße von 30 MB)
-	Benutzer/Gruppen ID 16 Bit
-	Dateirechte 10 Bit
-	Zugriff: (	1 Byte Tag
-			1 Byte Monat
-			2 Byte Jahr
-			1 Byte Stunde
-			1 Byte Sekunde
-		) x3 			(Überprüfe!!!!!)
-	8 Bit Zeigerlänge
-	Zeiger
-
--Sblock:	4 Byte Name des Dateisystems/100
-		4 Byte Größe des Dateisystems
-		4 Byte Gesamt Datasize
-		3 Byte Anzahl der freien Blöcke
-		Datum letzte Änderung:
-			(	1 Byte Tag
-				1 Byte Monat
-				2 Byte Jahr
-				1 Byte Stunde
-				1 Byte Sekunde
-			)
-		Startadressen: 8 Byte Dmap
-				8 Byte FAT
-				8 Byte Root
-				8 Byte Daten
-				
-				
+### Größe
+2^16 Blöcke (NUM_DATA_BLOCKS)
