@@ -41,6 +41,8 @@ Extensive testing
 
 ### [libfuse documentation](http://libfuse.github.io/doxygen/)
 
+### [libfuse examples](https://github.com/libfuse/libfuse/tree/master/example)
+
 ### Structure of MyFS container files (minimum)
 - Super Block
     - information about the file system (size, position of entries, ...)
