@@ -24,7 +24,10 @@ public:
     static MyFS *Instance();
     
     // TODO: Add attributes of your file system here
-    
+
+    int DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8];
+    //Array für Dateinamen aus ROOT?
+
     MyFS();
     ~MyFS();
     
