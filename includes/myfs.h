@@ -70,8 +70,8 @@ public:
     int fuseTruncate(const char *path, off_t offset, struct fuse_file_info *fileInfo);
     int fuseCreate(const char *, mode_t, struct fuse_file_info *);
     void fuseDestroy();
-    
     // TODO: Add methods of your file system here
+    void readStructures();
     
 };
 
