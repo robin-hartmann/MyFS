@@ -19,6 +19,7 @@ class MyFS {
 private:
     static MyFS *_instance;
     FILE *logFile;
+    BlockDevice *blockDevice;
     
 public:
     static MyFS *Instance();
@@ -26,7 +27,8 @@ public:
     // TODO: Add attributes of your file system here
 
     int DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8];
-    //Array für Dateinamen aus ROOT?
+    char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH];
+    int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK];
 
     MyFS();
     ~MyFS();
@@ -71,6 +73,7 @@ public:
     int fuseCreate(const char *, mode_t, struct fuse_file_info *);
     void fuseDestroy();
     // TODO: Add methods of your file system here
+    int getFilePosition(const char *path);
     void readStructures();
     
 };

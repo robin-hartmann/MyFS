@@ -20,6 +20,11 @@
 #include "myfs.h"
 #include "myfs-info.h"
 
+
+
+
+
+
 MyFS* MyFS::_instance = NULL;
 
 MyFS* MyFS::Instance() {
@@ -121,9 +126,34 @@ int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
 
 int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
-    
+    u_int i = 0;
+    u_int j = offset;
+    bool endOfFile = false;
+    char buffer[BLOCK_SIZE];
+    int actuallFATPosition = this->getFilePosition(path);
+
+    //if filesize > 0 && size > 0
+    while (j >= BLOCK_SIZE && !endOfFile) {
+        j -= BLOCK_SIZE;
+        actuallFATPosition == FAT[actuallFATPosition]? endOfFile = true : actuallFATPosition = FAT[actuallFATPosition];
+        actuallFATPosition = FAT[actuallFATPosition];
+    }
+    while (i < size && !endOfFile) {
+        blockDevice->read(actuallFATPosition + START_DATA_BLOCKS, buffer);
+            for (;j < BLOCK_SIZE && i < size; i++, j++) {
+                buf[i] = buffer[j];
+            }
+        actuallFATPosition == FAT[actuallFATPosition]? endOfFile = true : actuallFATPosition = FAT[actuallFATPosition];
+
+        j = 0;
+    }
     // TODO: Implement this!
 
+    delete &buffer;
+    delete &actuallFATPosition;
+    delete &i;
+    delete &j;
+    delete &endOfFile;
     RETURN(0);
 }
 
@@ -258,10 +288,44 @@ int MyFS::fuseGetxattr(const char *path, const char *name, char *value, size_t s
     RETURN(0);
 }
 
+int MyFS::getFilePosition(const char *path) {
+
+    //TODO implemnt (created by robin w)
+    return 2;
+}
+
+int MyFS::getFileSize(int position) {
+    return 0;
+}
+
+int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
+    u_int i = 0;
+    u_int j = offset;
+    char buffer[BLOCK_SIZE];
+
+    blockDevice->read(blockNo, buffer);
+
+    //if size + offset <= BLOCK_SIZE
+    while (i < size) {
+        buf[i] = buffer[j];
+    }
+
+    delete &i;
+    delete &j;
+    delete &buffer;
+}
+
+int MyFs::getSizeOfCharArray(char *buf) {
+    int size = 0;
+    while(buf[size] != '\0') {
+        size++;
+    }
+    return size;
+}
 
 void MyFS::readStructures(){
 
 }
 
-            
+
 

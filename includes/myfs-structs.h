@@ -5,6 +5,7 @@
 //  Created by Oliver Waldhorst on 07.09.17.
 //  Copyright © 2017 Oliver Waldhorst. All rights reserved.
 //
+#include <math.h>
 
 #ifndef myfs_structs_h
 #define myfs_structs_h
@@ -18,7 +19,7 @@
 #define NUM_SUPER_BLOCKS  1
 #define NUM_DMAP_BLOCKS 16
 #define NUM_FAT_BLOCKS 256
-#define NUM_ROOT_BLOCKS NUM_DIR_ENTRIES + 1
+#define NUM_ROOT_BLOCKS NUM_DIR_ENTRIES + 2
 #define NUM_DATA_BLOCKS 65536
 
 #define START_SUPER_BLOCKS 0
@@ -40,6 +41,7 @@
 
 //FAT
 #define ADRESS_LENGTH_BITS 16
+#define NUM_ADRESS_PER_BLOCK 512 / 2
 
 //ROOT
 #define NUM_FILENAME_BITS NAME_LENGTH * 8
