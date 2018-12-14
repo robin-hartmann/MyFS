@@ -12,12 +12,19 @@
 
 int main(int argc, char *argv[]) {
 
-    BlockDevice test;
-    test.create(argv[0]);
+    //BlockDevice test;
+    //test.create(argv[0]);
 
 
     // TODO: Implement file system generation & copying of files here
+    char buffer[2];
+    buffer[0] = 'b';
+    buffer[1] = 'a';
 
+    printf("%d\n", ((int) buffer[1]));
+    printf("%d\n", ((int) buffer[0]));
+    printf("%d\n", (((int) buffer[0])<<8) + ((int) buffer[1]));
+    printf("TEst");
     return 0;
 }
 

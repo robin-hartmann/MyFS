@@ -295,28 +295,50 @@ int MyFS::getFilePosition(const char *path) {
 }
 
 int MyFS::getFileSize(int position) {
-    return 0;
+    char buffer[NUM_FILE_SIZE_BYTE];
+    this->readBlock(START_ROOT_BLOCKS + position, buffer, NUM_FILE_SIZE_BYTE,START_FILE_SIZE_BYTE);
+
+    return (((int) buffer[0])<<8) + ((int) buffer[1]);
 }
 
+//TODO implement return value
+/*
+ * Saves the wanted block in the given Char Array.
+ * @var blockNo Block you want to read from the device
+ * @var *buf buffe, where you want to save the Data. Have to be >= size
+ * @var size number of chars you want to get. Have to be given: size + offset <= BD_Block_Size
+ * @var offset number of char you want to pass before reading. size + offset <= BD_Block-Size
+ * @return
+ */
 int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
     u_int i = 0;
     u_int j = offset;
-    char buffer[BLOCK_SIZE];
+    char buffer[size];
 
     blockDevice->read(blockNo, buffer);
 
-    //if size + offset <= BLOCK_SIZE
-    while (i < size) {
-        buf[i] = buffer[j];
+    if (size + offset <= BD_BLOCK_SIZE && size <= getSizeOfCharArray(buf)) {
+        while (i < size) {
+            buf[i] = buffer[j];
+        }
     }
 
     delete &i;
     delete &j;
     delete &buffer;
+    return 0;
 }
 
-int MyFs::getSizeOfCharArray(char *buf) {
-    int size = 0;
+
+//TODO Was wenn Array größer 32 Bit Int?
+/*
+ * Return the Size of the Char-Array.
+ * '\0' not included.
+ * @var *buf pointer auf das char Array
+ * @return size of the Array
+ */
+u_int32_t MyFS::getSizeOfCharArray(char *buf) {
+    u_int32_t size = 0;
     while(buf[size] != '\0') {
         size++;
     }

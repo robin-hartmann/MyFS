@@ -74,6 +74,9 @@ public:
     void fuseDestroy();
     // TODO: Add methods of your file system here
     int getFilePosition(const char *path);
+    u_int32_t getSizeOfCharArray(char *buf);
+    int readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset);
+    int getFileSize(int position);
     void readStructures();
     
 };
