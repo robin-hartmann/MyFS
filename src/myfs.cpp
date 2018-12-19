@@ -126,7 +126,17 @@ int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
 
 int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
-    u_int i = 0;
+
+    if (isFilenameCorrect(path) && getSizeOfCharArray(buf) >= size && size > 0) {
+        int actuallFATPosition = this->getFilePosition(path);
+        u_int64_t i = offset;
+        if (getFileSize(actuallFATPosition) > 0) {
+
+        }
+
+    }
+
+   /* u_int i = 0;
     u_int j = offset;
     bool endOfFile = false;
     char buffer[BLOCK_SIZE];
@@ -153,7 +163,7 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
     delete &actuallFATPosition;
     delete &i;
     delete &j;
-    delete &endOfFile;
+    delete &endOfFile;*/
     RETURN(0);
 }
 
@@ -296,7 +306,7 @@ int MyFS::getFilePosition(const char *path) {
 
 int MyFS::getFileSize(int position) {
     char buffer[NUM_FILE_SIZE_BYTE];
-    this->readBlock(START_ROOT_BLOCKS + position, buffer, NUM_FILE_SIZE_BYTE,START_FILE_SIZE_BYTE);
+    this->readBlock(START_ROOT_BLOCKS + position, buffer, NUM_FILE_SIZE_BYTE, START_FILE_SIZE_BYTE);
 
     return (((int) buffer[0])<<8) + ((int) buffer[1]);
 }
@@ -311,8 +321,8 @@ int MyFS::getFileSize(int position) {
  * @return
  */
 int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
-    u_int i = 0;
-    u_int j = offset;
+    u_int32_t i = 0;
+    int64_t j = offset;
     char buffer[size];
 
     blockDevice->read(blockNo, buffer);
@@ -320,12 +330,10 @@ int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
     if (size + offset <= BD_BLOCK_SIZE && size <= getSizeOfCharArray(buf)) {
         while (i < size) {
             buf[i] = buffer[j];
+            i++;
+            j++;
         }
     }
-
-    delete &i;
-    delete &j;
-    delete &buffer;
     return 0;
 }
 
@@ -344,6 +352,62 @@ u_int32_t MyFS::getSizeOfCharArray(char *buf) {
     }
     return size;
 }
+
+u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
+    u_int32_t size = 0;
+    while(buf[size] != '\0') {
+        size++;
+    }
+    return size;
+}
+
+const char* MyFS::remDirPath(const char *path) {
+    bool removedPath = false;
+    int NumOfPathChars = 0;
+    if(*path == '/') {
+       NumOfPathChars++;
+    }
+    while(!removedPath) {
+        removedPath = true;
+        if (*(path + NumOfPathChars) == '.' && *(path+ NumOfPathChars + 1) == '/') {
+            NumOfPathChars += 2;
+            removedPath = false;
+        }
+        if (*(path + NumOfPathChars) == '.' && *(path + NumOfPathChars + 1) == '.' &&
+        *(path + NumOfPathChars + 2) == '/') {
+            NumOfPathChars += 3;
+            removedPath = false;
+        }
+    }
+    return (path + NumOfPathChars);
+}
+
+
+bool MyFS::isFilenameCorrect(const char *path) {
+    const char *StartOfFilename = remDirPath(path);
+    if (getSizeOfCharArray(StartOfFilename) > NAME_LENGTH || (*StartOfFilename == '/' || *StartOfFilename == '\0' ||
+    (*StartOfFilename == '.' && (*(StartOfFilename + 1) == '\0' || (*(StartOfFilename + 1) == '.' &&
+    *(StartOfFilename + 2) == '\0' ))))) {
+        return false;
+    }
+    return true;
+}
+
+bool MyFS::isFileExisting(const char *path) {
+    if (isFilenameCorrect(path)) {
+        return false;
+    }
+    const char *StartOfFilename = remDirPath(path);
+    for(int i = 0; i < NUM_ROOT_BLOCKS; i++) {
+        for(int j = 0;  *(StartOfFilename + j) == (FILENAME[i][j]); j++) {
+            if(*(StartOfFilename + j) == '\0') {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 
 void MyFS::readStructures(){
 

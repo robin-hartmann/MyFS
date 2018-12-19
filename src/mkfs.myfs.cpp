@@ -7,8 +7,14 @@
 //
 #include <fstream>
 #include "myfs.h"
+
+//zum testen vorübergenen eingefügt
+#include "myfs.cpp"
+
 #include "blockdevice.h"
 #include "macros.h"
+
+MyFS *my;
 
 int main(int argc, char *argv[]) {
 
@@ -17,14 +23,13 @@ int main(int argc, char *argv[]) {
 
 
     // TODO: Implement file system generation & copying of files here
-    char buffer[2];
-    buffer[0] = 'b';
-    buffer[1] = 'a';
 
-    printf("%d\n", ((int) buffer[1]));
-    printf("%d\n", ((int) buffer[0]));
-    printf("%d\n", (((int) buffer[0])<<8) + ((int) buffer[1]));
-    printf("TEst");
-    return 0;
+   const char test[] = {"/./../.././Hallo"};
+   const char *a = test + 3;
+   //printf("%c\n", *(a));
+   //printf("%s\n", a);
+   //printf("%d", my->getSizeOfCharArray(a));
+   printf("%s", my->remDirPath(test));
+   return 0;
 }
 
