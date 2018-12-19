@@ -59,3 +59,54 @@ Mounts the block device.
 - files on the block device can be read, edited, deleted and new files can be added
 - adding a directory causes an error
     - `ENOSYS`
+
+# Tests
+
+- `mkfs.myfs`
+    - CLI
+        - Pfad zu Container
+            - nicht angegeben
+            - existiert bereits
+        - Zu kopierende Datei(en)
+            - existiert nicht
+            - genau 64
+            - mehr als 64
+            - mehrere Dateien mit gleichem Namen
+            - Dateiname länger als 255 Zeichen
+            - Inhalt
+                - leer
+                - genau ein Block groß
+                - minimal größer als ein Block
+                - überschreitet Größe des Datenträgers
+                    - eine einzelne Datei
+                    - mehrere Dateien zusammen
+- `mount.myfs`
+    - CLI
+        - Pfad zu Container
+            - nicht angegeben
+            - existiert nicht
+            - bereits gemountet
+        - Pfad zu Logfile
+            - nicht angegeben
+            - existiert bereits
+        - Mouting Ziel
+            - nicht angegeben
+            - existiert nicht
+            - dort ist bereits etwas anderes gemountet
+    - Dateien lesen
+        - Inhalt komplett lesen
+            - entspricht der Originaldatei
+        - Inhalt an bestimmter Stelle lesen
+            - entspricht der Originaldatei
+        - Metadaten lesen
+            - User und Group ID entsprechen dem aktuellen Nutzer
+            - Zugriffsrechte gesetzt auf `S_IFREG | 0444`
+            - `nlink` ist `1`
+            - übrige Attribute entsprechen der Originaldatei
+        - genau 64 Dateien öffnen
+        - mehr als 64 Dateien öffnen
+    - Root-Verzeichnis lesen
+        - Zugriffsrechte gesetzt auf `S_IFDIR | 0555`
+        - `nlink` ist `2`
+    - Dateien oder Verzeichnis schreiben, ändern oder löschen
+        - muss Fehler `EROFS` verursachen
