@@ -8,13 +8,11 @@
 #include <fstream>
 #include "myfs.h"
 
-//zum testen vorübergenen eingefügt
 #include "myfs.cpp"
 
 #include "blockdevice.h"
 #include "macros.h"
 
-MyFS *my;
 
 int main(int argc, char *argv[]) {
 
@@ -23,12 +21,6 @@ int main(int argc, char *argv[]) {
 
 
     // TODO: Implement file system generation & copying of files here
-   const char test[] = {"/./../.././Hallo"};
-   const char *a = test + 3;
-   //printf("%c\n", *(a));
-   //printf("%s\n", a);
-   //printf("%d", my->getSizeOfCharArray(a));
-   printf("%d", my->isFileExisting(test));
    return 0;
 }
 

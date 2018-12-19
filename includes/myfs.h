@@ -11,6 +11,7 @@
 
 #include <fuse.h>
 #include <cmath>
+#include <errno.h>
 
 #include "blockdevice.h"
 #include "myfs-structs.h"
@@ -29,6 +30,7 @@ public:
     int DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8];
     char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH];
     int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK];
+    bool isDirOpen = false;
 
     MyFS();
     ~MyFS();
@@ -82,6 +84,7 @@ public:
     bool isFileExisting(const char *path);
     const char* remDirPath(const char *path);
     bool isFilenameCorrect(const char* path);
+    bool isDirPathCorrect(const char *path);
     void readStructures();
     
 };

@@ -127,7 +127,7 @@ int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
 int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    if (isFilenameCorrect(path) && getSizeOfCharArray(buf) >= size && size > 0) {
+    if (isFilenameCorrect(path) && getSizeOfCharArray(buf) >= size && size > 0 && offset >= 0) {
         int actuallFATPosition = this->getFilePosition(path);
         bool endOfFile = false;
         char buffer[BLOCK_SIZE];
@@ -139,20 +139,16 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
                                                               : actuallFATPosition = FAT[actuallFATPosition];
                 actuallFATPosition = FAT[actuallFATPosition];
             }
-            for (int j = 0; j < size && !endOfFile;) {
+            for (u_int64_t j = 0; j < size && !endOfFile; j += BLOCK_SIZE) {
                 readBlock(actuallFATPosition + START_DATA_BLOCKS, buffer, BLOCK_SIZE - i, i);
-                for (; j < BLOCK_SIZE && i < size; i++, j++) {
-                    buf[i] = buffer[j];
-                }
-                actuallFATPosition == FAT[actuallFATPosition] ? endOfFile = true
-                                                              : actuallFATPosition = FAT[actuallFATPosition];
+                transferBytes(buffer, j + BLOCK_SIZE < size ? BLOCK_SIZE - i : size - j, i, buf, j);
+                actuallFATPosition == FAT[actuallFATPosition] ? endOfFile = true : actuallFATPosition = FAT[actuallFATPosition];
 
-                j = 0;
+                i = 0;
             }
-
         }
-        RETURN(0);
     }
+    RETURN(0);
 }
 
 int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
@@ -198,17 +194,31 @@ int MyFS::fuseRemovexattr(const char *path, const char *name) {
 
 int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-    
     // TODO: Implement this!
+    if(!isDirPathCorrect(path)) {
+        RETURN(ENOTDIR);
+    }
+    isDirOpen = true;
     
     RETURN(0);
 }
 
 int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
-    
     // TODO: Implement this!
-    
+    if(!isDirOpen) {
+        RETURN(EPERM);
+    }
+    if(!isDirPathCorrect(path)) {
+        RETURN(ENOTDIR);
+    }
+
+    for (int i = 0; i < NUM_ROOT_BLOCKS; i++) {
+        if (FILENAME[i][0] != '\0') {
+            filler(buf, FILENAME[i], NULL, 0);
+        }
+
+    }
     RETURN(0);
     
     // <<< My new code
@@ -216,9 +226,13 @@ int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
 
 int MyFS::fuseReleasedir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-    
     // TODO: Implement this!
-    
+    if(!isDirPathCorrect(path)) {
+        RETURN(ENOTDIR);
+    }
+    isDirOpen = false;
+
+
     RETURN(0);
 }
 
@@ -327,7 +341,7 @@ int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
 
 void MyFS::transferBytes(char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff) {
     if(getSizeOfCharArray(firstBuf) >= size + firstOff && getSizeOfCharArray(secondBuf) >= size + secondOff) {
-        for(int i = 0; i < size; i++) {
+        for(u_int64_t i = 0; i < size; i++) {
             *(secondBuf + secondOff + i) = *(firstBuf + firstOff + i);
         }
     }
@@ -387,6 +401,14 @@ bool MyFS::isFilenameCorrect(const char *path) {
         return false;
     }
     return true;
+}
+
+bool MyFS::isDirPathCorrect(const char *path) {
+    const char *dir = remDirPath(path);
+    if (*(dir) == '\0' || ((*dir == '/' || *dir == '.') && *(dir + 1) == '\0') || (*(dir) == '.' && *(dir + 1) == '.' && *(dir + 2) == '\0')) {
+        return true;
+    }
+    return false;
 }
 
 bool MyFS::isFileExisting(const char *path) {
