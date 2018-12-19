@@ -129,42 +129,30 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
 
     if (isFilenameCorrect(path) && getSizeOfCharArray(buf) >= size && size > 0) {
         int actuallFATPosition = this->getFilePosition(path);
+        bool endOfFile = false;
+        char buffer[BLOCK_SIZE];
         u_int64_t i = offset;
+
         if (getFileSize(actuallFATPosition) > 0) {
+            for (; i >= BLOCK_SIZE && !endOfFile; i = BLOCK_SIZE) {
+                actuallFATPosition == FAT[actuallFATPosition] ? endOfFile = true
+                                                              : actuallFATPosition = FAT[actuallFATPosition];
+                actuallFATPosition = FAT[actuallFATPosition];
+            }
+            for (int j = 0; j < size && !endOfFile;) {
+                readBlock(actuallFATPosition + START_DATA_BLOCKS, buffer, BLOCK_SIZE - i, i);
+                for (; j < BLOCK_SIZE && i < size; i++, j++) {
+                    buf[i] = buffer[j];
+                }
+                actuallFATPosition == FAT[actuallFATPosition] ? endOfFile = true
+                                                              : actuallFATPosition = FAT[actuallFATPosition];
+
+                j = 0;
+            }
 
         }
-
+        RETURN(0);
     }
-
-   /* u_int i = 0;
-    u_int j = offset;
-    bool endOfFile = false;
-    char buffer[BLOCK_SIZE];
-    int actuallFATPosition = this->getFilePosition(path);
-
-    //if filesize > 0 && size > 0
-    while (j >= BLOCK_SIZE && !endOfFile) {
-        j -= BLOCK_SIZE;
-        actuallFATPosition == FAT[actuallFATPosition]? endOfFile = true : actuallFATPosition = FAT[actuallFATPosition];
-        actuallFATPosition = FAT[actuallFATPosition];
-    }
-    while (i < size && !endOfFile) {
-        blockDevice->read(actuallFATPosition + START_DATA_BLOCKS, buffer);
-            for (;j < BLOCK_SIZE && i < size; i++, j++) {
-                buf[i] = buffer[j];
-            }
-        actuallFATPosition == FAT[actuallFATPosition]? endOfFile = true : actuallFATPosition = FAT[actuallFATPosition];
-
-        j = 0;
-    }
-    // TODO: Implement this!
-
-    delete &buffer;
-    delete &actuallFATPosition;
-    delete &i;
-    delete &j;
-    delete &endOfFile;*/
-    RETURN(0);
 }
 
 int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
@@ -335,6 +323,14 @@ int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
         }
     }
     return 0;
+}
+
+void MyFS::transferBytes(char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff) {
+    if(getSizeOfCharArray(firstBuf) >= size + firstOff && getSizeOfCharArray(secondBuf) >= size + secondOff) {
+        for(int i = 0; i < size; i++) {
+            *(secondBuf + secondOff + i) = *(firstBuf + firstOff + i);
+        }
+    }
 }
 
 

@@ -23,13 +23,12 @@ int main(int argc, char *argv[]) {
 
 
     // TODO: Implement file system generation & copying of files here
-
    const char test[] = {"/./../.././Hallo"};
    const char *a = test + 3;
    //printf("%c\n", *(a));
    //printf("%s\n", a);
    //printf("%d", my->getSizeOfCharArray(a));
-   printf("%s", my->remDirPath(test));
+   printf("%d", my->isFileExisting(test));
    return 0;
 }
 
