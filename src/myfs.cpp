@@ -265,6 +265,7 @@ void* MyFS::fuseInit(struct fuse_conn_info *conn) {
         
         // TODO: Implement your initialization methods here
         readStructures();
+        // MYFsInfo ist ein Struct -> darauf wird ein pointer erzeugt um an den namen des containers zu kommen
     }
     
     RETURN(0);
