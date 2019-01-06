@@ -21,10 +21,10 @@ set(MOUNT
 set(UNITTESTS
         src/blockdevice.cpp
         src/myfs.cpp
-        unittests/main.cpp
-        unittests/test-blockdevice.cpp
-        unittests/test-myfs.cpp
-        unittests/helper.cpp)
+        tests/unit/main.cpp
+        tests/unit/test-blockdevice.cpp
+        tests/unit/test-myfs.cpp
+        tests/unit/helper.cpp)
 
 include_directories(includes)
 
