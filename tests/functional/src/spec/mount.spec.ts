@@ -21,7 +21,7 @@ test.serial.before('mounts properly', async (t) => {
 test.after.always('unmounts properly', async (t) => {
   t.log(t.context);
   await unmount(t);
-  t.false(isMounted(t));
+  t.false(await isMounted(t));
 
   unlinkSync(t.context.containerFile);
   t.context.logFile.removeCallback();
