@@ -30,8 +30,8 @@ export const mount = async (t: ExecutionContext) => {
 };
 
 export const unmount = async (t: ExecutionContext) => {
-  if (!t.context.containerFile) {
-    throw 'Context is missing required attribute "containerFile"';
+  if (!t.context.mountDir) {
+    throw 'Context is missing required attribute "mountDir"';
   }
 
   try {
@@ -42,8 +42,8 @@ export const unmount = async (t: ExecutionContext) => {
 };
 
 export const isMounted = async (t: ExecutionContext) => {
-  if (!t.context.containerFile) {
-    throw 'Context is missing required attribute "containerFile"';
+  if (!t.context.mountDir) {
+    throw 'Context is missing required attribute "mountDir"';
   }
 
   try {
