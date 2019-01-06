@@ -1,7 +1,8 @@
 import { exec as cbBasedExec } from 'child_process';
-import { promisify } from 'util';
+import { realpathSync } from 'fs';
 import { dirSync, fileSync } from 'tmp';
 import { umount as cbBasedUmount, isMounted as cbBasedIsMounted } from 'umount';
+import { promisify } from 'util';
 
 import { ExecutionContext } from '../util/test';
 import config from '../config';
@@ -13,6 +14,11 @@ const promiseBasedIsMounted = promisify(cbBasedIsMounted);
 export const mount = async (t: ExecutionContext) => {
   const logFile = fileSync({ prefix: 'myfs-log-' });
   const mountDir = dirSync({ prefix: 'myfs-mount-' });
+
+  // required, because /tmp is just a link to /private/tmp
+  // and umount doesn't seem to work when used on links
+  // @todo find a better solution
+  mountDir.name = realpathSync(mountDir.name);
 
   if (!t.context.containerFile) {
     throw 'Context is missing required attribute "containerFile"';
