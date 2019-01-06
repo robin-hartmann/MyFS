@@ -11,8 +11,8 @@ const umount = promisify(cbBasedUmount);
 const promiseBasedIsMounted = promisify(cbBasedIsMounted);
 
 export const mount = async (t: ExecutionContext) => {
-  const logFile = fileSync();
-  const mountDir = dirSync();
+  const logFile = fileSync({ prefix: 'myfs-log-' });
+  const mountDir = dirSync({ prefix: 'myfs-mount-' });
 
   if (!t.context.containerFile) {
     throw 'Context is missing required attribute "containerFile"';
