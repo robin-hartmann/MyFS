@@ -12,7 +12,7 @@ const umount = promisify(cbBasedUmount);
 const promiseBasedIsMounted = promisify(cbBasedIsMounted);
 
 export const mount = async (t: ExecutionContext) => {
-  const logFile = fileSync({ prefix: 'myfs-log-' });
+  const logFile = fileSync({ prefix: 'myfs-log-', postfix: '.log' });
   const mountDir = dirSync({ prefix: 'myfs-mount-' });
 
   // required, because /tmp is just a link to /private/tmp
