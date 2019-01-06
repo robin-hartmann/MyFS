@@ -17,16 +17,14 @@
 
 
 int main(int argc, char *argv[]) {
-    char *arr;
-
     BlockDevice test;
-    test.create(argv[0]);
-    if(!test.open(argv[0]))
+    test.create(argv[1]);
+    if(test.open(argv[1]) < 0)
     {
         std::cout<<"Cannot open Container file\n";
         return 1;
-    }else{
-        for(int i = 1; i< argc ; i++ ){
+    } else {
+        for(int i = 2; i < argc ; i++ ){
             char* array = readFile(argv[i]);
             writeToDevice(array);
         }
