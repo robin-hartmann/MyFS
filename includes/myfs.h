@@ -31,6 +31,7 @@ public:
     char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH];
     int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK];
     bool isDirOpen = false;
+    bool openFiles[NUM_ROOT_BLOCKS];
 
     MyFS();
     ~MyFS();
