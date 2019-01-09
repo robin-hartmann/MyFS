@@ -44,10 +44,21 @@ MyFS::~MyFS() {
 
 int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     LOGM();
-    
-    // TODO: Implement this!
-    
-    RETURN(0);
+    const char* remPath = remDirPath(path);
+    bool filenameIsCorrect = isFilenameCorrect(path);
+
+    if (!filenameIsCorrect && *remPath != '/' && !getSizeOfCharArray(remPath) > NAME_LENGTH) {
+        statbuf->st_mode = S_IFDIR | 0555;
+        statbuf->st_nlink = 2;
+        return 0;
+    } else if (filenameIsCorrect) {
+        char buffer[NUM_ACCESS_RIGHT_BYTE];
+        readBlock(getFilePosition(path) + START_ROOT_BLOCKS, buffer, NUM_ACCESS_RIGHT_BYTE, START_ACCESS_RIGHT_BYTE);
+        //statbuf->st_mode = (int) buffer;
+        statbuf->st_nlink = 1;
+        return 0;
+    }
+    return ENOENT;
 }
 
 int MyFS::fuseReadlink(const char *path, char *link, size_t size) {
@@ -119,15 +130,18 @@ int MyFS::fuseUtime(const char *path, struct utimbuf *ubuf) {
 int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
     
-    // TODO: Implement this!
+    if(isFileExisting(path)) {
+        openFiles[getFilePosition(path)] = true;
+        return 0;
+    }
     
-    RETURN(0);
+    return EEXIST;
 }
 
 int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    if (isFilenameCorrect(path) && getSizeOfCharArray(buf) >= size && size > 0 && offset >= 0) {
+    if (getSizeOfCharArray(buf) >= size && size > 0 && offset >= 0 && isFileExisting(path) && openFiles[getFilePosition(path)]) {
         int actuallFATPosition = this->getFilePosition(path);
         bool endOfFile = false;
         char buffer[BLOCK_SIZE];
@@ -171,8 +185,10 @@ int MyFS::fuseFlush(const char *path, struct fuse_file_info *fileInfo) {
 
 int MyFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-    
-    // TODO: Implement this!
+
+    if(isFileExisting(path)) {
+        openFiles[getFilePosition(path)] = false;
+    }
     
     RETURN(0);
 }
@@ -302,9 +318,18 @@ int MyFS::fuseGetxattr(const char *path, const char *name, char *value, size_t s
 }
 
 int MyFS::getFilePosition(const char *path) {
-
-    //TODO implemnt (created by robin w)
-    return 2;
+    if (isFilenameCorrect(path)) {
+        return -1;
+    }
+    const char *StartOfFilename = remDirPath(path);
+    for(int i = 0; i < NUM_ROOT_BLOCKS; i++) {
+        for(int j = 0;  *(StartOfFilename + j) == (FILENAME[i][j]); j++) {
+            if(*(StartOfFilename + j) == '\0') {
+                return i;
+            }
+        }
+    }
+    return -1;
 }
 
 int MyFS::getFileSize(int position) {
@@ -413,18 +438,7 @@ bool MyFS::isDirPathCorrect(const char *path) {
 }
 
 bool MyFS::isFileExisting(const char *path) {
-    if (isFilenameCorrect(path)) {
-        return false;
-    }
-    const char *StartOfFilename = remDirPath(path);
-    for(int i = 0; i < NUM_ROOT_BLOCKS; i++) {
-        for(int j = 0;  *(StartOfFilename + j) == (FILENAME[i][j]); j++) {
-            if(*(StartOfFilename + j) == '\0') {
-                return true;
-            }
-        }
-    }
-    return false;
+    return getFilePosition(path) >= 0;
 }
 
 
