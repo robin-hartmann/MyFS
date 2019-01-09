@@ -17,16 +17,23 @@
 
 
 int main(int argc, char *argv[]) {
-    BlockDevice test;
-    test.create(argv[1]);
-    if(test.open(argv[1]) < 0)
+
+    BlockDevice device;
+    device.create(argv[0]);
+    if(!device.open(argv[0]))
     {
         std::cout<<"Cannot open Container file\n";
         return 1;
-    } else {
-        for(int i = 2; i < argc ; i++ ){
-            char* array = readFile(argv[i]);
-            writeToDevice(array);
+    }else{
+        if(!initializeDevice(device)){
+            std::cout<<"Cannot initialize filesystem"<<std::endl;
+            return 1;
+        }else{
+            for (int i = 1; i < argc; i++) {
+                char *array = readFile(argv[i]);
+                writeToDevice(array);
+            }
+
         }
     }
 
@@ -63,4 +70,24 @@ char* readFile(std::string fileURL){
 
 int writeToDevice(char *array){
 
+
+
+}
+
+int initializeDevice(BlockDevice &device){
+    char* superblock = initializeSuperblock();
+    device.write();
+
+    return 0;
+}
+
+char* initializeSuperblock(){
+
+    //initalize superblock
+    char* superblock;
+    int sizeSuperblock = NUM_NAME_FILESYSTEM_BYTE + NUM_RESERVED_ENTRIES_BYTE + NUM_RESERVED_BLOCKS_BYTE + NUM_RESERVED_DATA_BYTES_BYTE;
+    superblock = new char[sizeSuperblock];
+
+
+    return superblock;
 }
