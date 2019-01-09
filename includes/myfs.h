@@ -86,6 +86,8 @@ public:
     const char* remDirPath(const char *path);
     bool isFilenameCorrect(const char* path);
     bool isDirPathCorrect(const char *path);
+    int charToInt(char* chars);
+    char* intToChar(int number);
     void readStructures();
     
 };

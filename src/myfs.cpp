@@ -54,7 +54,7 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     } else if (filenameIsCorrect) {
         char buffer[NUM_ACCESS_RIGHT_BYTE];
         readBlock(getFilePosition(path) + START_ROOT_BLOCKS, buffer, NUM_ACCESS_RIGHT_BYTE, START_ACCESS_RIGHT_BYTE);
-        //statbuf->st_mode = (int) buffer;
+        statbuf->st_mode = charToInt(buffer);
         statbuf->st_nlink = 1;
         return 0;
     }
@@ -141,7 +141,7 @@ int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
 int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
 
-    if (getSizeOfCharArray(buf) >= size && size > 0 && offset >= 0 && isFileExisting(path) && openFiles[getFilePosition(path)]) {
+    if (size > 0 && offset >= 0 && isFileExisting(path) && openFiles[getFilePosition(path)]) {
         int actuallFATPosition = this->getFilePosition(path);
         bool endOfFile = false;
         char buffer[BLOCK_SIZE];
@@ -355,7 +355,7 @@ int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
 
     blockDevice->read(blockNo, buffer);
 
-    if (size + offset <= BD_BLOCK_SIZE && size <= getSizeOfCharArray(buf)) {
+    if (size + offset <= BD_BLOCK_SIZE) {
         while (i < size) {
             buf[i] = buffer[j];
             i++;
@@ -366,10 +366,8 @@ int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
 }
 
 void MyFS::transferBytes(char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff) {
-    if(getSizeOfCharArray(firstBuf) >= size + firstOff && getSizeOfCharArray(secondBuf) >= size + secondOff) {
-        for(u_int64_t i = 0; i < size; i++) {
-            *(secondBuf + secondOff + i) = *(firstBuf + firstOff + i);
-        }
+    for(u_int64_t i = 0; i < size; i++) {
+        *(secondBuf + secondOff + i) = *(firstBuf + firstOff + i);
     }
 }
 
@@ -439,6 +437,28 @@ bool MyFS::isDirPathCorrect(const char *path) {
 
 bool MyFS::isFileExisting(const char *path) {
     return getFilePosition(path) >= 0;
+}
+
+int MyFS::charToInt(char* chars) {
+    int sum = 0;
+    if (getSizeOfCharArray(chars) <= 4) {
+        for (int i = 0; chars[i] != '\0'; i++) {
+            sum += ((int) chars[i]) << (i * 8);
+        }
+    }
+    return sum;
+
+}
+
+char* MyFS::intToChar(int number) {
+    int sizeOfCharArray = 4;
+    for (; sizeOfCharArray > 1 && number == ((number << ((5 - sizeOfCharArray) * 8) >> ((5 - sizeOfCharArray) * 8))); sizeOfCharArray--);
+    char* chars= new char[sizeOfCharArray + 1];
+    for (int i = 0; i < sizeOfCharArray; i++){
+        chars[i] = (char) ((number >> (8 * i)) & 0b11111111);
+    }
+    chars[sizeOfCharArray] = '\0';
+    return chars;
 }
 
 
