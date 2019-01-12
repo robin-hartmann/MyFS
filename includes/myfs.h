@@ -27,7 +27,7 @@ public:
     
     // TODO: Add attributes of your file system here
 
-    int DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8];
+    bool DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8];
     char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH];
     int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK];
     bool isDirOpen = false;
@@ -87,7 +87,7 @@ public:
     bool isFilenameCorrect(const char* path);
     bool isDirPathCorrect(const char *path);
     int charToInt(char* chars);
-    char* intToChar(int number);
+    void intToChar(int number, char* buffer);
     void readStructures();
     
 };

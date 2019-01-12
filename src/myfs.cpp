@@ -450,15 +450,12 @@ int MyFS::charToInt(char* chars) {
 
 }
 
-char* MyFS::intToChar(int number) {
+void MyFS::intToChar(int number, char* buffer) {
     int sizeOfCharArray = 4;
     for (; sizeOfCharArray > 1 && number == ((number << ((5 - sizeOfCharArray) * 8) >> ((5 - sizeOfCharArray) * 8))); sizeOfCharArray--);
-    char* chars= new char[sizeOfCharArray + 1];
     for (int i = 0; i < sizeOfCharArray; i++){
-        chars[i] = (char) ((number >> (8 * i)) & 0b11111111);
+        buffer[i] = (char) ((number >> (8 * i)) & 0b11111111);
     }
-    chars[sizeOfCharArray] = '\0';
-    return chars;
 }
 
 

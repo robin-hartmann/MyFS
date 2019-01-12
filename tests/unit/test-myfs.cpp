@@ -43,15 +43,41 @@ TEST_CASE( "intToChar / charToInt" ) {
 
     MyFS myfs;
 
-    REQUIRE(myfs.charToInt("a") == 97);
-    REQUIRE(myfs.charToInt("b") == 98);
-    REQUIRE(myfs.charToInt("K") == 75);
-    REQUIRE(myfs.charToInt("aa") == 24929);
-    REQUIRE(myfs.charToInt("\0") == 0);
+    char test[3] = "a";
+    REQUIRE(myfs.charToInt(test) == 97);
 
-    REQUIRE(strcmp(myfs.intToChar(24929), "aa") == 0);
-    REQUIRE(strcmp(myfs.intToChar(97), "a") == 0);
-    REQUIRE(strcmp(myfs.intToChar(0), "\0") == 0);
+    strcpy(test, "b");
+    REQUIRE(myfs.charToInt(test) == 98);
+
+    strcpy(test, "K");
+    REQUIRE(myfs.charToInt(test) == 75);
+
+    strcpy(test, "aa");
+    REQUIRE(myfs.charToInt(test) == 24929);
+
+    strcpy(test, "\0");
+    REQUIRE(myfs.charToInt(test) == 0);
+
+    strcpy(test, "ba");
+    REQUIRE(myfs.charToInt(test) == 24930);
+
+
+    char buffer[5];
+    buffer[2] = '\0';
+    myfs.intToChar(24929, buffer);
+    REQUIRE(strcmp(buffer, "aa") == 0);
+
+    buffer[1] = '\0';
+    myfs.intToChar(97, buffer);
+    REQUIRE(strcmp(buffer, "a") == 0);
+
+    buffer[1] = '\0';
+    myfs.intToChar(0, buffer);
+    REQUIRE(strcmp(buffer, "\0") == 0);
+
+    buffer[2] = '\0';
+    myfs.intToChar(24930, buffer);
+    REQUIRE(strcmp(buffer, "ba") == 0);
 }
 
 
