@@ -1,4 +1,4 @@
-import ava, { ExecutionContext as UntypedExecutionContext, TestInterface } from 'ava';
+import ava, { ExecutionContext as GenericExecutionContext, TestInterface } from 'ava';
 import { SynchrounousResult } from 'tmp';
 
 export interface Context {
@@ -7,6 +7,6 @@ export interface Context {
   mountDir: SynchrounousResult;
 }
 
-export type ExecutionContext = UntypedExecutionContext<Context>;
+export type ExecutionContext = GenericExecutionContext<Context>;
 
 export const test = ava as TestInterface<Context>;
