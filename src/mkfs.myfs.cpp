@@ -75,9 +75,6 @@ int writeToDevice(char *array){
 }
 
 int initializeDevice(BlockDevice &device){
-    char* superblock = initializeSuperblock();
-    device.write();
-
     return 0;
 }
 
