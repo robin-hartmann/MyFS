@@ -19,17 +19,17 @@
 int main(int argc, char *argv[]) {
 
     BlockDevice device;
-    device.create(argv[0]);
-    if(!device.open(argv[0]))
+    device.create(argv[1]);
+    if(device.open(argv[1]) < 0)
     {
         std::cout<<"Cannot open Container file\n";
         return 1;
     }else{
-        if(!initializeDevice(device)){
+        if(initializeDevice(device) < 0){
             std::cout<<"Cannot initialize filesystem"<<std::endl;
             return 1;
         }else{
-            for (int i = 1; i < argc; i++) {
+            for (int i = 2; i < argc; i++) {
                 char *array = readFile(argv[i]);
                 writeToDevice(array);
             }
