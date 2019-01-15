@@ -8,13 +8,11 @@ import config from '../config';
 const exec = promisify(cbBasedExec);
 
 export const mkfs = async (t: ExecutionContext) => {
-  const containerFile = tmpNameSync({ prefix: 'myfs-container-', postfix: '.bin' });
+  t.context.containerFile = tmpNameSync({ prefix: 'myfs-container-', postfix: '.bin' });
 
   try {
-    await exec(`${config.BINARIES.MKFS} ${containerFile}`);
+    await exec(`"${config.BINARIES.MKFS}" "${t.context.containerFile}"`);
   } catch (e) {
     throw `Error while creating container\n${e}`;
   }
-
-  t.context.containerFile = containerFile;
 };

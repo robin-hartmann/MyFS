@@ -12,13 +12,13 @@ const umount = promisify(cbBasedUmount);
 const promiseBasedIsMounted = promisify(cbBasedIsMounted);
 
 export const mount = async (t: ExecutionContext) => {
-  const logFile = fileSync({ prefix: 'myfs-log-', postfix: '.log' });
-  const mountDir = dirSync({ prefix: 'myfs-mount-' });
+  t.context.logFile = fileSync({ prefix: 'myfs-log-', postfix: '.log' });
+  t.context.mountDir = dirSync({ prefix: 'myfs-mount-' });
 
   // required, because /tmp is just a link to /private/tmp
   // and umount doesn't seem to work when used on links
   // @todo find a better solution
-  mountDir.name = realpathSync(mountDir.name);
+  t.context.mountDir.name = realpathSync(t.context.mountDir.name);
 
   if (!t.context.containerFile) {
     throw 'Context is missing required attribute "containerFile"';
@@ -26,13 +26,10 @@ export const mount = async (t: ExecutionContext) => {
 
   try {
     // tslint:disable-next-line: max-line-length
-    await exec(`${config.BINARIES.MOUNT} ${t.context.containerFile} ${logFile.name} ${mountDir.name}`);
+    await exec(`"${config.BINARIES.MOUNT}" "${t.context.containerFile}" "${t.context.logFile.name}" "${t.context.mountDir.name}"`);
   } catch (e) {
     throw `Error while mounting device\n${e}`;
   }
-
-  t.context.logFile = logFile;
-  t.context.mountDir = mountDir;
 };
 
 export const unmount = async (t: ExecutionContext) => {
