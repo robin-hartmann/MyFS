@@ -292,7 +292,7 @@ void* MyFS::fuseInit(struct fuse_conn_info *conn) {
         LOGF("Container file name: %s", ((MyFsInfo *) fuse_get_context()->private_data)->contFile);
         
         // TODO: Implement your initialization methods here
-        readStructures();
+        //readStructures();
         // MYFsInfo ist ein Struct -> darauf wird ein pointer erzeugt um an den namen des containers zu kommen
     }
     
@@ -366,7 +366,7 @@ int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
     int64_t j = offset;
     char buffer[size];
 
-    blockDevice->read(blockNo, buffer);
+    blockDevice->read(blockNo, buffer); //wird unötig gelesen wenn size = 0
 
     if (size + offset <= BD_BLOCK_SIZE) {
         while (i < size) {
@@ -523,8 +523,6 @@ void MyFS::readDMap(){ // Dmap is completely rewritten each time to blockdevice 
 
 
 void::MyFS::setCharBitstoBool(char* buffer) {
-
-}
     for (int i = 0; i<NUM_DATA_BLOCKS; i++) {
         int whichChar = (i - (i % 8))/8 ;
         int whichBitinChar = i % 8;
@@ -532,7 +530,7 @@ void::MyFS::setCharBitstoBool(char* buffer) {
     }
 }
 
-void:MyFS::setBitinChar(int position, bool value, char* buffer){
+void::MyFS::setBitinChar(int position, bool value, char* buffer){
     int whichChar = (position - (position % 8))/8 ;
     int whichBitinChar = position % 8;
 
@@ -589,29 +587,31 @@ int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offse
    size_t writtenBytes = 0;
    size_t readBytes = 0;
     for(int i = 0; size > 0; i++) {
-        readBytes = size > BLOCK_SIZE ? BLOCK_SIZE - offset : size - offset;
-        readBlock(list[i], buf + writtenBytes, readBytes, offset);
-        writtenBytes += readBytes;
-        size -= readBytes;
-        offset = 0;
+        readBytes = size + offset > BLOCK_SIZE ? BLOCK_SIZE - offset : size;
+        if(readBytes > 0) {
+            readBlock(list[i], buf + writtenBytes, readBytes, offset);
+            writtenBytes += readBytes;
+            size -= readBytes;
+        }
+        offset > BLOCK_SIZE ? offset -= BLOCK_SIZE : offset = 0;
     }
 }
 
-
-
-
 /**
- *
- * @param startblock
- * @param size
+ * Füllt den Buffer mit Daten aus dem StartBlock und den nachfolgenden Blöcken
+ * @param startblock Erster Block der gelesen werden soll
+ * @param buffer Buffer, in den die Daten geschrieben werden sollen
+ * @param size Anzahl der Bytes die in den Buffer geschrieben werden sollen
+ * @param offset Stelle ab der vom Blockdevice gelesen werden soll
+ * @return
  */
-
-
-void MyFS::readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
-
-
-
-
+int MyFS::readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
+    int numberOfBlocks = (((size + offset) - ((size + offset) % BLOCK_SIZE)) / BLOCK_SIZE) + 1;   //Warnung kann ignoriert werden
+    u_int32_t list[numberOfBlocks];
+    for (u_int32_t i = 0; i < numberOfBlocks; i++) {
+        list[i] = startblock + i;
+    }
+    return readSectionByList(list, buffer, size, offset);
 }
 
 
