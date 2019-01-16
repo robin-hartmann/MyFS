@@ -90,11 +90,17 @@ public:
     void intToChar(int number, char* buffer);
     void readDMap();
     void writeDMap();
+    void setCharBitstoBool(char* buffer);
     void setBitinChar(int position, bool value, char* buffer);
     void setDataBlocksUnused(int &position);
     void searchfreeBlocks(size_t size, int* blockAdressBuffer);
+<<<<<<< Updated upstream
     int readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset);
 
+=======
+    void MreadSection(u_int32_t startblock, char* buffer, size_t size, off_t offset)
+    void readStructures();
+>>>>>>> Stashed changes
     
 };
 
