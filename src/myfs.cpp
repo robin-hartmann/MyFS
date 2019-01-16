@@ -354,10 +354,10 @@ int MyFS::getFileSize(int position) {
 //TODO implement return value
 /**
  * Saves the wanted block in the given Char Array.
- * @var blockNo Block you want to read from the device
- * @var *buf buffe, where you want to save the Data. Have to be >= size
- * @var size number of chars you want to get. Have to be given: size + offset <= BD_Block_Size
- * @var offset number of char you want to pass before reading. size + offset <= BD_Block-Size
+ * @param blockNo Block you want to read from the device
+ * @param buf buffer, where you want to save the Data. Have to be >= size
+ * @param size number of chars you want to get. Have to be given: size + offset <= BD_Block_Size
+ * @param offset number of char you want to pass before reading. size + offset <= BD_Block-Size
  * @return
  */
 int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
@@ -394,7 +394,7 @@ void MyFS::transferBytes(char *firstBuf, size_t size, off_t firstOff, char* seco
 /**
  * Return the Size of the Char-Array.
  * '\0' not included.
- * @var *buf pointer auf das char Array
+ * @param buf pointer auf das char Array
  * @return size of the Array
  */
 u_int32_t MyFS::getSizeOfCharArray(char *buf) {
@@ -408,7 +408,7 @@ u_int32_t MyFS::getSizeOfCharArray(char *buf) {
 /**
  * Return the Size of the Char-Array.
  * '\0' not included.
- * @var *buf pointer auf das char Array
+ * @param buf pointer auf das char Array
  * @return size of the Array
  */
 u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
