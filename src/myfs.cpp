@@ -545,7 +545,7 @@ void MyFS::setDataBlocksUnused(int &position){ // auf basis der position wird da
 
 
 
-void MyFS:: searchfreeBlocks(size_t size, int* blockAdressBuffer){ // Falls keine Blöcke mehr frei bzw. nicht mehr genug vorhanden sind, wird ein NULLPOINTER zurück gegeben.
+void MyFS::searchfreeBlocks(size_t size, int* blockAdressBuffer){ // Falls keine Blöcke mehr frei bzw. nicht mehr genug vorhanden sind, wird ein NULLPOINTER zurück gegeben.
     int counter = 0;
     int iterator = 0;
     while(counter != size) {
@@ -563,12 +563,19 @@ void MyFS:: searchfreeBlocks(size_t size, int* blockAdressBuffer){ // Falls kein
     }
 }
 
-
-
-
-void MyFS::readStructures(){
-
+int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset) {
+   size_t writtenBytes = 0;
+   size_t readBytes = 0;
+    for(int i = 0; size > 0; i++) {
+        readBytes = size > BLOCK_SIZE ? BLOCK_SIZE - offset : size - offset;
+        readBlock(list[i], buf + writtenBytes, readBytes, offset);
+        writtenBytes += readBytes;
+        size -= readBytes;
+        offset = 0;
+    }
 }
+
+
 
 
 
