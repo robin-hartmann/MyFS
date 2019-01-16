@@ -317,6 +317,12 @@ int MyFS::fuseGetxattr(const char *path, const char *name, char *value, size_t s
     RETURN(0);
 }
 
+/**
+ * Gibt die Positon einer Datei im Root-Verzeichnis zurück.
+ * Achtung: Voher nicht remDirPath() auf den Pfad anwenden!
+ * @param path Dateipfad + Dateiname
+ * @return -1 wenn Datei nicht existiert. Ansonsten die DateiPosition
+ */
 int MyFS::getFilePosition(const char *path) {
     if (isFilenameCorrect(path)) {
         return -1;
@@ -332,11 +338,17 @@ int MyFS::getFilePosition(const char *path) {
     return -1;
 }
 
+/**
+ * Gibt die Dateigröße einer Datei zurück
+ * @param position Die position der Datei im Root-Verzeichnis (getFilePosition())
+ * @return größe der Datei
+ */
 int MyFS::getFileSize(int position) {
-    char buffer[NUM_FILE_SIZE_BYTE];
+    char buffer[NUM_FILE_SIZE_BYTE + 1];
+    buffer[NUM_FILE_SIZE_BYTE] = '\0';
     this->readBlock(START_ROOT_BLOCKS + position, buffer, NUM_FILE_SIZE_BYTE, START_FILE_SIZE_BYTE);
 
-    return (((int) buffer[0])<<8) + ((int) buffer[1]);
+    return charToInt(buffer);
 }
 
 //TODO implement return value
@@ -365,14 +377,20 @@ int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
     return 0;
 }
 
+/**
+ * Schreibt Bytes aus dem ersten Buffer, in den zweiten Buffer.
+ * @param firstBuf Erster Buffer
+ * @param size  Anzahl der Bytes, die übertragen werden soll
+ * @param firstOff Offset, ab welcher Stelle angefangen werden soll zu lesen
+ * @param secondBuf Zweiter Buffer
+ * @param secondOff Offset, ab welcher Stelle angefangen werden soll zu schreiben
+ */
 void MyFS::transferBytes(char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff) {
     for(u_int64_t i = 0; i < size; i++) {
         *(secondBuf + secondOff + i) = *(firstBuf + firstOff + i);
     }
 }
 
-
-//TODO Was wenn Array größer 32 Bit Int?
 /**
  * Return the Size of the Char-Array.
  * '\0' not included.
@@ -387,6 +405,12 @@ u_int32_t MyFS::getSizeOfCharArray(char *buf) {
     return size;
 }
 
+/**
+ * Return the Size of the Char-Array.
+ * '\0' not included.
+ * @var *buf pointer auf das char Array
+ * @return size of the Array
+ */
 u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
     u_int32_t size = 0;
     while(buf[size] != '\0') {
@@ -395,6 +419,11 @@ u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
     return size;
 }
 
+/**
+ * Entfernt den Dateipfad vom Dateinamen.
+ * @param path Dateipfad / Dateiname
+ * @return Dateiname
+ */
 const char* MyFS::remDirPath(const char *path) {
     bool removedPath = false;
     int NumOfPathChars = 0;
@@ -416,7 +445,12 @@ const char* MyFS::remDirPath(const char *path) {
     return (path + NumOfPathChars);
 }
 
-
+/**
+ * Überprüft, ob der Filename correkt ist.
+ * Achtung: Auf den Dateipfad vorher nicht removeDirPath() ausführen!
+ * @param path Dateipfad / Dateiname
+ * @return true, wenn Dateiname correkt ist
+ */
 bool MyFS::isFilenameCorrect(const char *path) {
     const char *StartOfFilename = remDirPath(path);
     if (getSizeOfCharArray(StartOfFilename) > NAME_LENGTH || (*StartOfFilename == '/' || *StartOfFilename == '\0' ||
