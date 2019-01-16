@@ -47,7 +47,7 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     const char* remPath = remDirPath(path);
     bool filenameIsCorrect = isFilenameCorrect(path);
 
-    if (!filenameIsCorrect && *remPath != '/' && !getSizeOfCharArray(remPath) > NAME_LENGTH) {
+    if (!filenameIsCorrect && *remPath != '/' && getSizeOfCharArray(remPath) <= NAME_LENGTH) {
         statbuf->st_mode = S_IFDIR | 0555;
         statbuf->st_nlink = 2;
         return 0;
@@ -340,7 +340,7 @@ int MyFS::getFileSize(int position) {
 }
 
 //TODO implement return value
-/*
+/**
  * Saves the wanted block in the given Char Array.
  * @var blockNo Block you want to read from the device
  * @var *buf buffe, where you want to save the Data. Have to be >= size
@@ -373,7 +373,7 @@ void MyFS::transferBytes(char *firstBuf, size_t size, off_t firstOff, char* seco
 
 
 //TODO Was wenn Array größer 32 Bit Int?
-/*
+/**
  * Return the Size of the Char-Array.
  * '\0' not included.
  * @var *buf pointer auf das char Array
@@ -427,6 +427,12 @@ bool MyFS::isFilenameCorrect(const char *path) {
     return true;
 }
 
+/**
+ * Überprüft ob der übergebene Dateipfad Correct ist.
+ * Achtung: Der Dateipfad darf davor nicht durch remDirPath() gelaufen sein! Das verfälscht das Ergebnis.
+ * @param path Dateipfad
+ * @return true, wenn Dateipfad korrekt ist
+ */
 bool MyFS::isDirPathCorrect(const char *path) {
     const char *dir = remDirPath(path);
     if (*(dir) == '\0' || ((*dir == '/' || *dir == '.') && *(dir + 1) == '\0') || (*(dir) == '.' && *(dir + 1) == '.' && *(dir + 2) == '\0')) {
@@ -435,10 +441,20 @@ bool MyFS::isDirPathCorrect(const char *path) {
     return false;
 }
 
+/**
+ * Überprüft, Ob eine Datei beireits existiert.
+ * @param path Dateiame / Dateipfad
+ * @return true, wenn die Datei existiert
+ */
 bool MyFS::isFileExisting(const char *path) {
     return getFilePosition(path) >= 0;
 }
 
+/**
+ * Wandelt ein Char-Array in einen Integer um.
+ * @param chars char Array mit maximal 4 chars
+ * @return intege based on the input
+ */
 int MyFS::charToInt(char* chars) {
     int sum = 0;
     if (getSizeOfCharArray(chars) <= 4) {
@@ -450,6 +466,11 @@ int MyFS::charToInt(char* chars) {
 
 }
 
+/**
+ * Wandelt einen Integer in bis zu 4 chars um. Achtung: Es wird kein \0 hinter das letzte chars geschrieben
+ * @param number Integer, der umgewandelt werden soll
+ * @param buffer char-Array in den die chars geschrieben werden sollen
+ */
 void MyFS::intToChar(int number, char* buffer) {
     int sizeOfCharArray = 4;
     for (; sizeOfCharArray > 1 && number == ((number << ((5 - sizeOfCharArray) * 8) >> ((5 - sizeOfCharArray) * 8))); sizeOfCharArray--);
