@@ -88,6 +88,12 @@ public:
     bool isDirPathCorrect(const char *path);
     int charToInt(char* chars);
     void intToChar(int number, char* buffer);
+    void readDMap();
+    void writeDMap();
+    void setBitinChar(int position, bool value, char* buffer);
+    void setDataBlocksUnused(int &position);
+    void searchfreeBlocks(size_t size, int* blockAdressBuffer);
+
     void readStructures();
     
 };

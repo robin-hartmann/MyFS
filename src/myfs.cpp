@@ -458,6 +458,58 @@ void MyFS::intToChar(int number, char* buffer) {
     }
 }
 
+void MyFS::readDMap(){ // Dmap is completely rewritten each time to blockdevice - idear: write only block, which are changed
+            char* buffer;
+            blockDevice->read();
+}
+
+void:MyFS::setBitinChar(int position, bool value, char* buffer){
+    int whichChar = (position - (position % 8))/8 ;
+    int whichBitinChar = position % 8;
+
+    if (value){
+        buffer[whichChar] |= 1 << whichBitinChar;
+    }else {
+        buffer[whichChar] &= ~(1 << whichBitinChar);
+    }
+
+}
+
+
+void MyFS::writeDMap(){
+
+}
+
+void MyFS::setDataBlocksUnused(int &position){ // auf basis der position wird das FAT durchgesucht nach des restlichen Blöcken und diese werden auf unused gestzt. -> Rekursiv lösen
+    if(position == FAT[position]){
+    }else{
+        DMAP[position] = false;
+        MyFS::setDataBlocksUnused(FAT[position]);
+    }
+}
+
+
+
+void MyFS:: searchfreeBlocks(size_t size, int* blockAdressBuffer){ // Falls keine Blöcke mehr frei bzw. nicht mehr genug vorhanden sind, wird ein NULLPOINTER zurück gegeben.
+    int counter = 0;
+    int iterator = 0;
+    while(counter != size) {
+        if (iterator == NUM_DATA_BLOCKS) {
+            blockAdressBuffer = nullptr;
+            counter = size;
+        } else {
+            if (DMAP[iterator] == false) {
+                blockAdressBuffer[counter] = iterator;
+                counter++;
+            }
+            iterator++;
+
+        }
+    }
+}
+
+
+
 
 void MyFS::readStructures(){
 
