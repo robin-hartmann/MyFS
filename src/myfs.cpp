@@ -307,6 +307,7 @@ int MyFS::fuseSetxattr(const char *path, const char *name, const char *value, si
     LOGM();
     RETURN(0);
 }
+
     
 #ifdef __APPLE__
 int MyFS::fuseGetxattr(const char *path, const char *name, char *value, size_t size, uint x) {
@@ -514,8 +515,21 @@ void MyFS::intToChar(int number, char* buffer) {
 }
 
 void MyFS::readDMap(){ // Dmap is completely rewritten each time to blockdevice - idear: write only block, which are changed
-            char* buffer;
-            blockDevice->read();
+            char buffer[BLOCK_SIZE];
+            blockDevice->read(1, buffer);
+            setCharBitstoBool(buffer);
+
+}
+
+
+void::MyFS::setCharBitstoBool(char* buffer) {
+
+}
+    for (int i = 0; i<NUM_DATA_BLOCKS; i++) {
+        int whichChar = (i - (i % 8))/8 ;
+        int whichBitinChar = i % 8;
+        DMAP[i] = (buffer[whichChar] >> whichBitinChar) & 1;
+    }
 }
 
 void:MyFS::setBitinChar(int position, bool value, char* buffer){
@@ -532,6 +546,13 @@ void:MyFS::setBitinChar(int position, bool value, char* buffer){
 
 
 void MyFS::writeDMap(){
+    char buffer[BLOCK_SIZE];
+    for(int i=0; i<NUM_DATA_BLOCKS ; i++) {
+        setBitinChar(i, DMAP[i], buffer);
+    }
+
+    // aufteilen des chars in blöcke
+    blockDevice->write(1, buffer);
 
 }
 
@@ -563,6 +584,7 @@ void MyFS::searchfreeBlocks(size_t size, int* blockAdressBuffer){ // Falls keine
     }
 }
 
+
 int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset) {
    size_t writtenBytes = 0;
    size_t readBytes = 0;
@@ -576,6 +598,23 @@ int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offse
 }
 
 
+
+
+/**
+ *
+ * @param startblock
+ * @param size
+ */
+
+
+void MyFS::readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
+
+
+
+
+}
+
+>>>>>>> Stashed changes
 
 
 
