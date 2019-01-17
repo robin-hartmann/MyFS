@@ -555,10 +555,7 @@ void MyFS::writeDMap(){
     for(int i=0; i<NUM_DATA_BLOCKS ; i++) {
         setBitinChar(i, DMAP[i], buffer);
     }
-
-    // aufteilen des chars in blöcke
-
-
+    writeSection(1, buffer, BLOCK_SIZE, 0);
 }
 
 /**
@@ -570,14 +567,7 @@ void MyFS::writeDMap(){
  * @param offset
  */
 void MyFS::writeSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
-
-    /*
-    for(int i=0; i< sizeof(buffer); i=+BLOCK_SIZE){             //sizeof geht hier nicht
-           char bufferToBlock[BLOCK_SIZE];                      //Das würde nich gehen, da der buffer bereits angelegt ist
-            transferBytes(buffer,BLOCK_SIZE,i, bufferToBlock, 0  );
-            blockDevice->write();
-    }*/
-
+    
     int numberOfBlocks = ((size - (size % BLOCK_SIZE)) / BLOCK_SIZE) + 1; //Die Warnung kann ignoriert werden
     u_int32_t list[numberOfBlocks];
     for (int i = 0; i < numberOfBlocks; i++) {
