@@ -564,13 +564,33 @@ void MyFS::writeDMap(){
  */
 void MyFS::writeSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
 
-    for(int i=0; i< sizeof(buffer); i=+BLOCK_SIZE){
+    /*
+    for(int i=0; i< sizeof(buffer); i=+BLOCK_SIZE){ //sizeof geht hier nicht
            char bufferToBlock[BLOCK_SIZE];
             transferBytes(buffer,BLOCK_SIZE,i, bufferToBlock, 0  );
-            blockDevice->write()
+            blockDevice->write();
+    }*/
+
+    int numberOfBlocks = ((size - (size % BLOCK_SIZE)) / BLOCK_SIZE) + 1; //Die Warnung kann ignoriert werden
+    u_int32_t list[numberOfBlocks];
+    for (int i = 0; i < numberOfBlocks; i++) {
+        list[i] = startblock + i;
     }
+    writeSectionByList(list, buffer, size, offset);
+}
 
-
+void MyFS::writeSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset) {
+    char buffer[BLOCK_SIZE];
+    size_t numbeOfWriteBytes = 0;
+    size_t numberOfWrittenBytes = 0;
+    for(int i = 0; size > 0; i++) {
+        numbeOfWriteBytes = size > BLOCK_SIZE ? BLOCK_SIZE : size;
+        transferBytes(buf + numbeOfWriteBytes, numbeOfWriteBytes, offset, buffer, 0);
+        numberOfWrittenBytes += numbeOfWriteBytes;
+        size -= numbeOfWriteBytes;
+        offset = 0;
+        blockDevice->write(list[i], buffer);
+    }
 }
 
 void MyFS::setDataBlocksUnused(int &position){ // auf basis der position wird das FAT durchgesucht nach des restlichen Blöcken und diese werden auf unused gestzt. -> Rekursiv lösen
