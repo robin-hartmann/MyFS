@@ -96,7 +96,7 @@ public:
     void searchfreeBlocks(size_t size, int* blockAdressBuffer);
     int readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset);
     int readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset);
-
+    void writeSection(u_int32_t startblock, char* buffer, size_t size, off_t offset)
     
 };
 

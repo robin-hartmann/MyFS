@@ -550,7 +550,26 @@ void MyFS::writeDMap(){
     }
 
     // aufteilen des chars in blöcke
-    blockDevice->write(1, buffer);
+
+
+}
+
+/**
+ * Buffer kann auf blockdevice geschrieben werden.
+ * ---> noch nicht fertig : ToDo
+ * @param startblock
+ * @param buffer
+ * @param size
+ * @param offset
+ */
+void MyFS::writeSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
+
+    for(int i=0; i< sizeof(buffer); i=+BLOCK_SIZE){
+           char bufferToBlock[BLOCK_SIZE];
+            transferBytes(buffer,BLOCK_SIZE,i, bufferToBlock, 0  );
+            blockDevice->write()
+    }
+
 
 }
 
