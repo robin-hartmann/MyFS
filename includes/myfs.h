@@ -35,7 +35,7 @@ public:
 
     int numberOfFiles = 0;
     int numberOfUsedDATABLOCKS = 0;
-    int numberOfwrittenBytes = 0;
+    u_int64_t numberOfwrittenBytes = 0;
     
     MyFS();
     ~MyFS();
@@ -104,6 +104,7 @@ public:
     void writeSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset);
     void writeFAT();
     void readFAT();
+    int writeSBLOCK();
 };
 
 #endif /* myfs_h */
