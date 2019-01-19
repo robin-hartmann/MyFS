@@ -652,7 +652,7 @@ int MyFS::readSection(u_int32_t startblock, char* buffer, size_t size, off_t off
 void MyFS::writeFAT() {
     char buffer[NUM_FAT_BLOCKS * BLOCK_SIZE];
     char numberbuffer[ADRESS_LENGTH_BYTE];
-    for (int i = 0; i < sizeof(FAT); i++) {
+    for (int i = 0; i < NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++) {
         intToChar(FAT[i], numberbuffer);
         transferBytes(numberbuffer, ADRESS_LENGTH_BYTE, 0, buffer, ADRESS_LENGTH_BYTE * i);
 
@@ -670,6 +670,8 @@ void MyFS::readFAT() {
         FAT[i]= charToInt(numberbuffer);
     }
 }
+
+
 
 
 
