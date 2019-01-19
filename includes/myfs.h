@@ -33,6 +33,10 @@ public:
     bool isDirOpen = false;
     bool openFiles[NUM_ROOT_BLOCKS];
 
+    int numberOfFiles = 0;
+    int numberOfUsedDATABLOCKS = 0;
+    int numberOfwrittenBytes = 0;
+    
     MyFS();
     ~MyFS();
     

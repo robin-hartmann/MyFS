@@ -551,11 +551,11 @@ void::MyFS::setBitinChar(int position, bool value, char* buffer){
 
 
 void MyFS::writeDMap(){
-    char buffer[BLOCK_SIZE];
+    char buffer[NUM_DATA_BLOCKS];
     for(int i=0; i<NUM_DATA_BLOCKS ; i++) {
         setBitinChar(i, DMAP[i], buffer);
     }
-    writeSection(1, buffer, BLOCK_SIZE, 0);
+    writeSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS * BLOCK_SIZE, 0);
 }
 
 /**
