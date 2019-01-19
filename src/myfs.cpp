@@ -686,6 +686,22 @@ int MyFS::writeSBLOCK() {
     return 0;
 }
 
+int MyFS::readSBlock(){
+    char SBLOCK[BLOCK_SIZE];
+    char fileNAME[NUM_FILE_SIZE_BYTE];
+    blockDevice->read(START_SUPER_BLOCKS, SBLOCK);
+    transferBytes(SBLOCK,NUM_FILE_SIZE_BYTE,0,fileNAME,0);
+    if( strcmp(fileNAME, NAME_FILESYSTEM)){
+        return EIO;
+    }
+    char numOfFiles[NUM_RESERVED_ENTRIES_BYTE];
+    transferBytes(SBLOCK, NUM_RESERVED_ENTRIES_BYTE, NUM_FILE_SIZE_BYTE, numOfFiles, 0);
+    numberOfFiles = charToInt(buffer);
+
+    transferBytes(SBLOCK,NUM_RESERVED_BLOCKS_BYTE, NUM_FILE_SIZE_BYTE+NUM_RESERVED_ENTRIES_BYTE, buffer, 0 );
+
+}
+
 
 
 
