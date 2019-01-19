@@ -664,8 +664,8 @@ void MyFS::writeFAT() {
 void MyFS::readFAT() {
     char buffer[NUM_FAT_BLOCKS * BLOCK_SIZE];
     char numberbuffer[ADRESS_LENGTH_BYTE];
-    readBlock(START_FAT_BLOCKS, buffer, NUM_FAT_BLOCKS*BLOCK_SIZE,0);
-    for(int i = 0; i< NUM_FAT_BLOCKS * BLOCK_SIZE; i++){
+    readSection(START_FAT_BLOCKS, buffer, NUM_FAT_BLOCKS*BLOCK_SIZE,0);
+    for(int i = 0; i< NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++){
         transferBytes(buffer, ADRESS_LENGTH_BYTE, i*ADRESS_LENGTH_BYTE, numberbuffer, 0);
         FAT[i]= charToInt(numberbuffer);
     }
