@@ -266,9 +266,14 @@ int MyFS::fuseTruncate(const char *path, off_t offset, struct fuse_file_info *fi
 
 int MyFS::fuseCreate(const char *path, mode_t mode, struct fuse_file_info *fileInfo) {
     LOGM();
-    
-    // TODO: Implement this!
-    
+    if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
+        return ENOENT;
+    } else if (isFileExisting(path)) {
+        return EEXIST;
+    } else if (numberOfFiles >= 64) {
+        return ENOSPC;
+    }
+    writeROOT(,,"\0","\0","\0","\0","\0","\0", 0)
     RETURN(0);
 }
 
@@ -674,19 +679,22 @@ void MyFS::readFAT() {
 int MyFS::writeSBLOCK() {
     char SBLOCK[BLOCK_SIZE];
     char buffer[4];
-    transferBytes(NAME_FILESYSTEM, NUM_FILENAME_BYTE, 0, SBLOCK, START_FILENAME_BYTE);
+    transferBytes(NAME_FILESYSTEM, NUM_NAME_FILESYSTEM_BYTE, 0, SBLOCK, START_FILENAME_BYTE);
     intToChar(numberOfFiles, buffer);
     transferBytes(buffer, NUM_RESERVED_ENTRIES_BYTE, 0 , SBLOCK, START_RESERVED_ENTRIES_BYTE);
     intToChar(numberOfUsedDATABLOCKS, buffer);
     transferBytes(buffer, NUM_RESERVED_BLOCKS_BYTE, 0, SBLOCK, START_RESERVED_BLOCKS_BYTE);
-    intToChar(numberOfwrittenBytes,buffer);
+    intToChar((int) numberOfwrittenBytes,buffer);
     transferBytes(buffer, NUM_RESERVED_DATA_BYTES_BYTE, 0, SBLOCK, START_RESERVED_DATA_BYTES_BYTE);
 
     blockDevice->write(START_SUPER_BLOCKS,SBLOCK);
     return 0;
 }
 
+int MyFS::writeROOT(u_int32_t position, char* filename,size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock) {
+    char ROOTBlock[BLOCK_SIZE];
 
+}
 
 
 
