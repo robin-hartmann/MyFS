@@ -671,7 +671,20 @@ void MyFS::readFAT() {
     }
 }
 
+int MyFS::writeSBLOCK() {
+    char SBLOCK[BLOCK_SIZE];
+    char buffer[4];
+    transferBytes(NAME_FILESYSTEM, NUM_FILENAME_BYTE, 0, SBLOCK, START_FILENAME_BYTE);
+    intToChar(numberOfFiles, buffer);
+    transferBytes(buffer, NUM_RESERVED_ENTRIES_BYTE, 0 , SBLOCK, START_RESERVED_ENTRIES_BYTE);
+    intToChar(numberOfUsedDATABLOCKS, buffer);
+    transferBytes(buffer, NUM_RESERVED_BLOCKS_BYTE, 0, SBLOCK, START_RESERVED_BLOCKS_BYTE);
+    intToChar(numberOfwrittenBytes,buffer);
+    transferBytes(buffer, NUM_RESERVED_DATA_BYTES_BYTE, 0, SBLOCK, START_RESERVED_DATA_BYTES_BYTE);
 
+    blockDevice->write(START_SUPER_BLOCKS,SBLOCK);
+    return 0;
+}
 
 
 
