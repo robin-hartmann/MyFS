@@ -567,7 +567,7 @@ void MyFS::writeDMap(){
  * @param offset
  */
 void MyFS::writeSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
-    
+
     int numberOfBlocks = ((size - (size % BLOCK_SIZE)) / BLOCK_SIZE) + 1; //Die Warnung kann ignoriert werden
     u_int32_t list[numberOfBlocks];
     for (int i = 0; i < numberOfBlocks; i++) {
@@ -648,6 +648,18 @@ int MyFS::readSection(u_int32_t startblock, char* buffer, size_t size, off_t off
     }
     return readSectionByList(list, buffer, size, offset);
 }
+
+void MyFS::writeFAT() {
+    char* buffer[NUM_FAT_BLOCKS*BLOCK_SIZE];
+    
+
+}
+
+void MyFS::readFAT() {
+
+}
+
+
 
 
 
