@@ -102,7 +102,8 @@ public:
     int readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset);
     void writeSection(u_int32_t startblock, char* buffer, size_t size, off_t offset);
     void writeSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset);
-    
+    void writeFAT();
+    void readFAT();
 };
 
 #endif /* myfs_h */
