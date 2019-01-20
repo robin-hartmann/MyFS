@@ -688,7 +688,7 @@ int MyFS::writeSBLOCK() {
 
 int MyFS::readSBlock(){
     char SBLOCK[BLOCK_SIZE];
-    char fileNAME[NUM_FILE_SIZE_BYTE];
+    char fileNAME[NUM_FILENAME_BYTE];
     blockDevice->read(START_SUPER_BLOCKS, SBLOCK);
     transferBytes(SBLOCK,NUM_FILE_SIZE_BYTE,0,fileNAME,0);
     if( strcmp(fileNAME, NAME_FILESYSTEM)){
@@ -696,10 +696,18 @@ int MyFS::readSBlock(){
     }
     char numOfFiles[NUM_RESERVED_ENTRIES_BYTE];
     transferBytes(SBLOCK, NUM_RESERVED_ENTRIES_BYTE, NUM_FILE_SIZE_BYTE, numOfFiles, 0);
-    numberOfFiles = charToInt(buffer);
+    numberOfFiles = charToInt(numOfFiles);
 
-    transferBytes(SBLOCK,NUM_RESERVED_BLOCKS_BYTE, NUM_FILE_SIZE_BYTE+NUM_RESERVED_ENTRIES_BYTE, buffer, 0 );
+    char numOfDataBlocks[NUM_RESERVED_BLOCKS_BYTE];
+    transferBytes(SBLOCK,NUM_RESERVED_BLOCKS_BYTE, NUM_FILE_SIZE_BYTE+NUM_RESERVED_ENTRIES_BYTE, numOfDataBlocks, 0 );
+    numberOfUsedDATABLOCKS = charToInt(numOfDataBlocks);
 
+    char numOfwrittenBytes[NUM_RESERVED_DATA_BYTES_BYTE];
+    transferBytes(SBLOCK,NUM_RESERVED_DATA_BYTES_BYTE, NUM_FILE_SIZE_BYTE+NUM_RESERVED_ENTRIES_BYTE+NUM_RESERVED_BLOCKS_BYTE, numOfwrittenBytes, 0 );
+    numberOfwrittenBytes = charToInt(numOfwrittenBytes);
+
+
+    return 0; 
 }
 
 
