@@ -191,7 +191,10 @@ int MyFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     if(isFileExisting(path)) {
         openFiles[getFilePosition(path)] = false;
     }
-    
+    writeSBLOCK();
+    writeDMap();
+    writeFAT();
+    blockDevice->close();
     RETURN(0);
 }
 
@@ -299,8 +302,14 @@ void* MyFS::fuseInit(struct fuse_conn_info *conn) {
         LOGF("Container file name: %s", ((MyFsInfo *) fuse_get_context()->private_data)->contFile);
         
         // TODO: Implement your initialization methods here
-        //readStructures();
-        // MYFsInfo ist ein Struct -> darauf wird ein pointer erzeugt um an den namen des containers zu kommen
+        BlockDevice* newblockDevice = new BlockDevice(BLOCK_SIZE);
+        newblockDevice->open(((MyFsInfo *) fuse_get_context()->private_data)->contFile);
+        this->blockDevice = newblockDevice;
+
+        readSBlock();
+        readDMap();
+        readFAT();
+
     }
     
     RETURN(0);
@@ -691,10 +700,31 @@ int MyFS::writeSBLOCK() {
     return 0;
 }
 
-int MyFS::writeROOT(u_int32_t position, char* filename,size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock) {
-    char ROOTBlock[BLOCK_SIZE];
+int MyFS::readSBlock(){
+    char SBLOCK[BLOCK_SIZE];
+    char fileNAME[NUM_FILENAME_BYTE];
+    blockDevice->read(START_SUPER_BLOCKS, SBLOCK);
+    transferBytes(SBLOCK,NUM_FILE_SIZE_BYTE,0,fileNAME,0);
+    if( strcmp(fileNAME, NAME_FILESYSTEM)){
+        return EIO;
+    }
+    char numOfFiles[NUM_RESERVED_ENTRIES_BYTE];
+    transferBytes(SBLOCK, NUM_RESERVED_ENTRIES_BYTE, NUM_FILE_SIZE_BYTE, numOfFiles, 0);
+    numberOfFiles = charToInt(numOfFiles);
 
+    char numOfDataBlocks[NUM_RESERVED_BLOCKS_BYTE];
+    transferBytes(SBLOCK,NUM_RESERVED_BLOCKS_BYTE, NUM_FILE_SIZE_BYTE+NUM_RESERVED_ENTRIES_BYTE, numOfDataBlocks, 0 );
+    numberOfUsedDATABLOCKS = charToInt(numOfDataBlocks);
+
+    char numOfwrittenBytes[NUM_RESERVED_DATA_BYTES_BYTE];
+    transferBytes(SBLOCK,NUM_RESERVED_DATA_BYTES_BYTE, NUM_FILE_SIZE_BYTE+NUM_RESERVED_ENTRIES_BYTE+NUM_RESERVED_BLOCKS_BYTE, numOfwrittenBytes, 0 );
+    numberOfwrittenBytes = charToInt(numOfwrittenBytes);
+
+
+    return 0;
 }
+
+
 
 
 

@@ -12,7 +12,7 @@
 #include <fuse.h>
 #include <cmath>
 #include <errno.h>
-
+#include <string.h>
 #include "blockdevice.h"
 #include "myfs-structs.h"
 
@@ -106,6 +106,7 @@ public:
     void readFAT();
     int writeSBLOCK();
     int writeROOT(u_int32_t position, size_t size, char* filename, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock);
+    int readSBlock();
 };
 
 #endif /* myfs_h */
