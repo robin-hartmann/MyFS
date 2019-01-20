@@ -294,8 +294,14 @@ void* MyFS::fuseInit(struct fuse_conn_info *conn) {
         LOGF("Container file name: %s", ((MyFsInfo *) fuse_get_context()->private_data)->contFile);
         
         // TODO: Implement your initialization methods here
-        //readStructures();
-        // MYFsInfo ist ein Struct -> darauf wird ein pointer erzeugt um an den namen des containers zu kommen
+        BlockDevice* newblockDevice = new BlockDevice(BLOCK_SIZE);
+        blockDevice->open(((MyFsInfo *) fuse_get_context()->private_data)->contFile);
+        this->blockDevice = newblockDevice;
+
+        readSBlock();
+        readDMap();
+        readFAT();
+
     }
     
     RETURN(0);
@@ -707,7 +713,7 @@ int MyFS::readSBlock(){
     numberOfwrittenBytes = charToInt(numOfwrittenBytes);
 
 
-    return 0; 
+    return 0;
 }
 
 
