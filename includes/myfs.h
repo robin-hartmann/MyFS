@@ -20,12 +20,13 @@ class MyFS {
 private:
     static MyFS *_instance;
     FILE *logFile;
-    BlockDevice *blockDevice;
     
 public:
     static MyFS *Instance();
     
     // TODO: Add attributes of your file system here
+
+    BlockDevice *blockDevice;
 
     bool DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8];
     char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH];
@@ -105,7 +106,7 @@ public:
     void writeFAT();
     void readFAT();
     int writeSBLOCK();
-    int writeROOT(u_int32_t position, size_t size, char* filename, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock);
+    int writeROOT(u_int32_t position, char* filename, size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock);
     int readSBlock();
 };
 

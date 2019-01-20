@@ -724,7 +724,6 @@ int MyFS::readSBlock(){
     return 0;
 }
 
-
-
-
-
+int MyFS::writeROOT(u_int32_t position, char* filename,size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock) {
+    char ROOTBlock[BLOCK_SIZE];
+}
