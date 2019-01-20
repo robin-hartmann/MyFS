@@ -191,7 +191,10 @@ int MyFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     if(isFileExisting(path)) {
         openFiles[getFilePosition(path)] = false;
     }
-    
+    writeSBLOCK();
+    writeDMap();
+    writeFAT();
+    blockDevice->close();
     RETURN(0);
 }
 
@@ -295,7 +298,7 @@ void* MyFS::fuseInit(struct fuse_conn_info *conn) {
         
         // TODO: Implement your initialization methods here
         BlockDevice* newblockDevice = new BlockDevice(BLOCK_SIZE);
-        blockDevice->open(((MyFsInfo *) fuse_get_context()->private_data)->contFile);
+        newblockDevice->open(((MyFsInfo *) fuse_get_context()->private_data)->contFile);
         this->blockDevice = newblockDevice;
 
         readSBlock();
