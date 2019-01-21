@@ -195,6 +195,7 @@ int MyFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     writeDMap();
     writeFAT();
     blockDevice->close();
+    delete blockDevice;
     RETURN(0);
 }
 
