@@ -29,7 +29,7 @@ public:
     BlockDevice *blockDevice;
 
     bool DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8];
-    char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH];
+    char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH + 1];
     int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK];
     bool isDirOpen = false;
     bool openFiles[NUM_ROOT_BLOCKS];
@@ -86,13 +86,14 @@ public:
     u_int32_t getSizeOfCharArray(const char *buf);
     int readBlock(u_int32_t blockNo,char *buf, size_t size, off_t offset);
     void transferBytes(char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff);
+    void transferBytes(const char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff);
     int getFileSize(int position);
     bool isFileExisting(const char *path);
     const char* remDirPath(const char *path);
     bool isFilenameCorrect(const char* path);
     bool isDirPathCorrect(const char *path);
-    int charToInt(char* chars);
-    void intToChar(int number, char* buffer);
+    int charToInt(char* chars, int numberOfChars);
+    void intToChar(int number, char* buffer, int numberOfChars);
     void readDMap();
     void writeDMap();
     void setCharBitstoBool(char* buffer);
@@ -106,7 +107,7 @@ public:
     void writeFAT();
     void readFAT();
     int writeSBLOCK();
-    int writeROOT(u_int32_t position, char* filename, size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock);
+    int writeROOT(u_int32_t position, const char* filename, size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock);
     int readSBlock();
 };
 
