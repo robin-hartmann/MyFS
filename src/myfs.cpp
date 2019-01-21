@@ -191,11 +191,6 @@ int MyFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     if(isFileExisting(path)) {
         openFiles[getFilePosition(path)] = false;
     }
-    writeSBLOCK();
-    writeDMap();
-    writeFAT();
-    blockDevice->close();
-    delete blockDevice;
     RETURN(0);
 }
 
@@ -282,6 +277,11 @@ int MyFS::fuseCreate(const char *path, mode_t mode, struct fuse_file_info *fileI
 }
 
 void MyFS::fuseDestroy() {
+    writeSBLOCK();
+    writeDMap();
+    writeFAT();
+    blockDevice->close();
+    delete blockDevice;
     LOGM();
 }
 
