@@ -562,16 +562,16 @@ void MyFS::intToChar(int number, char* buffer, int numberOfChars) {
     }
 }
 
-void MyFS::readDMap(){ // Dmap is completely rewritten each time to blockdevice - idear: write only block, which are changed
+void MyFS::readDMap(){
             char buffer[BLOCK_SIZE];
-            blockDevice->read(1, buffer); //Defines anstatt der 1 verwenden zudem ist die D Map 16 Blöcke groß
+            writeSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS*BLOCK_SIZE,0);
             setCharBitstoBool(buffer);
 
 }
 
 
 void::MyFS::setCharBitstoBool(char* buffer) {
-    for (int i = 0; i<NUM_DATA_BLOCKS; i++) {
+    for (int i = 0; i<NUM_DATA_BLOCKS*NUM_DMAP_BLOCKS; i++) {
         int whichChar = (i - (i % 8))/8 ;
         int whichBitinChar = i % 8;
         DMAP[i] = (buffer[whichChar] >> whichBitinChar) & 1;
@@ -640,7 +640,7 @@ void MyFS::setDataBlocksUnused(int &position){ // auf basis der position wird da
 
 
 
-void MyFS::searchfreeBlocks(size_t size, int* blockAdressBuffer){ // Falls keine Blöcke mehr frei bzw. nicht mehr genug vorhanden sind, wird ein NULLPOINTER zurück gegeben.
+void MyFS::searchfreeBlocks(size_t size, int* blockAdressBuffer){
     int counter = 0;
     int iterator = 0;
     while(counter != size) {
