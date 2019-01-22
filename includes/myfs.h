@@ -96,7 +96,6 @@ public:
     void intToChar(int number, char* buffer, int numberOfChars);
     void readDMap();
     void writeDMap();
-    void setCharBitstoBool(char* buffer);
     void setBitinChar(int position, bool value, char* buffer);
     void setDataBlocksUnused(u_int32_t position);
     void searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer);

@@ -15,8 +15,10 @@
 #define DEBUG_METHODS
 #define DEBUG_RETURN_VALUES
 
+
 #include "macros.h"
 
+#include <cstdlib>
 #include "myfs.h"
 #include "myfs-info.h"
 
@@ -594,18 +596,16 @@ void MyFS::intToChar(int number, char* buffer, int numberOfChars) {
 void MyFS::readDMap(){
             char buffer[BLOCK_SIZE];
             writeSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS*BLOCK_SIZE,0);
-            setCharBitstoBool(buffer);
-
-}
-
-
-void::MyFS::setCharBitstoBool(char* buffer) {
     for (int i = 0; i<NUM_DATA_BLOCKS*NUM_DMAP_BLOCKS; i++) {
         int whichChar = (i - (i % 8))/8 ;
         int whichBitinChar = i % 8;
         DMAP[i] = (buffer[whichChar] >> whichBitinChar) & 1;
     }
+
 }
+
+
+
 
 void::MyFS::setBitinChar(int position, bool value, char* buffer){
     int whichChar = (position - (position % 8))/8 ;
@@ -662,9 +662,15 @@ void MyFS::writeSectionByList(u_int32_t* list, const char* buf, size_t size, off
 void MyFS::setDataBlocksUnused(u_int32_t position){ // auf basis der position wird das FAT durchgesucht nach des restlichen Blöcken und diese werden auf unused gestzt. -> Rekursiv lösen
     if(position == FAT[position]){
     }else{
-        DMAP[position] = false; //Anzahl belegter Blöcke anpassen
-        MyFS::setDataBlocksUnused(FAT[position]);
+        if(DMAP[position] == true) {
+            DMAP[position] = false;
+            numberOfUsedDATABLOCKS--;
+            MyFS::setDataBlocksUnused(FAT[position]);
+        }else{
+            error("");
+        }
     }
+
 }
 
 
@@ -672,6 +678,9 @@ void MyFS::setDataBlocksUnused(u_int32_t position){ // auf basis der position wi
 void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
     int counter = 0;
     int iterator = 0;
+
+
+
     while(counter != size) {
         if (iterator == NUM_DATA_BLOCKS) {
             blockAdressBuffer = nullptr;

@@ -7,9 +7,6 @@
 //
 #include <iostream>
 #include "myfs.h"
-
-#include "myfs.cpp"
-
 #include "blockdevice.h"
 #include "macros.h"
 #include "mkfs.myfs.h"
@@ -17,7 +14,7 @@
 
 
 int main(int argc, char *argv[]) {
-
+/**
     BlockDevice device;
     device.create(argv[1]);
     if(device.open(argv[1]) < 0)
@@ -25,20 +22,19 @@ int main(int argc, char *argv[]) {
         std::cout<<"Cannot open Container file\n";
         return 1;
     }else{
-        if(initializeDevice(device) < 0){
-            std::cout<<"Cannot initialize filesystem"<<std::endl;
-            return 1;
-        }else{
+
             for (int i = 2; i < argc; i++) {
-                char *array = readFile(argv[i]);
-                writeToDevice(array);
-            }
+              //  char *array = readFile(argv[i]);
+              //  error("test");
 
         }
     }
 
     return 0;
+    */
 }
+
+/**
 
 int getsize(std::string &fileURL){
     std::ifstream file( fileURL, std::ios::binary | std::ios::ate);
@@ -61,30 +57,9 @@ char* readFile(std::string fileURL){
         inputFile.close();
 
     }else {
-        std::cout << "Error!";
         return nullptr;
     }
 
     return arr;
 }
-
-int writeToDevice(char *array){
-
-
-
-}
-
-int initializeDevice(BlockDevice &device){
-    return 0;
-}
-
-char* initializeSuperblock(){
-
-    //initalize superblock
-    char* superblock;
-    int sizeSuperblock = NUM_NAME_FILESYSTEM_BYTE + NUM_RESERVED_ENTRIES_BYTE + NUM_RESERVED_BLOCKS_BYTE + NUM_RESERVED_DATA_BYTES_BYTE;
-    superblock = new char[sizeSuperblock];
-
-
-    return superblock;
-}
+*/
