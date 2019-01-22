@@ -7,6 +7,8 @@
 //
 #include <iostream>
 #include "myfs.h"
+#include "myfs.cpp"
+
 #include "blockdevice.h"
 #include "macros.h"
 #include "mkfs.myfs.h"
@@ -14,9 +16,14 @@
 
 
 int main(int argc, char *argv[]) {
-/**
     BlockDevice device;
     device.create(argv[1]);
+     char *array;
+    MyFS filesystem;
+
+    filesystem.blockDevice = &device;
+    fuse_file_info* dummyfile = nullptr;
+
     if(device.open(argv[1]) < 0)
     {
         std::cout<<"Cannot open Container file\n";
@@ -24,19 +31,19 @@ int main(int argc, char *argv[]) {
     }else{
 
             for (int i = 2; i < argc; i++) {
-              //  char *array = readFile(argv[i]);
-              //  error("test");
-
-        }
+                array = readFile(argv[i]);
+                filesystem.fuseCreate(argv[i],getFilePermission(argv[i]),dummyfile ); //
+                size_t size = getsize(argv[i]);
+                filesystem.fuseWrite(argv[i], array,size, 0, dummyfile );
+            }
     }
 
     return 0;
-    */
+
 }
 
-/**
 
-int getsize(std::string &fileURL){
+int getsize(std::string fileURL){
     std::ifstream file( fileURL, std::ios::binary | std::ios::ate);
     return file.tellg();
 }
@@ -62,4 +69,9 @@ char* readFile(std::string fileURL){
 
     return arr;
 }
-*/
+
+mode_t getFilePermission(char* filename){
+    struct stat sb;
+
+    return sb.st_mode;
+}

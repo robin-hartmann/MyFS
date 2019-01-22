@@ -355,7 +355,7 @@ void* MyFS::fuseInit(struct fuse_conn_info *conn) {
     
     RETURN(0);
 }
-/*
+
 #ifdef __APPLE__
 int MyFS::fuseSetxattr(const char *path, const char *name, const char *value, size_t size, int flags, uint32_t x) {
 #else
@@ -374,7 +374,7 @@ int MyFS::fuseGetxattr(const char *path, const char *name, char *value, size_t s
     LOGM();
     RETURN(0);
 }
-*/
+
 /**
  * Gibt die Positon einer Datei im Root-Verzeichnis zurück.
  * Achtung: Voher nicht remDirPath() auf den Pfad anwenden!
