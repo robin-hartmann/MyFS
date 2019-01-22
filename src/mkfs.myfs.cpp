@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
 
     filesystem.blockDevice = &device;
     fuse_file_info* dummyinfo = nullptr;
+    mode_t mode;
 
     if(device.open(argv[1]) < 0)
     {
@@ -32,7 +33,7 @@ int main(int argc, char *argv[]) {
 
             for (int i = 2; i < argc; i++) {
                 array = readFile(argv[i]);
-                filesystem.fuseCreate(argv[i],getFilePermission(argv[i]),dummyinfo ); //
+                filesystem.fuseCreate(argv[i],mode,dummyinfo ); //
                 size_t size = getsize(argv[i]);
                 filesystem.fuseWrite(argv[i], array,size, 0, dummyinfo );
             }
