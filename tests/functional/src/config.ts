@@ -1,11 +1,14 @@
 import { resolve } from 'path';
+import { sync as getPkgRoot } from 'pkg-dir';
 
-const FS_ROOT = resolve(__dirname, '../../..');
-const FS_BUILD = resolve(FS_ROOT, 'cmake-build-debug/bin');
+const PKG_ROOT = getPkgRoot(__dirname) as string;
+
+const FS_ROOT = resolve(PKG_ROOT, '../..');
+const FS_BIN = resolve(FS_ROOT, 'cmake-build-debug/bin');
 
 export default Object.freeze({
   BINARIES: {
-    MKFS: resolve(FS_BUILD, 'mkfs.myfs'),
-    MOUNT: resolve(FS_BUILD, 'mount.myfs'),
+    MKFS: resolve(FS_BIN, 'mkfs.myfs'),
+    MOUNT: resolve(FS_BIN, 'mount.myfs'),
   },
 });
