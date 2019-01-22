@@ -564,7 +564,7 @@ void MyFS::intToChar(int number, char* buffer, int numberOfChars) {
 
 void MyFS::readDMap(){ // Dmap is completely rewritten each time to blockdevice - idear: write only block, which are changed
             char buffer[BLOCK_SIZE];
-            blockDevice->read(1, buffer);
+            blockDevice->read(1, buffer); //Defines anstatt der 1 verwenden zudem ist die D Map 16 Blöcke groß
             setCharBitstoBool(buffer);
 
 }
@@ -609,7 +609,7 @@ void MyFS::writeDMap(){
  */
 void MyFS::writeSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
 
-    int numberOfBlocks = ((size - (size % BLOCK_SIZE)) / BLOCK_SIZE) + 1; //Die Warnung kann ignoriert werden
+    int numberOfBlocks = (int) ((size - (size % BLOCK_SIZE)) / BLOCK_SIZE) + 1;
     u_int32_t list[numberOfBlocks];
     for (int i = 0; i < numberOfBlocks; i++) {
         list[i] = startblock + i;
@@ -745,7 +745,7 @@ int MyFS::readSBlock(){
 
     char numOfwrittenBytes[NUM_RESERVED_DATA_BYTES_BYTE];
     transferBytes(SBLOCK,NUM_RESERVED_DATA_BYTES_BYTE, NUM_FILE_SIZE_BYTE+NUM_RESERVED_ENTRIES_BYTE+NUM_RESERVED_BLOCKS_BYTE, numOfwrittenBytes, 0 );
-    numberOfwrittenBytes = charToInt(numOfwrittenBytes, NUM_RESERVED_DATA_BYTES_BYTE);
+    numberOfwrittenBytes = (u_int64_t) charToInt(numOfwrittenBytes, NUM_RESERVED_DATA_BYTES_BYTE);
 
 
     return 0;
