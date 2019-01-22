@@ -170,9 +170,38 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
 int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
     
-    // TODO: Implement this!
-    
-    RETURN(0);
+    if (!isFileExisting(path)) {
+        return EEXIST;
+    }
+    int filePosition = getFilePosition(path);
+    if (!openFiles[filePosition]) {
+        return EBADF;
+    } else if (sizeToBlocks(size) - sizeToBlocks((size_t) getFileSize(filePosition)) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) {
+        return ENOSPC;
+    }
+
+    const char* filename = remDirPath(path);
+    setDataBlocksUnused( getFirstPointer(filePosition));
+    numberOfwrittenBytes -= getFileSize(filePosition);
+    numberOfUsedDATABLOCKS -= sizeToBlocks(getFileSize(filePosition));
+
+    u_int32_t blockAdress[sizeToBlocks(size)];
+    searchfreeBlocks(size, blockAdress);
+
+    writeSectionByList(blockAdress, buf, size, offset);
+
+    numberOfUsedDATABLOCKS += sizeToBlocks(size);
+    numberOfwrittenBytes += size;
+
+    int i = 0;
+    for (; i < sizeToBlocks(size) - 1; i++) {
+        FAT[blockAdress[i]] = FAT[blockAdress[i + 1]];
+    }
+    FAT[blockAdress[i + 1]] =  FAT[blockAdress[i + 1]];
+
+    writeROOT(filePosition, filename, size, "\0", "\0", "\0", "\0", "\0", "\0", blockAdress[0]);
+
+    return size;
 }
 
 int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
@@ -607,9 +636,9 @@ void MyFS::writeDMap(){
  * @param size
  * @param offset
  */
-void MyFS::writeSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
+void MyFS::writeSection(u_int32_t startblock, const char* buffer, size_t size, off_t offset){
 
-    int numberOfBlocks = (int) ((size - (size % BLOCK_SIZE)) / BLOCK_SIZE) + 1;
+    int numberOfBlocks = sizeToBlocks(size);
     u_int32_t list[numberOfBlocks];
     for (int i = 0; i < numberOfBlocks; i++) {
         list[i] = startblock + i;
@@ -617,7 +646,7 @@ void MyFS::writeSection(u_int32_t startblock, char* buffer, size_t size, off_t o
     writeSectionByList(list, buffer, size, offset);
 }
 
-void MyFS::writeSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset) {
+void MyFS::writeSectionByList(u_int32_t* list, const char* buf, size_t size, off_t offset) {
     char buffer[BLOCK_SIZE];
     size_t numberOfWriteBytes = 0;
     size_t numberOfWrittenBytes = 0;
@@ -630,17 +659,17 @@ void MyFS::writeSectionByList(u_int32_t* list, char* buf, size_t size, off_t off
     }
 }
 
-void MyFS::setDataBlocksUnused(int &position){ // auf basis der position wird das FAT durchgesucht nach des restlichen Blöcken und diese werden auf unused gestzt. -> Rekursiv lösen
+void MyFS::setDataBlocksUnused(u_int32_t position){ // auf basis der position wird das FAT durchgesucht nach des restlichen Blöcken und diese werden auf unused gestzt. -> Rekursiv lösen
     if(position == FAT[position]){
     }else{
-        DMAP[position] = false;
+        DMAP[position] = false; //Anzahl belegter Blöcke anpassen
         MyFS::setDataBlocksUnused(FAT[position]);
     }
 }
 
 
 
-void MyFS::searchfreeBlocks(size_t size, int* blockAdressBuffer){
+void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
     int counter = 0;
     int iterator = 0;
     while(counter != size) {
@@ -682,7 +711,7 @@ int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offse
  * @return
  */
 int MyFS::readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
-    int numberOfBlocks = (int) (((size + offset) - ((size + offset) % BLOCK_SIZE)) / BLOCK_SIZE) + 1;
+    int numberOfBlocks = sizeToBlocks(size + offset);
     u_int32_t list[numberOfBlocks];
     for (u_int32_t i = 0; i < numberOfBlocks; i++) {
         list[i] = startblock + i;
@@ -778,4 +807,15 @@ int MyFS::writeROOT(u_int32_t position, const char* filename, size_t size, char*
     transferBytes(buffer, NUM_POINTER_BYTE, 0, ROOTBlock, START_POINTER_BYTE);
 
     return blockDevice->write(position + START_ROOT_BLOCKS, ROOTBlock);
+}
+
+int MyFS::sizeToBlocks(size_t size) {
+    return (int) (((size - 1) - ((size - 1) % BLOCK_SIZE)) / BLOCK_SIZE) + 1;
+}
+
+u_int32_t MyFS::getFirstPointer(int filePosition) {
+    char buffer[BLOCK_SIZE];
+    char pointer[NUM_POINTER_BYTE];
+    transferBytes(buffer, NUM_POINTER_BYTE, START_POINTER_BYTE, pointer, 0);
+    return (u_int32_t) charToInt(pointer, NUM_POINTER_BYTE);
 }

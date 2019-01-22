@@ -98,17 +98,19 @@ public:
     void writeDMap();
     void setCharBitstoBool(char* buffer);
     void setBitinChar(int position, bool value, char* buffer);
-    void setDataBlocksUnused(int &position);
-    void searchfreeBlocks(size_t size, int* blockAdressBuffer);
+    void setDataBlocksUnused(u_int32_t position);
+    void searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer);
     int readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset);
     int readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset);
-    void writeSection(u_int32_t startblock, char* buffer, size_t size, off_t offset);
-    void writeSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset);
+    void writeSection(u_int32_t startblock,const char* buffer, size_t size, off_t offset);
+    void writeSectionByList(u_int32_t* list, const char* buf, size_t size, off_t offset);
     void writeFAT();
     void readFAT();
     int writeSBLOCK();
     int writeROOT(u_int32_t position, const char* filename, size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock);
     int readSBlock();
+    int sizeToBlocks(size_t size);
+    u_int32_t getFirstPointer(int filePosition);
 };
 
 #endif /* myfs_h */
