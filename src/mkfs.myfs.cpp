@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     MyFS filesystem;
 
     filesystem.blockDevice = &device;
-    fuse_file_info* dummyfile = nullptr;
+    fuse_file_info* dummyinfo = nullptr;
 
     if(device.open(argv[1]) < 0)
     {
@@ -32,9 +32,9 @@ int main(int argc, char *argv[]) {
 
             for (int i = 2; i < argc; i++) {
                 array = readFile(argv[i]);
-                filesystem.fuseCreate(argv[i],getFilePermission(argv[i]),dummyfile ); //
+                filesystem.fuseCreate(argv[i],getFilePermission(argv[i]),dummyinfo ); //
                 size_t size = getsize(argv[i]);
-                filesystem.fuseWrite(argv[i], array,size, 0, dummyfile );
+                filesystem.fuseWrite(argv[i], array,size, 0, dummyinfo );
             }
     }
 
@@ -69,9 +69,10 @@ char* readFile(std::string fileURL){
 
     return arr;
 }
-
+/**
 mode_t getFilePermission(char* filename){
     struct stat sb;
 
     return sb.st_mode;
 }
+*/
