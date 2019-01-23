@@ -70,10 +70,23 @@ int MyFS::fuseReadlink(const char *path, char *link, size_t size) {
 
 int MyFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     LOGM();
-    
-    // TODO: Implement this!
-    
-    RETURN(0);
+    if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
+        return ENOENT;
+    } else if (isFileExisting(path)) {
+        return EEXIST;
+    } else if (numberOfFiles >= 64) {
+        return ENOSPC;
+    }
+    u_int32_t freePosition = 0;
+    const char* filename = remDirPath(path);
+    size_t lentghOFFilename = getSizeOfCharArray(filename);
+
+    for(;FILENAME[freePosition][0] != '\0'; freePosition++);
+
+    transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
+    numberOfFiles++;
+    writeROOT(freePosition, filename, 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+    RETURN(0);;
 }
 
 int MyFS::fuseMkdir(const char *path, mode_t mode) {
@@ -83,9 +96,22 @@ int MyFS::fuseMkdir(const char *path, mode_t mode) {
 
 int MyFS::fuseUnlink(const char *path) {
     LOGM();
-    
-    // TODO: Implement this!
-    
+    if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
+        return ENOENT;
+    } else if (isFileExisting(path)) {
+        return EEXIST;
+    }
+
+    int filePosition = getFilePosition(path);
+    if(getFileSize(filePosition) > 0) {
+        setDataBlocksUnused(getFirstPointer(filePosition));
+    }
+
+    numberOfwrittenBytes -= getFileSize(filePosition);
+    numberOfUsedDATABLOCKS -= sizeToBlocks(getFileSize(filePosition));
+
+    writeROOT(filePosition, "\0", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+
     RETURN(0);
 }
 
@@ -183,7 +209,9 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     }
 
     const char* filename = remDirPath(path);
-    setDataBlocksUnused( getFirstPointer(filePosition));
+    if (getFileSize(filePosition) > 0) {
+        setDataBlocksUnused( getFirstPointer(filePosition));
+    }
     numberOfwrittenBytes -= getFileSize(filePosition);
     numberOfUsedDATABLOCKS -= sizeToBlocks(getFileSize(filePosition));
 
@@ -803,7 +831,9 @@ int MyFS::readSBlock(){
 int MyFS::writeROOT(u_int32_t position, const char* filename, size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock) {
     char ROOTBlock[BLOCK_SIZE];
     char buffer[4];
-    transferBytes(filename, NUM_FILENAME_BYTE, 0, ROOTBlock, START_FILENAME_BYTE);
+    int lengthOfFilename = getSizeOfCharArray(filename);
+
+    transferBytes(filename, lengthOfFilename < NUM_FILENAME_BYTE? lengthOfFilename + 1 : NUM_FILENAME_BYTE, 0, ROOTBlock, START_FILENAME_BYTE);
 
     intToChar((int) size, buffer, NUM_FILE_SIZE_BYTE);
     transferBytes(buffer, NUM_FILE_SIZE_BYTE, 0, ROOTBlock, START_FILE_SIZE_BYTE);
