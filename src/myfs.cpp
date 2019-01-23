@@ -619,7 +619,7 @@ void MyFS::intToChar(int number, char* buffer, int numberOfChars) {
 
 void MyFS::readDMap(){
             char buffer[BLOCK_SIZE];
-            writeSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS*BLOCK_SIZE,0);
+           readSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS*BLOCK_SIZE,0);
     for (int i = 0; i<NUM_DATA_BLOCKS*NUM_DMAP_BLOCKS; i++) {
         int whichChar = (i - (i % 8))/8 ;
         int whichBitinChar = i % 8;

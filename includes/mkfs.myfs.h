@@ -9,6 +9,7 @@
 
 #include <string>
 
+char* getFilePath(char* path, int size);
 
 //int getsize(std::string fileURL);
 //char* readFile(std::string fileURL);
