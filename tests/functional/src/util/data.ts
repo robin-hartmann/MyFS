@@ -17,7 +17,7 @@ export const generateData = (byteCount: number) => {
   }
 
   if (remainingBytes) {
-    throw 'remainingBytes must be 0';
+    throw new Error('remainingBytes must be 0');
   }
 
   return data;

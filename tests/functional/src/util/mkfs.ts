@@ -19,6 +19,6 @@ export const mkfs = async (t: ExecutionContext) => {
   try {
     await exec(`"${config.BINARIES.MKFS}" "${t.context.containerFile}"`);
   } catch (e) {
-    throw `Error while creating container\n${e}`;
+    throw new Error(`Error while creating container\n${e}`);
   }
 };
