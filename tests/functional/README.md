@@ -44,6 +44,12 @@ npm test
 
 This project includes task definitions for Visual Studio Code. Just open the parent folder of the `package.json` file in VS Code and then run the task `Run tests`.
 
+## Debugging with VS Code
+
+1. Set a breakpoint in a file inside the `src` folder
+1. Inside the folder `transpiled` open the `.spec` test file you want to run
+1. Run the debugger (by default `F5`)
+
 ## Built With
 
 * [AVA](https://github.com/avajs/ava) - Futuristic test runner for Node.js

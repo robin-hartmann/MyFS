@@ -4,6 +4,23 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Build",
+      "type": "shell",
+      "command": "npm run build --silent",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [
+        "$tsc",
+        "$tslint5"
+      ]
+    },
+    {
       "label": "Run tests",
       "type": "shell",
       "command": "npm run test --silent",
