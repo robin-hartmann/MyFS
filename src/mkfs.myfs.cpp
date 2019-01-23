@@ -14,8 +14,13 @@
 #include "mkfs.myfs.h"
 #include  <fstream>
 
-using namespace std;
-
+#define DEVICEPATH "/home/robin/Schreibtisch/MyFs/test"
+int main(int argc, char *argv[]) {
+    BlockDevice device;
+    device.create(argv[1]);
+    const char* filename;
+     char *array;
+    MyFS filesystem;
 
 int main(int argc, char *argv[]) {
     BlockDevice* device = new BlockDevice();
@@ -27,16 +32,16 @@ int main(int argc, char *argv[]) {
     mode_t mode;
 
 
-    for (int i = 2; i < argc; ++i)
-    {
-        ifstream file (argv[i], ifstream::binary);
-        size = file.tellg();
-        char array[size];
-        file.read(array, size);
-        file.close();
-        cout<<array<<endl;
-        filesystem.fuseCreate(argv[i], mode, dummyinfo);
-        filesystem.fuseWrite(argv[i], array,size, 0, dummyinfo );
+            for (int i = 2; i < argc; i++) {
+                filesystem.fuseOpendir("/", nullptr);
+                filename = "/English";
+                array = readFile(argv[i]);
+                filesystem.fuseCreate(filename,mode,dummyinfo ); //
+                size_t size = getsize(argv[i]);
+                filesystem.fuseOpen(filename, nullptr);
+                filesystem.fuseWrite(filename, array,size, 0, dummyinfo );
+                filesystem.fuseRelease(filename, nullptr);
+            }
     }
 
 
