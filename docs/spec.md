@@ -10,8 +10,7 @@ Creates and initializes the block device.
   `mkfs.myfs <container-file> [file1, file2, ...]`
     - selected files are added to the root directory no matter from which directory they originate
         - amount of files is limited to `NUM_DIR_ENTRIES`
-        - adding a file that already exists causes an error
-            - `EEXIST`
+        - throws `EEXIST` when adding a file that already exists
     - most attributes (name, size, `atime`, `mtime`, `ctime`) are copied from the original files
         - length of name is limited to `NAME_LENGTH`
     - user and group id are set depending on the current user
@@ -28,8 +27,7 @@ Mounts the block device.
     - ...its own nlink: `2`
     - ...a file's nlink: `1`
 - amount of opened files is limited to `NUM_OPEN_FILES`
-- trying to add, edit or delete files or adding a directory causes an error
-    - `EROFS`
+- throws `EACCES` when trying to add, edit or delete files or adding a directory
 - the following operations need to be implemented (minimum):
     - container
         - MyFS::fuseInit()
@@ -38,13 +36,21 @@ Mounts the block device.
         - MyFS::fuseOpendir()
             - can be opened together with the container (fuseInit())
         - MyFS::fuseReaddir()
+            - throws `ENOTDIR` when called for a directory other than root
         - MyFS::fuseReleasedir()
             - can be released with the container (fuseRelease())
         - MyFS::fuseGettatr()
+            - throws `ENOENT` when called for a an entry that doesn't exist
     - file
         - MyFS::fuseOpen()
         - MyFS::fuseRead()
+            - needs to be buffered
         - MyFS::fuseRelease()
+        - relevant errors for files
+            - throws `ENFILE` when too many files are open
+            - throws `ENOENT` when a file wasn't found
+            - throws `EBADF` when `fileInfo->fh` doesn't point to an open file
+            - throws `ENXIO` when trying to access an index outside the file's boundaries
 - for each opened file the last read block should be buffered
 
 ## Part 2: Read-Write File System
@@ -56,9 +62,25 @@ Mounts the block device.
 
 ### extend `mount.myfs`
 
-- files on the block device can be read, edited, deleted and new files can be added
-- adding a directory causes an error
-    - `ENOSYS`
+- files on the block device can be read, edited (overwritten, appended), deleted and new files can be added
+- throws `EACCES` when trying to add a directory
+- the following operations need to be implemented additionally (minimum):
+    - create new file
+        - MyFS::fuseMknod()
+            - is only called if MyFS::fuseGetattr() has returned `ENOENT` before
+            - throws `EEXIST` if file already exists
+            - throws `ENOSPC` if there is not enough space
+        - MyFS::fuseCreate()
+            - only if needed
+    - (over)write file
+        - MyFS::write()
+            - the file has to be opened beforehand, so `fileInfo` should be used
+            - needs to be buffered
+            - throws `EBADF` when `fileInfo->fh` doesn't point to an open file
+            - throws `ENOSPC` if there is not enough space
+    - delete file
+        - MyFS::unlink()
+            - throws `ENOENT` if file doesn't exist
 
 # Tests
 
