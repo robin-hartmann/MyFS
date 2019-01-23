@@ -13,71 +13,74 @@
 #include "macros.h"
 #include "mkfs.myfs.h"
 #include  <fstream>
+#include <string>
+
+using namespace std;
+
 
 int main(int argc, char *argv[]) {
-    BlockDevice device;
-    device.create(argv[1]);
-    const char* filename;
-    char *array;
+    BlockDevice *device = new BlockDevice();
+    device->create(argv[1]);
     MyFS filesystem;
-
-    filesystem.blockDevice = &device;
-    fuse_file_info* dummyinfo = nullptr;
+    size_t size;
+    filesystem.blockDevice = device;
+    fuse_file_info *dummyinfo = nullptr;
     mode_t mode;
 
-    if(device.open(argv[1]) < 0)
-    {
-        std::cout<<"Cannot open Container file\n";
-        return 1;
-    }else{
 
-        for (int i = 2; i < argc; i++) {
-            filesystem.fuseOpendir("/", nullptr);
-            filename = "/English";
-            array = readFile(argv[i]);
-            filesystem.fuseCreate(filename,mode,dummyinfo ); //
-            size_t size = getsize(argv[i]);
-            filesystem.fuseOpen(filename, nullptr);
-            filesystem.fuseWrite(filename, array,size, 0, dummyinfo );
-            filesystem.fuseRelease(filename, nullptr);
+    filesystem.writeROOT(0, ".", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+    filesystem.writeROOT(1, "..", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+    char *memblock;
+    for (int i = 2; i < argc; ++i) {
+
+        ifstream file(argv[i], ios::in | ios::binary | ios::ate);
+        if (file.is_open()) {
+            size = file.tellg();
+            memblock = new char[size];
+            file.seekg(0, ios::beg);
+            file.read(memblock, size);
+            file.close();
+
+            string nameasString = argv[i];
+            int pathsize = nameasString.size();
+            cout << getFilePath(argv[i], pathsize) << endl;
+
+            int errorCode = filesystem.fuseCreate(getFilePath(argv[i], pathsize), mode, dummyinfo);
+            cout << errorCode << endl;
+            if (errorCode != EEXIST) {
+                filesystem.fuseOpen(getFilePath(argv[i], pathsize), dummyinfo);
+                filesystem.fuseWrite(getFilePath(argv[i], pathsize), memblock, size, 0, dummyinfo);
+                filesystem.fuseRelease(getFilePath(argv[i], pathsize), dummyinfo);
+            } else {
+                delete[] memblock;
+                cout << "error" << endl;
+                error("File alreasy exists");
+            }
+            delete[] memblock;
+        } else {
+            error("file is not open");
         }
     }
 
-    return 0;
 
+    filesystem.fuseDestroy();
 }
 
-
-int getsize(std::string fileURL){
-    std::ifstream file( fileURL, std::ios::binary | std::ios::ate);
-    return file.tellg();
-}
-
-
-char* readFile(std::string fileURL){
-    int size = getsize(fileURL);
-    std::cout<<size<<std::endl;
-    std::ifstream inputFile (fileURL);
-    char* arr ;
-    arr = new char[size];
-
-    if (inputFile.good()) {
-        for (int i = 0; i < size; i++) {
-            inputFile >> arr[i];
+char *getFilePath(char *path, int size) {
+    bool found = false;
+    int count = size - 1;
+    while (!found) {
+        if (path[count] == '/') {
+            found = true;
+            count++;
         }
-
-        inputFile.close();
-
-    }else {
-        return nullptr;
+        count--;
     }
+    char *pointer;
+    pointer = &path[count];
 
-    return arr;
-}
-/**
-mode_t getFilePermission(char* filename){
-    struct stat sb;
 
-    return sb.st_mode;
+    return pointer;
+
 }
-*/
+

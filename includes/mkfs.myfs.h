@@ -9,7 +9,4 @@
 
 #include <string>
 
-
-int getsize(std::string fileURL);
-char* readFile(std::string fileURL);
-mode_t getFilePermission(char* filename);
+char* getFilePath(char* path, int size);
