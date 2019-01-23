@@ -178,7 +178,7 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     int filePosition = getFilePosition(path);
     if (!openFiles[filePosition]) {
         return EBADF;
-    } else if (sizeToBlocks(size) - sizeToBlocks((size_t) getFileSize(filePosition)) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) {
+    } else if (sizeToBlocks(size) - sizeToBlocks((size_t) getFileSize(filePosition)) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) { //abändern
         return ENOSPC;
     }
 
@@ -196,10 +196,10 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     numberOfwrittenBytes += size;
 
     int i = 0;
-    for (; i < sizeToBlocks(size) - 1; i++) {
-        FAT[blockAdress[i]] = FAT[blockAdress[i + 1]];
+    for (; i < sizeToBlocks(size); i++) {
+        FAT[blockAdress[i]] = blockAdress[i + 1];
     }
-    FAT[blockAdress[i + 1]] =  FAT[blockAdress[i + 1]];
+    FAT[blockAdress[i]] =  blockAdress[i];
 
     writeROOT(filePosition, filename, size, "\0", "\0", "\0", "\0", "\0", "\0", blockAdress[0]);
 
@@ -382,7 +382,7 @@ int MyFS::fuseGetxattr(const char *path, const char *name, char *value, size_t s
  * @return -1 wenn Datei nicht existiert. Ansonsten die DateiPosition
  */
 int MyFS::getFilePosition(const char *path) {
-    if (isFilenameCorrect(path)) {
+    if (!isFilenameCorrect(path)) {
         return -1;
     }
     const char *StartOfFilename = remDirPath(path);
@@ -420,16 +420,12 @@ int MyFS::getFileSize(int position) {
 int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
     u_int32_t i = 0;
     int64_t j = offset;
-    char buffer[size];
+    char buffer[BLOCK_SIZE];
 
     blockDevice->read(blockNo, buffer); //wird unötig gelesen wenn size = 0
 
-    if (size + offset <= BD_BLOCK_SIZE) {
-        while (i < size) {
-            buf[i] = buffer[j];
-            i++;
-            j++;
-        }
+    if (size + offset <= BD_BLOCK_SIZE){
+        transferBytes(buffer, size, offset, buf, 0);
     }
     return 0;
 }
@@ -521,7 +517,7 @@ const char* MyFS::remDirPath(const char *path) {
  * Überprüft, ob der Filename correkt ist.
  * Achtung: Auf den Dateipfad vorher nicht removeDirPath() ausführen!
  * @param path Dateipfad / Dateiname
- * @return true, wenn Dateiname correkt ist
+ * @return true, wenn Dateiname korrekt ist
  */
 bool MyFS::isFilenameCorrect(const char *path) {
     const char *startOfFilename = remDirPath(path);
@@ -547,9 +543,9 @@ bool MyFS::isFilenameCorrect(const char *path) {
 bool MyFS::isDirPathCorrect(const char *path) {
     const char *dir = remDirPath(path);
     if (*(dir) == '\0' || ((*dir == '/' || *dir == '.') && *(dir + 1) == '\0') || (*(dir) == '.' && *(dir + 1) == '.' && *(dir + 2) == '\0')) {
-        return true;
+        return false;
     }
-    return false;
+    return true;
 }
 
 /**
@@ -678,7 +674,7 @@ void MyFS::setDataBlocksUnused(u_int32_t position){ // auf basis der position wi
 void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
     int counter = 0;
     int iterator = 0;
-
+    size = sizeToBlocks(size);
 
 
     while(counter != size) {
@@ -687,7 +683,7 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
             counter = size;
         } else {
             if (DMAP[iterator] == false) {
-                blockAdressBuffer[counter] = iterator;
+                blockAdressBuffer[counter] = START_DATA_BLOCKS + iterator;
                 counter++;
             }
             iterator++;
@@ -823,8 +819,7 @@ int MyFS::sizeToBlocks(size_t size) {
 }
 
 u_int32_t MyFS::getFirstPointer(int filePosition) {
-    char buffer[BLOCK_SIZE];
     char pointer[NUM_POINTER_BYTE];
-    transferBytes(buffer, NUM_POINTER_BYTE, START_POINTER_BYTE, pointer, 0);
+    readBlock(START_ROOT_BLOCKS + filePosition,pointer, NUM_POINTER_BYTE, START_POINTER_BYTE);
     return (u_int32_t) charToInt(pointer, NUM_POINTER_BYTE);
 }
