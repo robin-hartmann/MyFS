@@ -20,7 +20,6 @@ using namespace std;
 int main(int argc, char *argv[]) {
     BlockDevice* device = new BlockDevice();
     device->create(argv[1]);
-      char *array;
     MyFS filesystem ;
     size_t size;
     filesystem.blockDevice = device;
