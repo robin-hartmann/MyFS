@@ -10,8 +10,6 @@
 #include <string>
 
 
-int getsize(std::string &fileURL);
-char* readFile(std::string fileURL);
-int writeToDevice(char *array);
-int initializeDevice(BlockDevice &device);
-char* initializeSuperblock();
+//int getsize(std::string fileURL);
+//char* readFile(std::string fileURL);
+// mode_t getFilePermission(char* filename);

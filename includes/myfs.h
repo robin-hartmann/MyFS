@@ -12,7 +12,7 @@
 #include <fuse.h>
 #include <cmath>
 #include <errno.h>
-
+#include <string.h>
 #include "blockdevice.h"
 #include "myfs-structs.h"
 
@@ -20,19 +20,24 @@ class MyFS {
 private:
     static MyFS *_instance;
     FILE *logFile;
-    BlockDevice *blockDevice;
     
 public:
     static MyFS *Instance();
     
     // TODO: Add attributes of your file system here
 
-    bool DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8];
-    char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH];
-    int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK];
+    BlockDevice *blockDevice;
+
+    bool DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8] = {};
+    char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH + 1];
+    int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK] = {};
     bool isDirOpen = false;
     bool openFiles[NUM_ROOT_BLOCKS];
 
+    int numberOfFiles = 0;
+    int numberOfUsedDATABLOCKS = 0;
+    u_int64_t numberOfwrittenBytes = 0;
+    
     MyFS();
     ~MyFS();
     
@@ -81,15 +86,30 @@ public:
     u_int32_t getSizeOfCharArray(const char *buf);
     int readBlock(u_int32_t blockNo,char *buf, size_t size, off_t offset);
     void transferBytes(char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff);
+    void transferBytes(const char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff);
     int getFileSize(int position);
     bool isFileExisting(const char *path);
     const char* remDirPath(const char *path);
     bool isFilenameCorrect(const char* path);
     bool isDirPathCorrect(const char *path);
-    int charToInt(char* chars);
-    void intToChar(int number, char* buffer);
-    void readStructures();
-    
+    int charToInt(char* chars, int numberOfChars);
+    void intToChar(int number, char* buffer, int numberOfChars);
+    void readDMap();
+    void writeDMap();
+    void setBitinChar(int position, bool value, char* buffer);
+    void setDataBlocksUnused(u_int32_t position);
+    void searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer);
+    int readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset);
+    int readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset);
+    void writeSection(u_int32_t startblock,const char* buffer, size_t size, off_t offset);
+    void writeSectionByList(u_int32_t* list, const char* buf, size_t size, off_t offset);
+    void writeFAT();
+    void readFAT();
+    int writeSBLOCK();
+    int writeROOT(u_int32_t position, const char* filename, size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock);
+    int readSBlock();
+    int sizeToBlocks(size_t size);
+    u_int32_t getFirstPointer(int filePosition);
 };
 
 #endif /* myfs_h */

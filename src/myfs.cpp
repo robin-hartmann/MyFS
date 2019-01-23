@@ -15,8 +15,10 @@
 #define DEBUG_METHODS
 #define DEBUG_RETURN_VALUES
 
+
 #include "macros.h"
 
+#include <cstdlib>
 #include "myfs.h"
 #include "myfs-info.h"
 
@@ -53,8 +55,8 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
         return 0;
     } else if (filenameIsCorrect) {
         char buffer[NUM_ACCESS_RIGHT_BYTE];
-        readBlock(getFilePosition(path) + START_ROOT_BLOCKS, buffer, NUM_ACCESS_RIGHT_BYTE, START_ACCESS_RIGHT_BYTE);
-        statbuf->st_mode = charToInt(buffer);
+        readBlock((u_int32_t ) getFilePosition(path) + START_ROOT_BLOCKS, buffer, NUM_ACCESS_RIGHT_BYTE, START_ACCESS_RIGHT_BYTE);
+        statbuf->st_mode = charToInt(buffer, NUM_ACCESS_RIGHT_BYTE);
         statbuf->st_nlink = 1;
         return 0;
     }
@@ -68,10 +70,23 @@ int MyFS::fuseReadlink(const char *path, char *link, size_t size) {
 
 int MyFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     LOGM();
-    
-    // TODO: Implement this!
-    
-    RETURN(0);
+    if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
+        return ENOENT;
+    } else if (isFileExisting(path)) {
+        return EEXIST;
+    } else if (numberOfFiles >= 64) {
+        return ENOSPC;
+    }
+    u_int32_t freePosition = 0;
+    const char* filename = remDirPath(path);
+    size_t lentghOFFilename = getSizeOfCharArray(filename);
+
+    for(;FILENAME[freePosition][0] != '\0'; freePosition++);
+
+    transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
+    numberOfFiles++;
+    writeROOT(freePosition, filename, 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+    RETURN(0);;
 }
 
 int MyFS::fuseMkdir(const char *path, mode_t mode) {
@@ -81,9 +96,22 @@ int MyFS::fuseMkdir(const char *path, mode_t mode) {
 
 int MyFS::fuseUnlink(const char *path) {
     LOGM();
-    
-    // TODO: Implement this!
-    
+    if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
+        return ENOENT;
+    } else if (isFileExisting(path)) {
+        return EEXIST;
+    }
+
+    int filePosition = getFilePosition(path);
+    if(getFileSize(filePosition) > 0) {
+        setDataBlocksUnused(getFirstPointer(filePosition));
+    }
+
+    numberOfwrittenBytes -= getFileSize(filePosition);
+    numberOfUsedDATABLOCKS -= sizeToBlocks(getFileSize(filePosition));
+
+    writeROOT(filePosition, "\0", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+
     RETURN(0);
 }
 
@@ -127,6 +155,7 @@ int MyFS::fuseUtime(const char *path, struct utimbuf *ubuf) {
     return 0;
 }
 
+//Fertig
 int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
     
@@ -138,6 +167,7 @@ int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     return EEXIST;
 }
 
+//Nochmal ändern aufgrund neuer Methoden
 int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
 
@@ -150,13 +180,13 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
         if (getFileSize(actuallFATPosition) > 0) {
             for (; i >= BLOCK_SIZE && !endOfFile; i = BLOCK_SIZE) {
                 actuallFATPosition == FAT[actuallFATPosition] ? endOfFile = true
-                                                              : actuallFATPosition = FAT[actuallFATPosition];
+                                                              : (actuallFATPosition = FAT[actuallFATPosition]);
                 actuallFATPosition = FAT[actuallFATPosition];
             }
             for (u_int64_t j = 0; j < size && !endOfFile; j += BLOCK_SIZE) {
-                readBlock(actuallFATPosition + START_DATA_BLOCKS, buffer, BLOCK_SIZE - i, i);
+                readBlock((u_int32_t ) actuallFATPosition + START_DATA_BLOCKS, buffer, BLOCK_SIZE - i, i);
                 transferBytes(buffer, j + BLOCK_SIZE < size ? BLOCK_SIZE - i : size - j, i, buf, j);
-                actuallFATPosition == FAT[actuallFATPosition] ? endOfFile = true : actuallFATPosition = FAT[actuallFATPosition];
+                actuallFATPosition == FAT[actuallFATPosition] ? endOfFile = true : (actuallFATPosition = FAT[actuallFATPosition]);
 
                 i = 0;
             }
@@ -168,9 +198,40 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
 int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
     
-    // TODO: Implement this!
-    
-    RETURN(0);
+    if (!isFileExisting(path)) {
+        return EEXIST;
+    }
+    int filePosition = getFilePosition(path);
+    if (!openFiles[filePosition]) {
+        return EBADF;
+    } else if (sizeToBlocks(size) - sizeToBlocks((size_t) getFileSize(filePosition)) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) { //abändern
+        return ENOSPC;
+    }
+
+    const char* filename = remDirPath(path);
+    if (getFileSize(filePosition) > 0) {
+        setDataBlocksUnused( getFirstPointer(filePosition));
+    }
+    numberOfwrittenBytes -= getFileSize(filePosition);
+    numberOfUsedDATABLOCKS -= sizeToBlocks(getFileSize(filePosition));
+
+    u_int32_t blockAdress[sizeToBlocks(size)];
+    searchfreeBlocks(size, blockAdress);
+
+    writeSectionByList(blockAdress, buf, size, offset);
+
+    numberOfUsedDATABLOCKS += sizeToBlocks(size);
+    numberOfwrittenBytes += size;
+
+    int i = 0;
+    for (; i < sizeToBlocks(size); i++) {
+        FAT[blockAdress[i]] = blockAdress[i + 1];
+    }
+    FAT[blockAdress[i]] =  blockAdress[i];
+
+    writeROOT(filePosition, filename, size, "\0", "\0", "\0", "\0", "\0", "\0", blockAdress[0]);
+
+    return size;
 }
 
 int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
@@ -189,7 +250,6 @@ int MyFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     if(isFileExisting(path)) {
         openFiles[getFilePosition(path)] = false;
     }
-    
     RETURN(0);
 }
 
@@ -208,9 +268,9 @@ int MyFS::fuseRemovexattr(const char *path, const char *name) {
     RETURN(0);
 }
 
+//Fertig
 int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-    // TODO: Implement this!
     if(!isDirPathCorrect(path)) {
         RETURN(ENOTDIR);
     }
@@ -240,14 +300,14 @@ int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
     // <<< My new code
 }
 
+//Fertig
 int MyFS::fuseReleasedir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-    // TODO: Implement this!
+
     if(!isDirPathCorrect(path)) {
         RETURN(ENOTDIR);
     }
     isDirOpen = false;
-
 
     RETURN(0);
 }
@@ -262,15 +322,34 @@ int MyFS::fuseTruncate(const char *path, off_t offset, struct fuse_file_info *fi
     RETURN(0);
 }
 
+//Fertig 2.0
 int MyFS::fuseCreate(const char *path, mode_t mode, struct fuse_file_info *fileInfo) {
     LOGM();
-    
-    // TODO: Implement this!
-    
+    if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
+        return ENOENT;
+    } else if (isFileExisting(path)) {
+        return EEXIST;
+    } else if (numberOfFiles >= 64) {
+        return ENOSPC;
+    }
+    u_int32_t freePosition = 0;
+    const char* filename = remDirPath(path);
+    size_t lentghOFFilename = getSizeOfCharArray(filename);
+
+    for(;FILENAME[freePosition][0] != '\0'; freePosition++);
+
+    transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
+    numberOfFiles++;
+    writeROOT(freePosition, filename, 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
     RETURN(0);
 }
 
 void MyFS::fuseDestroy() {
+    writeSBLOCK();
+    writeDMap();
+    writeFAT();
+    blockDevice->close();
+    delete blockDevice;
     LOGM();
 }
 
@@ -292,8 +371,14 @@ void* MyFS::fuseInit(struct fuse_conn_info *conn) {
         LOGF("Container file name: %s", ((MyFsInfo *) fuse_get_context()->private_data)->contFile);
         
         // TODO: Implement your initialization methods here
-        readStructures();
-        // MYFsInfo ist ein Struct -> darauf wird ein pointer erzeugt um an den namen des containers zu kommen
+        BlockDevice* newblockDevice = new BlockDevice(BLOCK_SIZE);
+        newblockDevice->open(((MyFsInfo *) fuse_get_context()->private_data)->contFile);
+        this->blockDevice = newblockDevice;
+
+        readSBlock();
+        readDMap();
+        readFAT();
+
     }
     
     RETURN(0);
@@ -307,6 +392,7 @@ int MyFS::fuseSetxattr(const char *path, const char *name, const char *value, si
     LOGM();
     RETURN(0);
 }
+
     
 #ifdef __APPLE__
 int MyFS::fuseGetxattr(const char *path, const char *name, char *value, size_t size, uint x) {
@@ -317,8 +403,14 @@ int MyFS::fuseGetxattr(const char *path, const char *name, char *value, size_t s
     RETURN(0);
 }
 
+/**
+ * Gibt die Positon einer Datei im Root-Verzeichnis zurück.
+ * Achtung: Voher nicht remDirPath() auf den Pfad anwenden!
+ * @param path Dateipfad + Dateiname
+ * @return -1 wenn Datei nicht existiert. Ansonsten die DateiPosition
+ */
 int MyFS::getFilePosition(const char *path) {
-    if (isFilenameCorrect(path)) {
+    if (!isFilenameCorrect(path)) {
         return -1;
     }
     const char *StartOfFilename = remDirPath(path);
@@ -332,51 +424,73 @@ int MyFS::getFilePosition(const char *path) {
     return -1;
 }
 
+/**
+ * Gibt die Dateigröße einer Datei zurück
+ * @param position Die position der Datei im Root-Verzeichnis (getFilePosition())
+ * @return größe der Datei
+ */
 int MyFS::getFileSize(int position) {
     char buffer[NUM_FILE_SIZE_BYTE];
     this->readBlock(START_ROOT_BLOCKS + position, buffer, NUM_FILE_SIZE_BYTE, START_FILE_SIZE_BYTE);
 
-    return (((int) buffer[0])<<8) + ((int) buffer[1]);
+    return charToInt(buffer, NUM_FILE_SIZE_BYTE);
 }
 
 //TODO implement return value
 /**
  * Saves the wanted block in the given Char Array.
- * @var blockNo Block you want to read from the device
- * @var *buf buffe, where you want to save the Data. Have to be >= size
- * @var size number of chars you want to get. Have to be given: size + offset <= BD_Block_Size
- * @var offset number of char you want to pass before reading. size + offset <= BD_Block-Size
+ * @param blockNo Block you want to read from the device
+ * @param buf buffer, where you want to save the Data. Have to be >= size
+ * @param size number of chars you want to get. Have to be given: size + offset <= BD_Block_Size
+ * @param offset number of char you want to pass before reading. size + offset <= BD_Block-Size
  * @return
  */
 int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
     u_int32_t i = 0;
     int64_t j = offset;
-    char buffer[size];
+    char buffer[BLOCK_SIZE];
 
-    blockDevice->read(blockNo, buffer);
+    blockDevice->read(blockNo, buffer); //wird unötig gelesen wenn size = 0
 
-    if (size + offset <= BD_BLOCK_SIZE) {
-        while (i < size) {
-            buf[i] = buffer[j];
-            i++;
-            j++;
-        }
+    if (size + offset <= BD_BLOCK_SIZE){
+        transferBytes(buffer, size, offset, buf, 0);
     }
     return 0;
 }
 
+/**
+ * Schreibt Bytes aus dem ersten Buffer, in den zweiten Buffer.
+ * @param firstBuf Erster Buffer
+ * @param size  Anzahl der Bytes, die übertragen werden soll
+ * @param firstOff Offset, ab welcher Stelle angefangen werden soll zu lesen
+ * @param secondBuf Zweiter Buffer
+ * @param secondOff Offset, ab welcher Stelle angefangen werden soll zu schreiben
+ */
 void MyFS::transferBytes(char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff) {
     for(u_int64_t i = 0; i < size; i++) {
         *(secondBuf + secondOff + i) = *(firstBuf + firstOff + i);
     }
 }
 
+/**
+ * Schreibt Bytes aus dem ersten Buffer, in den zweiten Buffer.
+ * @param firstBuf Erster Buffer
+ * @param size  Anzahl der Bytes, die übertragen werden soll
+ * @param firstOff Offset, ab welcher Stelle angefangen werden soll zu lesen
+ * @param secondBuf Zweiter Buffer
+ * @param secondOff Offset, ab welcher Stelle angefangen werden soll zu schreiben
+ */
+void MyFS::transferBytes(const char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff) {
+    for(u_int64_t i = 0; i < size; i++) {
+        *(secondBuf + secondOff + i) = *(firstBuf + firstOff + i);
+    }
+}
 
-//TODO Was wenn Array größer 32 Bit Int?
+
 /**
  * Return the Size of the Char-Array.
  * '\0' not included.
- * @var *buf pointer auf das char Array
+ * @param buf pointer auf das char Array
  * @return size of the Array
  */
 u_int32_t MyFS::getSizeOfCharArray(char *buf) {
@@ -387,6 +501,12 @@ u_int32_t MyFS::getSizeOfCharArray(char *buf) {
     return size;
 }
 
+/**
+ * Return the Size of the Char-Array.
+ * '\0' not included.
+ * @param buf pointer auf das char Array
+ * @return size of the Array
+ */
 u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
     u_int32_t size = 0;
     while(buf[size] != '\0') {
@@ -395,6 +515,11 @@ u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
     return size;
 }
 
+/**
+ * Entfernt den Dateipfad vom Dateinamen.
+ * @param path Dateipfad / Dateiname
+ * @return Dateiname
+ */
 const char* MyFS::remDirPath(const char *path) {
     bool removedPath = false;
     int NumOfPathChars = 0;
@@ -416,13 +541,23 @@ const char* MyFS::remDirPath(const char *path) {
     return (path + NumOfPathChars);
 }
 
-
+/**
+ * Überprüft, ob der Filename correkt ist.
+ * Achtung: Auf den Dateipfad vorher nicht removeDirPath() ausführen!
+ * @param path Dateipfad / Dateiname
+ * @return true, wenn Dateiname korrekt ist
+ */
 bool MyFS::isFilenameCorrect(const char *path) {
-    const char *StartOfFilename = remDirPath(path);
-    if (getSizeOfCharArray(StartOfFilename) > NAME_LENGTH || (*StartOfFilename == '/' || *StartOfFilename == '\0' ||
-    (*StartOfFilename == '.' && (*(StartOfFilename + 1) == '\0' || (*(StartOfFilename + 1) == '.' &&
-    *(StartOfFilename + 2) == '\0' ))))) {
+    const char *startOfFilename = remDirPath(path);
+    if (getSizeOfCharArray(startOfFilename) > NAME_LENGTH || (*startOfFilename == '/' || *startOfFilename == '\0' ||
+    (*startOfFilename == '.' && (*(startOfFilename + 1) == '\0' || (*(startOfFilename + 1) == '.' &&
+    *(startOfFilename + 2) == '\0' ))))) {
         return false;
+    }
+    for (int i= 0; startOfFilename[i] != '\0'; i++) {
+        if (startOfFilename[i] == '/') {
+            return false;
+        }
     }
     return true;
 }
@@ -436,9 +571,9 @@ bool MyFS::isFilenameCorrect(const char *path) {
 bool MyFS::isDirPathCorrect(const char *path) {
     const char *dir = remDirPath(path);
     if (*(dir) == '\0' || ((*dir == '/' || *dir == '.') && *(dir + 1) == '\0') || (*(dir) == '.' && *(dir + 1) == '.' && *(dir + 2) == '\0')) {
-        return true;
+        return false;
     }
-    return false;
+    return true;
 }
 
 /**
@@ -453,12 +588,13 @@ bool MyFS::isFileExisting(const char *path) {
 /**
  * Wandelt ein Char-Array in einen Integer um.
  * @param chars char Array mit maximal 4 chars
- * @return intege based on the input
+ * @param numberOfChars Anzahl der Chars, die das array hat
+ * @return intege based on the input; 0, wenn 0 >= numberOfChars > 4
  */
-int MyFS::charToInt(char* chars) {
+int MyFS::charToInt(char* chars, int numberOfChars) {
     int sum = 0;
-    if (getSizeOfCharArray(chars) <= 4) {
-        for (int i = 0; chars[i] != '\0'; i++) {
+    if (numberOfChars <= 4) {
+        for (int i = 0; i < numberOfChars; i++) {
             sum += ((int) chars[i]) << (i * 8);
         }
     }
@@ -467,22 +603,253 @@ int MyFS::charToInt(char* chars) {
 }
 
 /**
- * Wandelt einen Integer in bis zu 4 chars um. Achtung: Es wird kein \0 hinter das letzte chars geschrieben
+ * Wandelt einen Integer in bis zu 4 (+ \0) chars um.
  * @param number Integer, der umgewandelt werden soll
  * @param buffer char-Array in den die chars geschrieben werden sollen
+ * @param numberOfChars Anzahl der chars , die in das IntegerArray geschrieben werden sollen.
  */
-void MyFS::intToChar(int number, char* buffer) {
-    int sizeOfCharArray = 4;
-    for (; sizeOfCharArray > 1 && number == ((number << ((5 - sizeOfCharArray) * 8) >> ((5 - sizeOfCharArray) * 8))); sizeOfCharArray--);
-    for (int i = 0; i < sizeOfCharArray; i++){
-        buffer[i] = (char) ((number >> (8 * i)) & 0b11111111);
+void MyFS::intToChar(int number, char* buffer, int numberOfChars) {
+    //for (; sizeOfCharArray > 1 && number == ((number << ((5 - sizeOfCharArray) * 8) >> ((5 - sizeOfCharArray) * 8))); sizeOfCharArray--);
+    if (numberOfChars > 0 && numberOfChars <= 4) {
+        for (int i = 0; i < numberOfChars; i++) {
+            buffer[i] = (char) ((number >> (8 * i)) & 0b11111111);
+        }
+    }
+}
+
+void MyFS::readDMap(){
+            char buffer[BLOCK_SIZE];
+            writeSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS*BLOCK_SIZE,0);
+    for (int i = 0; i<NUM_DATA_BLOCKS*NUM_DMAP_BLOCKS; i++) {
+        int whichChar = (i - (i % 8))/8 ;
+        int whichBitinChar = i % 8;
+        DMAP[i] = (buffer[whichChar] >> whichBitinChar) & 1;
+    }
+
+}
+
+
+
+
+void::MyFS::setBitinChar(int position, bool value, char* buffer){
+    int whichChar = (position - (position % 8))/8 ;
+    int whichBitinChar = position % 8;
+
+    if (value){
+        buffer[whichChar] |= 1 << whichBitinChar;
+    }else {
+        buffer[whichChar] &= ~(1 << whichBitinChar);
+    }
+
+}
+
+
+void MyFS::writeDMap(){
+    char buffer[NUM_DATA_BLOCKS];
+    for(int i=0; i<NUM_DATA_BLOCKS ; i++) {
+        setBitinChar(i, DMAP[i], buffer);
+    }
+    writeSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS * BLOCK_SIZE, 0);
+}
+
+/**
+ * Buffer kann auf blockdevice geschrieben werden.
+ * ---> noch nicht fertig : ToDo
+ * @param startblock
+ * @param buffer
+ * @param size
+ * @param offset
+ */
+void MyFS::writeSection(u_int32_t startblock, const char* buffer, size_t size, off_t offset){
+
+    int numberOfBlocks = sizeToBlocks(size);
+    u_int32_t list[numberOfBlocks];
+    for (int i = 0; i < numberOfBlocks; i++) {
+        list[i] = startblock + i;
+    }
+    writeSectionByList(list, buffer, size, offset);
+}
+
+void MyFS::writeSectionByList(u_int32_t* list, const char* buf, size_t size, off_t offset) {
+    char buffer[BLOCK_SIZE];
+    size_t numberOfWriteBytes = 0;
+    size_t numberOfWrittenBytes = 0;
+    for(int i = 0; size > 0; i++) {
+        numberOfWriteBytes = size > BLOCK_SIZE ? BLOCK_SIZE : size;
+        transferBytes(buf + numberOfWrittenBytes + offset, numberOfWriteBytes, 0, buffer, 0);
+        numberOfWrittenBytes += numberOfWriteBytes;
+        size -= numberOfWriteBytes;
+        blockDevice->write(list[i], buffer);
+    }
+}
+
+void MyFS::setDataBlocksUnused(u_int32_t position){ // auf basis der position wird das FAT durchgesucht nach des restlichen Blöcken und diese werden auf unused gestzt. -> Rekursiv lösen
+    if(position == FAT[position]){
+    }else{
+        if(DMAP[position] == true) {
+            DMAP[position] = false;
+            numberOfUsedDATABLOCKS--;
+            MyFS::setDataBlocksUnused(FAT[position]);
+        }else{
+            error("");
+        }
+    }
+
+}
+
+
+
+void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
+    int counter = 0;
+    int iterator = 0;
+    size = sizeToBlocks(size);
+
+
+    while(counter != size) {
+        if (iterator == NUM_DATA_BLOCKS) {
+            blockAdressBuffer = nullptr;
+            counter = size;
+        } else {
+            if (DMAP[iterator] == false) {
+                blockAdressBuffer[counter] = START_DATA_BLOCKS + iterator;
+                counter++;
+            }
+            iterator++;
+
+        }
     }
 }
 
 
-void MyFS::readStructures(){
+int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset) {
+   size_t writtenBytes = 0;
+   size_t readBytes = 0;
+    for(int i = 0; size > 0; i++) {
+        readBytes = size + offset > BLOCK_SIZE ? BLOCK_SIZE - offset : size;
+        if(readBytes > 0) {
+            readBlock(list[i], buf + writtenBytes, readBytes, offset);
+            writtenBytes += readBytes;
+            size -= readBytes;
+        }
+        offset > BLOCK_SIZE ? offset -= BLOCK_SIZE : offset = 0;
+    }
+}
+
+/**
+ * Füllt den Buffer mit Daten aus dem StartBlock und den nachfolgenden Blöcken
+ * @param startblock Erster Block der gelesen werden soll
+ * @param buffer Buffer, in den die Daten geschrieben werden sollen
+ * @param size Anzahl der Bytes die in den Buffer geschrieben werden sollen
+ * @param offset Stelle ab der vom Blockdevice gelesen werden soll
+ * @return
+ */
+int MyFS::readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
+    int numberOfBlocks = sizeToBlocks(size + offset);
+    u_int32_t list[numberOfBlocks];
+    for (u_int32_t i = 0; i < numberOfBlocks; i++) {
+        list[i] = startblock + i;
+    }
+    return readSectionByList(list, buffer, size, offset);
+}
+
+void MyFS::writeFAT() {
+    char buffer[NUM_FAT_BLOCKS * BLOCK_SIZE];
+    char numberbuffer[ADRESS_LENGTH_BYTE];
+    for (int i = 0; i < NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++) {
+        intToChar(FAT[i], numberbuffer, ADRESS_LENGTH_BYTE);
+        transferBytes(numberbuffer, ADRESS_LENGTH_BYTE, 0, buffer, ADRESS_LENGTH_BYTE * i);
+
+    }
+    writeSection(START_FAT_BLOCKS,buffer,NUM_FAT_BLOCKS * BLOCK_SIZE, 0);
 
 }
 
+void MyFS::readFAT() {
+    char buffer[NUM_FAT_BLOCKS * BLOCK_SIZE];
+    char numberbuffer[ADRESS_LENGTH_BYTE];
+    readSection(START_FAT_BLOCKS, buffer, NUM_FAT_BLOCKS*BLOCK_SIZE,0);
+    for(int i = 0; i< NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++){
+        transferBytes(buffer, ADRESS_LENGTH_BYTE, i*ADRESS_LENGTH_BYTE, numberbuffer, 0);
+        FAT[i]= charToInt(numberbuffer, ADRESS_LENGTH_BYTE);
+    }
+}
+
+int MyFS::writeSBLOCK() {
+    char SBLOCK[BLOCK_SIZE];
+    char buffer[4];
+    transferBytes(NAME_FILESYSTEM, NUM_NAME_FILESYSTEM_BYTE, 0, SBLOCK, START_FILENAME_BYTE);
+    intToChar(numberOfFiles, buffer, NUM_RESERVED_ENTRIES_BYTE);
+    transferBytes(buffer, NUM_RESERVED_ENTRIES_BYTE, 0 , SBLOCK, START_RESERVED_ENTRIES_BYTE);
+    intToChar(numberOfUsedDATABLOCKS, buffer, NUM_RESERVED_BLOCKS_BYTE);
+    transferBytes(buffer, NUM_RESERVED_BLOCKS_BYTE, 0, SBLOCK, START_RESERVED_BLOCKS_BYTE);
+    intToChar((int) numberOfwrittenBytes,buffer, NUM_RESERVED_DATA_BYTES_BYTE);
+    transferBytes(buffer, NUM_RESERVED_DATA_BYTES_BYTE, 0, SBLOCK, START_RESERVED_DATA_BYTES_BYTE);
+
+    blockDevice->write(START_SUPER_BLOCKS,SBLOCK);
+    return 0;
+}
+
+int MyFS::readSBlock(){
+    char SBLOCK[BLOCK_SIZE];
+    char fileNAME[NUM_FILENAME_BYTE];
+    blockDevice->read(START_SUPER_BLOCKS, SBLOCK);
+    transferBytes(SBLOCK,NUM_FILE_SIZE_BYTE,0,fileNAME,0);
+    if( strcmp(fileNAME, NAME_FILESYSTEM) != 0){
+        return EIO;
+    }
+    char numOfFiles[NUM_RESERVED_ENTRIES_BYTE];
+    transferBytes(SBLOCK, NUM_RESERVED_ENTRIES_BYTE, NUM_FILE_SIZE_BYTE, numOfFiles, 0);
+    numberOfFiles = charToInt(numOfFiles, NUM_RESERVED_ENTRIES_BYTE);
+
+    char numOfDataBlocks[NUM_RESERVED_BLOCKS_BYTE];
+    transferBytes(SBLOCK,NUM_RESERVED_BLOCKS_BYTE, NUM_FILE_SIZE_BYTE+NUM_RESERVED_ENTRIES_BYTE, numOfDataBlocks, 0 );
+    numberOfUsedDATABLOCKS = charToInt(numOfDataBlocks, NUM_RESERVED_BLOCKS_BYTE);
+
+    char numOfwrittenBytes[NUM_RESERVED_DATA_BYTES_BYTE];
+    transferBytes(SBLOCK,NUM_RESERVED_DATA_BYTES_BYTE, NUM_FILE_SIZE_BYTE+NUM_RESERVED_ENTRIES_BYTE+NUM_RESERVED_BLOCKS_BYTE, numOfwrittenBytes, 0 );
+    numberOfwrittenBytes = (u_int64_t) charToInt(numOfwrittenBytes, NUM_RESERVED_DATA_BYTES_BYTE);
 
 
+    return 0;
+}
+
+//Fertig 2.0
+/**
+ * Schreibt einen Eintrag ins ROOT, mit den angegebenen Parametern.
+ * @param position gibt an, in welchen Root-Block geschrieben werden soll
+ * @param filename  Name der Datei (Ohne Pfad)
+ * @param size Größe der Datei
+ * @param userID
+ * @param groupID
+ * @param accesRight
+ * @param firstTimestamp
+ * @param secondTimestamp
+ * @param thirdTimestamp
+ * @param firstDataBlock Pointer auf den ersten DataBlock
+ * @return
+ */
+int MyFS::writeROOT(u_int32_t position, const char* filename, size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock) {
+    char ROOTBlock[BLOCK_SIZE];
+    char buffer[4];
+    int lengthOfFilename = getSizeOfCharArray(filename);
+
+    transferBytes(filename, lengthOfFilename < NUM_FILENAME_BYTE? lengthOfFilename + 1 : NUM_FILENAME_BYTE, 0, ROOTBlock, START_FILENAME_BYTE);
+
+    intToChar((int) size, buffer, NUM_FILE_SIZE_BYTE);
+    transferBytes(buffer, NUM_FILE_SIZE_BYTE, 0, ROOTBlock, START_FILE_SIZE_BYTE);
+
+    intToChar(firstDataBlock, buffer, NUM_POINTER_BYTE);
+    transferBytes(buffer, NUM_POINTER_BYTE, 0, ROOTBlock, START_POINTER_BYTE);
+
+    return blockDevice->write(position + START_ROOT_BLOCKS, ROOTBlock);
+}
+
+int MyFS::sizeToBlocks(size_t size) {
+    return (int) (((size - 1) - ((size - 1) % BLOCK_SIZE)) / BLOCK_SIZE) + 1;
+}
+
+u_int32_t MyFS::getFirstPointer(int filePosition) {
+    char pointer[NUM_POINTER_BYTE];
+    readBlock(START_ROOT_BLOCKS + filePosition,pointer, NUM_POINTER_BYTE, START_POINTER_BYTE);
+    return (u_int32_t) charToInt(pointer, NUM_POINTER_BYTE);
+}

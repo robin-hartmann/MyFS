@@ -7,7 +7,6 @@
 //
 #include <iostream>
 #include "myfs.h"
-
 #include "myfs.cpp"
 
 #include "blockdevice.h"
@@ -15,76 +14,41 @@
 #include "mkfs.myfs.h"
 #include  <fstream>
 
+using namespace std;
+
 
 int main(int argc, char *argv[]) {
+    BlockDevice* device = new BlockDevice();
+    device->create(argv[1]);
+    MyFS filesystem ;
+    size_t size;
+    filesystem.blockDevice = device;
+    fuse_file_info* dummyinfo = nullptr;
+    mode_t mode;
 
-    BlockDevice device;
-    device.create(argv[1]);
-    if(device.open(argv[1]) < 0)
+
+    for (int i = 2; i < argc; ++i)
     {
-        std::cout<<"Cannot open Container file\n";
-        return 1;
-    }else{
-        if(initializeDevice(device) < 0){
-            std::cout<<"Cannot initialize filesystem"<<std::endl;
-            return 1;
-        }else{
-            for (int i = 2; i < argc; i++) {
-                char *array = readFile(argv[i]);
-                writeToDevice(array);
-            }
-
-        }
+        ifstream file (argv[i], ifstream::binary);
+        size = file.tellg();
+        char array[size];
+        file.read(array, size);
+        file.close();
+        cout<<array<<endl;
+        filesystem.fuseCreate(argv[i], mode, dummyinfo);
+        filesystem.fuseWrite(argv[i], array,size, 0, dummyinfo );
     }
 
-    return 0;
+
+       filesystem.fuseDestroy();
 }
 
-int getsize(std::string &fileURL){
+
+/**
+int getsize(std::string fileURL){
     std::ifstream file( fileURL, std::ios::binary | std::ios::ate);
     return file.tellg();
 }
 
 
-char* readFile(std::string fileURL){
-    int size = getsize(fileURL);
-    std::cout<<size<<std::endl;
-    std::ifstream inputFile (fileURL);
-    char* arr ;
-    arr = new char[size];
-
-    if (inputFile.good()) {
-        for (int i = 0; i < size; i++) {
-            inputFile >> arr[i];
-        }
-
-        inputFile.close();
-
-    }else {
-        std::cout << "Error!";
-        return nullptr;
-    }
-
-    return arr;
-}
-
-int writeToDevice(char *array){
-
-
-
-}
-
-int initializeDevice(BlockDevice &device){
-    return 0;
-}
-
-char* initializeSuperblock(){
-
-    //initalize superblock
-    char* superblock;
-    int sizeSuperblock = NUM_NAME_FILESYSTEM_BYTE + NUM_RESERVED_ENTRIES_BYTE + NUM_RESERVED_BLOCKS_BYTE + NUM_RESERVED_DATA_BYTES_BYTE;
-    superblock = new char[sizeSuperblock];
-
-
-    return superblock;
-}
+*/
