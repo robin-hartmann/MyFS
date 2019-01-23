@@ -46,21 +46,25 @@ MyFS::~MyFS() {
 
 int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     LOGM();
+    LOGF("Path: %s", path);
     const char* remPath = remDirPath(path);
     bool filenameIsCorrect = isFilenameCorrect(path);
 
-    if (!filenameIsCorrect && *remPath != '/' && getSizeOfCharArray(remPath) <= NAME_LENGTH) {
-        statbuf->st_mode = S_IFDIR | 0555;
-        statbuf->st_nlink = 2;
-        return 0;
-    } else if (filenameIsCorrect) {
-        char buffer[NUM_ACCESS_RIGHT_BYTE];
-        readBlock((u_int32_t ) getFilePosition(path) + START_ROOT_BLOCKS, buffer, NUM_ACCESS_RIGHT_BYTE, START_ACCESS_RIGHT_BYTE);
-        statbuf->st_mode = charToInt(buffer, NUM_ACCESS_RIGHT_BYTE);
-        statbuf->st_nlink = 1;
-        return 0;
+    if (isFileExisting(path) || (path[0] == '/' && path[1] =='\0')) {
+        if (!filenameIsCorrect /*&& *remPath != '/'*/ && getSizeOfCharArray(remPath) <= NAME_LENGTH) {
+            statbuf->st_mode = S_IFDIR | 0555;
+            statbuf->st_nlink = 2;
+            RETURN(0);
+        } else if (filenameIsCorrect) {
+            char buffer[NUM_ACCESS_RIGHT_BYTE];
+            readBlock((u_int32_t) getFilePosition(path) + START_ROOT_BLOCKS, buffer, NUM_ACCESS_RIGHT_BYTE,
+                      START_ACCESS_RIGHT_BYTE);
+            statbuf->st_mode = charToInt(buffer, NUM_ACCESS_RIGHT_BYTE);
+            statbuf->st_nlink = 1;
+            RETURN (0);
+        }
     }
-    return ENOENT;
+    RETURN(-ENOENT);
 }
 
 int MyFS::fuseReadlink(const char *path, char *link, size_t size) {
@@ -70,12 +74,13 @@ int MyFS::fuseReadlink(const char *path, char *link, size_t size) {
 
 int MyFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     LOGM();
+    LOGF("Path: %s", path);
     if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
-        return ENOENT;
+        RETURN(-ENOTDIR);
     } else if (isFileExisting(path)) {
-        return EEXIST;
+        RETURN(EEXIST);
     } else if (numberOfFiles >= 64) {
-        return ENOSPC;
+        RETURN(-ENOSPC);
     }
     u_int32_t freePosition = 0;
     const char* filename = remDirPath(path);
@@ -97,9 +102,9 @@ int MyFS::fuseMkdir(const char *path, mode_t mode) {
 int MyFS::fuseUnlink(const char *path) {
     LOGM();
     if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
-        return ENOENT;
+        RETURN(-ENOENT);
     } else if (isFileExisting(path)) {
-        return EEXIST;
+        RETURN(-EEXIST);
     }
 
     int filePosition = getFilePosition(path);
@@ -158,19 +163,19 @@ int MyFS::fuseUtime(const char *path, struct utimbuf *ubuf) {
 //Fertig
 int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-    
+    LOGF("Path: %s", path);
     if(isFileExisting(path)) {
         openFiles[getFilePosition(path)] = true;
-        return 0;
+        RETURN(0);
     }
     
-    return EEXIST;
+    RETURN(-EEXIST);
 }
 
 //Nochmal ändern aufgrund neuer Methoden
 int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
-
+    LOGF("Path: %s", path);
     if (size > 0 && offset >= 0 && isFileExisting(path) && openFiles[getFilePosition(path)]) {
         int actuallFATPosition = this->getFilePosition(path);
         bool endOfFile = false;
@@ -197,15 +202,15 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
 
 int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
-    
+    LOGF("Path: %s", path);
     if (!isFileExisting(path)) {
-        return EEXIST;
+        RETURN(-EEXIST);
     }
     int filePosition = getFilePosition(path);
     if (!openFiles[filePosition]) {
-        return EBADF;
+        RETURN(-EBADF);
     } else if (sizeToBlocks(size) - sizeToBlocks((size_t) getFileSize(filePosition)) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) { //abändern
-        return ENOSPC;
+        RETURN(-ENOSPC);
     }
 
     const char* filename = remDirPath(path);
@@ -231,7 +236,7 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
 
     writeROOT(filePosition, filename, size, "\0", "\0", "\0", "\0", "\0", "\0", blockAdress[0]);
 
-    return size;
+    RETURN(size);
 }
 
 int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
@@ -246,7 +251,7 @@ int MyFS::fuseFlush(const char *path, struct fuse_file_info *fileInfo) {
 
 int MyFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-
+    LOGF("Path: %s", path);
     if(isFileExisting(path)) {
         openFiles[getFilePosition(path)] = false;
     }
@@ -271,6 +276,7 @@ int MyFS::fuseRemovexattr(const char *path, const char *name) {
 //Fertig
 int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
+    LOGF("Path: %s", path);
     if(!isDirPathCorrect(path)) {
         RETURN(ENOTDIR);
     }
@@ -281,14 +287,14 @@ int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
 
 int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
-    // TODO: Implement this!
+    LOGF("Path: %s", path);
     if(!isDirOpen) {
-        RETURN(EPERM);
+        RETURN(-EPERM);
     }
     if(!isDirPathCorrect(path)) {
-        RETURN(ENOTDIR);
+        RETURN(-ENOTDIR);
     }
-
+    //filler(buf, "English", NULL, 0);
     for (int i = 0; i < NUM_ROOT_BLOCKS; i++) {
         if (FILENAME[i][0] != '\0') {
             filler(buf, FILENAME[i], NULL, 0);
@@ -303,9 +309,9 @@ int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
 //Fertig
 int MyFS::fuseReleasedir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-
+    LOGF("Path: %s", path);
     if(!isDirPathCorrect(path)) {
-        RETURN(ENOTDIR);
+        RETURN(-ENOTDIR);
     }
     isDirOpen = false;
 
@@ -325,12 +331,13 @@ int MyFS::fuseTruncate(const char *path, off_t offset, struct fuse_file_info *fi
 //Fertig 2.0
 int MyFS::fuseCreate(const char *path, mode_t mode, struct fuse_file_info *fileInfo) {
     LOGM();
+    LOGF("Path: %s", path);
     if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
-        return ENOENT;
+        RETURN(-ENOENT);
     } else if (isFileExisting(path)) {
-        return EEXIST;
+        RETURN(EEXIST);
     } else if (numberOfFiles >= 64) {
-        return ENOSPC;
+        RETURN(-ENOSPC);
     }
     u_int32_t freePosition = 0;
     const char* filename = remDirPath(path);
@@ -345,12 +352,12 @@ int MyFS::fuseCreate(const char *path, mode_t mode, struct fuse_file_info *fileI
 }
 
 void MyFS::fuseDestroy() {
+    LOGM();
     writeSBLOCK();
     writeDMap();
     writeFAT();
     blockDevice->close();
     delete blockDevice;
-    LOGM();
 }
 
 void* MyFS::fuseInit(struct fuse_conn_info *conn) {
@@ -376,9 +383,9 @@ void* MyFS::fuseInit(struct fuse_conn_info *conn) {
         this->blockDevice = newblockDevice;
 
         readSBlock();
-        readDMap();
+        //readDMap();
         readFAT();
-
+        LOG("END OF INIT()");
     }
     
     RETURN(0);
@@ -548,17 +555,22 @@ const char* MyFS::remDirPath(const char *path) {
  * @return true, wenn Dateiname korrekt ist
  */
 bool MyFS::isFilenameCorrect(const char *path) {
+    //LOGM();
+    //LOGF("Path: %s", path);
     const char *startOfFilename = remDirPath(path);
     if (getSizeOfCharArray(startOfFilename) > NAME_LENGTH || (*startOfFilename == '/' || *startOfFilename == '\0' ||
     (*startOfFilename == '.' && (*(startOfFilename + 1) == '\0' || (*(startOfFilename + 1) == '.' &&
     *(startOfFilename + 2) == '\0' ))))) {
+        //LOG("Filname ist Korrekt");
         return false;
     }
     for (int i= 0; startOfFilename[i] != '\0'; i++) {
         if (startOfFilename[i] == '/') {
+            //LOG("Filname ist Falsch");
             return false;
         }
     }
+    //LOG("Filname ist Korrekt");
     return true;
 }
 
@@ -569,11 +581,15 @@ bool MyFS::isFilenameCorrect(const char *path) {
  * @return true, wenn Dateipfad korrekt ist
  */
 bool MyFS::isDirPathCorrect(const char *path) {
+    //LOGM();
+    //LOGF("Path: %s", path);
     const char *dir = remDirPath(path);
     if (*(dir) == '\0' || ((*dir == '/' || *dir == '.') && *(dir + 1) == '\0') || (*(dir) == '.' && *(dir + 1) == '.' && *(dir + 2) == '\0')) {
-        return false;
+        //LOG("Ist Korrekt");
+        return true;
     }
-    return true;
+    //LOG("Ist Falsch");
+    return false;
 }
 
 /**
