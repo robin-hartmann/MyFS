@@ -1,6 +1,6 @@
 import { exec as cbBasedExec } from 'child_process';
 import { promisify } from 'util';
-import { tmpNameSync, dirSync, setGracefulCleanup } from 'tmp';
+import { tmpNameSync, setGracefulCleanup } from 'tmp';
 import { unlinkSync } from 'fs';
 
 import { ExecutionContext } from '../util/test';
