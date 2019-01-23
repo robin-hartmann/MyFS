@@ -28,9 +28,9 @@ public:
 
     BlockDevice *blockDevice;
 
-    bool DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8];
+    bool DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8] = {};
     char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH + 1];
-    int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK];
+    int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK] = {};
     bool isDirOpen = false;
     bool openFiles[NUM_ROOT_BLOCKS];
 
