@@ -1,4 +1,6 @@
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
+
 import config from '../config';
 
 const LOREM_IPSUM = readFileSync(config.RESOURCES.LOREM_IPSUM);
@@ -21,4 +23,18 @@ export const generateData = (byteCount: number) => {
   }
 
   return data;
+};
+
+export const generateFile = (path: string, byteCount: number) => {
+  if (existsSync(path)) {
+    throw new Error(`file "${path}" already exists`);
+  }
+
+  const dir = dirname(path);
+
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+
+  writeFileSync(path, generateData(byteCount));
 };
