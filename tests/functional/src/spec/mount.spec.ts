@@ -1,5 +1,5 @@
 import {
-  readdirSync, constants as fsConstants, mkdirSync, writeFileSync,
+  readdirSync, constants as fsConstants, mkdirSync,
 } from 'fs';
 import { userInfo as getUserInfo, constants as OSConstants } from 'os';
 import { resolve } from 'path';
@@ -47,13 +47,6 @@ test.failing('root directory has proper attributes', (t) => {
 test.failing('does not allow directories to be created', (t) => {
   const error = t.throws<NodeJS.ErrnoException>(
     () => mkdirSync(resolve(t.context.mountDir, 'some-new-directory')),
-  );
-  t.is(error.errno, -OSConstants.errno.EROFS);
-});
-
-test.failing('does not allow files to be created', (t) => {
-  const error = t.throws<NodeJS.ErrnoException>(
-    () => writeFileSync(resolve(t.context.mountDir, 'some-new-file'), null),
   );
   t.is(error.errno, -OSConstants.errno.EROFS);
 });
