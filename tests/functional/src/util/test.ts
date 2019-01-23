@@ -1,12 +1,21 @@
 import ava, { ExecutionContext as GenericExecutionContext, TestInterface } from 'ava';
-import { SynchrounousResult } from 'tmp';
 
 export interface Context {
   containerFile: string;
-  logFile: SynchrounousResult;
-  mountDir: SynchrounousResult;
+  logFile: string;
+  mountDir: string;
+  cleanupCbs: (() => void)[];
 }
 
 export type ExecutionContext = GenericExecutionContext<Context>;
 
 export const test = ava as TestInterface<Context>;
+
+export const init = (t: ExecutionContext) => {
+  t.context.cleanupCbs = [];
+};
+
+export const cleanup = (t: ExecutionContext) => {
+  t.log(t.context);
+  t.context.cleanupCbs.forEach(cleanupCb => cleanupCb());
+};

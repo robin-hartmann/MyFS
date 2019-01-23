@@ -1,13 +1,15 @@
 import {
-  readdirSync, constants as fsConstants, mkdirSync, writeFileSync, unlinkSync,
+  readdirSync, constants as fsConstants, mkdirSync, writeFileSync,
 } from 'fs';
 import { userInfo as getUserInfo, constants as OSConstants } from 'os';
 import { resolve } from 'path';
 
 import { mkfs } from '../util/mkfs';
 import { mount, unmount, isMounted } from '../util/mount';
-import { test } from '../util/test';
+import { test, cleanup, init } from '../util/test';
 import { getStats } from '../util/fs';
+
+test.serial.before('init', init);
 
 test.serial.before('creates container', async (t) => {
   await mkfs(t);
@@ -18,18 +20,16 @@ test.serial.before('mounts properly', async (t) => {
   t.true(await isMounted(t));
 });
 
-test.after.always('unmounts properly', async (t) => {
+test.serial.after.always('unmounts properly', async (t) => {
   t.log(t.context);
   await unmount(t);
   t.false(await isMounted(t));
-
-  unlinkSync(t.context.containerFile);
-  t.context.logFile.removeCallback();
-  t.context.mountDir.removeCallback();
 });
 
+test.serial.after.always('cleanup', cleanup);
+
 test.failing('contains no entries', (t) => {
-  const dirEntries = readdirSync(t.context.mountDir.name);
+  const dirEntries = readdirSync(t.context.mountDir);
   t.is(dirEntries.length, 0);
 });
 
@@ -46,14 +46,14 @@ test.failing('root directory has proper attributes', (t) => {
 
 test.failing('does not allow directories to be created', (t) => {
   const error = t.throws<NodeJS.ErrnoException>(
-    () => mkdirSync(resolve(t.context.mountDir.name, 'some-new-directory')),
+    () => mkdirSync(resolve(t.context.mountDir, 'some-new-directory')),
   );
   t.is(error.errno, -OSConstants.errno.EROFS);
 });
 
 test.failing('does not allow files to be created', (t) => {
   const error = t.throws<NodeJS.ErrnoException>(
-    () => writeFileSync(resolve(t.context.mountDir.name, 'some-new-file'), null),
+    () => writeFileSync(resolve(t.context.mountDir, 'some-new-file'), null),
   );
   t.is(error.errno, -OSConstants.errno.EROFS);
 });

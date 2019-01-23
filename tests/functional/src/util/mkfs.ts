@@ -1,14 +1,20 @@
 import { exec as cbBasedExec } from 'child_process';
 import { promisify } from 'util';
-import { tmpNameSync } from 'tmp';
+import { tmpNameSync, dirSync, setGracefulCleanup } from 'tmp';
+import { unlinkSync } from 'fs';
 
 import { ExecutionContext } from '../util/test';
 import config from '../config';
 
+setGracefulCleanup();
+
 const exec = promisify(cbBasedExec);
 
 export const mkfs = async (t: ExecutionContext) => {
-  t.context.containerFile = tmpNameSync({ prefix: 'myfs-container-', postfix: '.bin' });
+  const containerFile = tmpNameSync({ prefix: 'myfs-container-', postfix: '.bin' });
+
+  t.context.containerFile = containerFile;
+  t.context.cleanupCbs.push(() => unlinkSync(t.context.containerFile));
 
   try {
     await exec(`"${config.BINARIES.MKFS}" "${t.context.containerFile}"`);
