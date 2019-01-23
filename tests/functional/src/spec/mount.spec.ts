@@ -28,7 +28,7 @@ test.serial.after.always('unmounts properly', async (t) => {
 
 test.serial.after.always('cleanup', cleanup);
 
-test.failing('contains no entries', (t) => {
+test('contains no entries', (t) => {
   const dirEntries = readdirSync(t.context.mountDir);
   t.is(dirEntries.length, 0);
 });
@@ -44,9 +44,9 @@ test.failing('root directory has proper attributes', (t) => {
   t.is(stats.gid, userInfo.gid);
 });
 
-test.failing('does not allow directories to be created', (t) => {
+test('does not allow directories to be created', (t) => {
   const error = t.throws<NodeJS.ErrnoException>(
     () => mkdirSync(resolve(t.context.mountDir, 'some-new-directory')),
   );
-  t.is(error.errno, -OSConstants.errno.EROFS);
+  t.is(error.errno, -OSConstants.errno.EACCES);
 });
