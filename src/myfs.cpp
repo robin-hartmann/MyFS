@@ -54,13 +54,15 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
         if (!filenameIsCorrect /*&& *remPath != '/'*/ && getSizeOfCharArray(remPath) <= NAME_LENGTH) {
             statbuf->st_mode = S_IFDIR | 0555;
             statbuf->st_nlink = 2;
+            LOG("Datei existiert nicht (. oder ..)");
             RETURN(0);
         } else if (filenameIsCorrect) {
             char buffer[NUM_ACCESS_RIGHT_BYTE];
             readBlock((u_int32_t) getFilePosition(path) + START_ROOT_BLOCKS, buffer, NUM_ACCESS_RIGHT_BYTE,
                       START_ACCESS_RIGHT_BYTE);
-            statbuf->st_mode = charToInt(buffer, NUM_ACCESS_RIGHT_BYTE);
+            statbuf->st_mode = S_IFDIR | 0777;//charToInt(buffer, NUM_ACCESS_RIGHT_BYTE);
             statbuf->st_nlink = 1;
+            LOG("Datei existiert");
             RETURN (0);
         }
     }
@@ -288,13 +290,22 @@ int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
 int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
     LOGF("Path: %s", path);
+
+    if(isFileExisting(path)) {
+        RETURN (0);
+    }
+
     if(!isDirOpen) {
         RETURN(-EPERM);
     }
     if(!isDirPathCorrect(path)) {
         RETURN(-ENOTDIR);
     }
-    //filler(buf, "English", NULL, 0);
+
+    if(isFileExisting(path)) {
+        RETURN (0);
+    }
+
     for (int i = 0; i < NUM_ROOT_BLOCKS; i++) {
         if (FILENAME[i][0] != '\0') {
             filler(buf, FILENAME[i], NULL, 0);
@@ -493,21 +504,6 @@ void MyFS::transferBytes(const char *firstBuf, size_t size, off_t firstOff, char
     }
 }
 
-
-/**
- * Return the Size of the Char-Array.
- * '\0' not included.
- * @param buf pointer auf das char Array
- * @return size of the Array
- */
-u_int32_t MyFS::getSizeOfCharArray(char *buf) {
-    u_int32_t size = 0;
-    while(buf[size] != '\0') {
-        size++;
-    }
-    return size;
-}
-
 /**
  * Return the Size of the Char-Array.
  * '\0' not included.
@@ -522,12 +518,43 @@ u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
     return size;
 }
 
+//Fetig 2.0
 /**
  * Entfernt den Dateipfad vom Dateinamen.
  * @param path Dateipfad / Dateiname
  * @return Dateiname
  */
 const char* MyFS::remDirPath(const char *path) {
+    int laeufer = getSizeOfCharArray(path) + 1;
+    for(; laeufer > 0 && *(path + laeufer - 1) != '/'; laeufer--);
+    if (*(path +  laeufer) == '.' && *(path+  laeufer + 1) == '\0') {
+         laeufer += 1;
+    } else if (*(path +  laeufer) == '.' && *(path +  laeufer + 1) == '.' &&
+               *(path +  laeufer + 2) == '\0') {
+         laeufer += 2;
+    }
+    return (path + laeufer);
+}
+
+//Fertig 2.0
+/**
+ * Überprüft, ob der Filename korrekt ist.
+ * Achtung: Auf den Dateipfad vorher nicht removeDirPath() ausführen!
+ * @param path Dateipfad / Dateiname
+ * @return true, wenn Dateiname + DateiPfad korrekt ist
+ */
+bool MyFS::isFilenameCorrect(const char *path) {
+    return (isDirPathCorrect(path) && !isDirPath(path) && getSizeOfCharArray(remDirPath(path)) <= NAME_LENGTH);
+}
+
+//Fetig 2.0
+/**
+ * Überprüft ob der übergebene Dateipfad Correct ist.
+ * Achtung: Der Dateipfad darf davor nicht durch remDirPath() gelaufen sein! Das verfälscht das Ergebnis.
+ * @param path Dateipfad
+ * @return true, wenn Dateipfad korrekt ist
+ */
+bool MyFS::isDirPathCorrect(const char *path) {
     bool removedPath = false;
     int NumOfPathChars = 0;
     if(*path == '/') {
@@ -545,51 +572,23 @@ const char* MyFS::remDirPath(const char *path) {
             removedPath = false;
         }
     }
-    return (path + NumOfPathChars);
+    if (*(path + NumOfPathChars) == '.' && *(path+ NumOfPathChars + 1) == '\0') {
+        NumOfPathChars += 1;
+    } else if (*(path + NumOfPathChars) == '.' && *(path + NumOfPathChars + 1) == '.' &&
+        *(path + NumOfPathChars + 2) == '\0') {
+        NumOfPathChars += 2;
+    }
+    return (path + NumOfPathChars) == remDirPath(path);
 }
 
+//Fetig 2.0
 /**
- * Überprüft, ob der Filename correkt ist.
- * Achtung: Auf den Dateipfad vorher nicht removeDirPath() ausführen!
- * @param path Dateipfad / Dateiname
- * @return true, wenn Dateiname korrekt ist
- */
-bool MyFS::isFilenameCorrect(const char *path) {
-    //LOGM();
-    //LOGF("Path: %s", path);
-    const char *startOfFilename = remDirPath(path);
-    if (getSizeOfCharArray(startOfFilename) > NAME_LENGTH || (*startOfFilename == '/' || *startOfFilename == '\0' ||
-    (*startOfFilename == '.' && (*(startOfFilename + 1) == '\0' || (*(startOfFilename + 1) == '.' &&
-    *(startOfFilename + 2) == '\0' ))))) {
-        //LOG("Filname ist Korrekt");
-        return false;
-    }
-    for (int i= 0; startOfFilename[i] != '\0'; i++) {
-        if (startOfFilename[i] == '/') {
-            //LOG("Filname ist Falsch");
-            return false;
-        }
-    }
-    //LOG("Filname ist Korrekt");
-    return true;
-}
-
-/**
- * Überprüft ob der übergebene Dateipfad Correct ist.
- * Achtung: Der Dateipfad darf davor nicht durch remDirPath() gelaufen sein! Das verfälscht das Ergebnis.
+ * Überprüft ob der Pfad ein korrekter DirPfad ist und keine Datei
  * @param path Dateipfad
- * @return true, wenn Dateipfad korrekt ist
+ * @return true, wenn es ein korrekter Dirpfad ist
  */
-bool MyFS::isDirPathCorrect(const char *path) {
-    //LOGM();
-    //LOGF("Path: %s", path);
-    const char *dir = remDirPath(path);
-    if (*(dir) == '\0' || ((*dir == '/' || *dir == '.') && *(dir + 1) == '\0') || (*(dir) == '.' && *(dir + 1) == '.' && *(dir + 2) == '\0')) {
-        //LOG("Ist Korrekt");
-        return true;
-    }
-    //LOG("Ist Falsch");
-    return false;
+bool MyFS::isDirPath(const char* path) {
+    return (isDirPathCorrect(path) && *remDirPath(path) == '\0');
 }
 
 /**

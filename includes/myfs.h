@@ -82,7 +82,6 @@ public:
     void fuseDestroy();
     // TODO: Add methods of your file system here
     int getFilePosition(const char *path);
-    u_int32_t getSizeOfCharArray(char *buf);
     u_int32_t getSizeOfCharArray(const char *buf);
     int readBlock(u_int32_t blockNo,char *buf, size_t size, off_t offset);
     void transferBytes(char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff);
@@ -92,6 +91,7 @@ public:
     const char* remDirPath(const char *path);
     bool isFilenameCorrect(const char* path);
     bool isDirPathCorrect(const char *path);
+    bool isDirPath(const char* path);
     int charToInt(char* chars, int numberOfChars);
     void intToChar(int number, char* buffer, int numberOfChars);
     void readDMap();
