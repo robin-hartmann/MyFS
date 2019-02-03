@@ -671,7 +671,6 @@ void MyFS::writeSection(u_int32_t startblock, const char* buffer, size_t size, o
 }
 
 void MyFS::writeSectionByList(u_int32_t* list, const char* buf, size_t size, off_t offset) {
-    LOGM();
     char buffer[BLOCK_SIZE];
     size_t numberOfWriteBytes = 0;
     size_t numberOfWrittenBytes = 0;
@@ -684,7 +683,6 @@ void MyFS::writeSectionByList(u_int32_t* list, const char* buf, size_t size, off
             numberOfWrittenBytes += numberOfWriteBytes;
             size -= numberOfWriteBytes;
             offset = 0;
-            LOGF("WRITE BLOCK: %d", list[i]);
             blockDevice->write(list[i], buffer);
         } else {
             offset -= BLOCK_SIZE;
@@ -717,35 +715,13 @@ void MyFS::setDataBlocksUnused(u_int32_t position){ // auf basis der position wi
 
 
 void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
-    LOGM();
-    LOGF("size: %d", size);
-   /* int counter = 0;
-    int iterator = 0;
-    size = sizeToBlocks(size);
-
-
-    while(counter != size) {
-        if (iterator == NUM_DATA_BLOCKS) {
-            blockAdressBuffer = nullptr;
-            counter = size;
-        } else {
-            if (DMAP[iterator] == false) {
-                blockAdressBuffer[counter] = iterator;
-                counter++;
-            }
-            iterator++;
-
-        }
-    }*/
     int nrOfBlocks = sizeToBlocks(size);
-    LOGF("NrOfBLocks = %d", nrOfBlocks);
     bool exit = false;
     int foundBlocks = 0;
 
     for (int i = 0; foundBlocks < nrOfBlocks && !exit; i++) {
         if (!DMAP[i]) {
             blockAdressBuffer[foundBlocks] = i;
-            LOGF("blockAdressBuffer[%d] = %d", foundBlocks, i);
             foundBlocks++;
         }
         if(i == NUM_DATA_BLOCKS - 1) {
@@ -754,19 +730,15 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
             blockAdressBuffer = nullptr;
         }
     }
-    LOG("END BLOCKSUCHE");
 }
 
 
 int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset) {
-    LOGM();
-    LOGF("Size: %d; offset: %d", (int) size,(int) offset);
    size_t writtenBytes = 0;
    size_t readBytes = 0;
     for(int i = 0; size > 0; i++) {
         readBytes = size + offset > BLOCK_SIZE ? (offset > BLOCK_SIZE ? 0 : BLOCK_SIZE - offset ): size;
         if(readBytes > 0) {
-            LOGF("Section: READ BLOCK %d", list[i]);
             readBlock(list[i], buf + writtenBytes, readBytes, offset);
             writtenBytes += readBytes;
             size -= readBytes;
@@ -890,7 +862,6 @@ int MyFS::writeROOT(u_int32_t position, const char* filename, size_t size, char*
     intToChar(firstDataBlock, buffer, NUM_POINTER_BYTE);
     transferBytes(buffer, NUM_POINTER_BYTE, 0, ROOTBlock, START_POINTER_BYTE);
 
-    LOGF("WRITE ROOTBLOCK: %d;Size: %d; Pointer: %d", position + START_ROOT_BLOCKS, size, firstDataBlock);
     return blockDevice->write(position + START_ROOT_BLOCKS, ROOTBlock);
 }
 
@@ -911,58 +882,37 @@ void MyFS::clearCharArray(char* buffer, size_t size) {
 }
 
 u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, size_t newFileSize) {
-    LOGM();
     int oldNumberOfBlocks = sizeToBlocks(oldFileSize);
     int newNumberOfBlocks = sizeToBlocks(newFileSize);
-    LOGF("Old Nr of Blocks: %d", oldNumberOfBlocks);
-    LOGF("New Nr of Blocks: %d", newNumberOfBlocks);
     u_int32_t list[oldNumberOfBlocks];
-    LOG("Checkpoint 1");
     if (oldFileSize > 0) {
-        LOG("Checkpoint 2");
         getFATList(list, startposition, -1, 0);
     }
 
     if (oldNumberOfBlocks > newNumberOfBlocks) {
-        LOG("Checkpoint 3");
         if (newNumberOfBlocks > 0) {
-            LOG("Checkpoint 4");
             FAT[list[newNumberOfBlocks - 1]] = list[newNumberOfBlocks - 1];
         }
-        LOG("Checkpoint 5");
         setDataBlocksUnused(list[newNumberOfBlocks]);
-        LOG("Checkpoint 6");
         numberOfUsedDATABLOCKS += newNumberOfBlocks - oldNumberOfBlocks;
         numberOfwrittenBytes += newFileSize - oldFileSize;
-        LOG("Checkpoint 7");
         return list[0];
     } else if (newNumberOfBlocks > oldNumberOfBlocks) {
-        LOG("Checkpoint 8");
         u_int32_t freeBlocks[newNumberOfBlocks - oldNumberOfBlocks];
         searchfreeBlocks(newFileSize - oldFileSize, freeBlocks);
-        LOG("Checkpoint 9");
         if (freeBlocks != nullptr) {
-            LOG("Checkpoint 10");
             if (oldNumberOfBlocks > 0) {
-                LOG("Checkpoint 11");
-                LOGF("FAT[%d] = %d", list[oldNumberOfBlocks - 1], freeBlocks[0]);
                 FAT[list[oldNumberOfBlocks - 1]] = freeBlocks[0];
             }
-            LOG("Checkpoint 12");
             int i = 0;
             for (; i < newNumberOfBlocks - oldNumberOfBlocks - 1; i++) {
-                LOGF("FAT[%d] = %d", freeBlocks[i], freeBlocks[i + 1]);
                 FAT[freeBlocks[i]] = freeBlocks[i + 1];
                 DMAP[freeBlocks[i]] = true;
             }
-            LOG("Checkpoint 13");
-            LOGF("FAT[%d] = %d", freeBlocks[i], freeBlocks[i]);
             FAT[freeBlocks[i]] = freeBlocks[i];
             DMAP[freeBlocks[i]] = true;
-            LOG("Checkpoint 14");
             numberOfUsedDATABLOCKS += newNumberOfBlocks - oldNumberOfBlocks;
             numberOfwrittenBytes += newFileSize - oldFileSize;
-            LOG("Checkpoint 15");
             return oldNumberOfBlocks > 0 ? list[0] : freeBlocks[0];
         }
     }
