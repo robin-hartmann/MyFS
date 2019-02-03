@@ -121,6 +121,7 @@ Mounts the block device.
             - entspricht der Originaldatei
         - Inhalt an bestimmter Stelle lesen
             - entspricht der Originaldatei
+        - Inhalt mehrfach lesen (und an verschiedenen Stellen)
         - Metadaten lesen
             - User und Group ID entsprechen dem aktuellen Nutzer
             - Zugriffsrechte gesetzt auf `S_IFREG | 0444`
@@ -128,9 +129,21 @@ Mounts the block device.
             - übrige Attribute entsprechen der Originaldatei
         - genau 64 Dateien öffnen
         - mehr als 64 Dateien öffnen
+    - Dateien anlegen
+        - ungültiger Dateiname
+            - `.` oder `..`
+        - Dateiname existiert bereits
+        - Größe überschreitet verfügbaren Speicherplatz
+    - Dateien umbenennen
+        - ungültiger Dateiname
+            - `.` oder `..`
+        - Pfad existiert nicht
+    - Dateien löschen
+        - Dateiname existiert nicht
+        - mehrfach löschen und wieder anlegen
     - Root-Verzeichnis lesen
         - Zugriffsrechte gesetzt auf `S_IFDIR | 0555`
         - `nlink` ist `2`
-    - Dateien oder Verzeichnis schreiben, ändern oder löschen
-        - muss Fehler `EROFS` verursachen
-- Integration
+    - Verzeichnis anlegen
+        - muss Fehler `EACCES` verursachen
+    - Auch zuvor über `mkfs.myfs` angelegte Dateien testen
