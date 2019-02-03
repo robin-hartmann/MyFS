@@ -134,6 +134,7 @@ int MyFS::fuseSymlink(const char *path, const char *link) {
 
 int MyFS::fuseRename(const char *path, const char *newpath) {
     LOGM();
+    LOGF("PATH: %s; NEWPATH: %s", path, newpath);
     return 0;
 }
 
@@ -246,6 +247,7 @@ int MyFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
 
 int MyFS::fuseFsync(const char *path, int datasync, struct fuse_file_info *fi) {
     LOGM();
+    LOGF("PATH: %s", path);
     return 0;
 }
 
