@@ -78,6 +78,12 @@ TEST_CASE( "intToChar / charToInt" ) {
     buffer[2] = '\0';
     myfs.intToChar(24930, buffer, 2);
     REQUIRE(strcmp(buffer, "ba") == 0);
+    
+    char testBuffer[4];
+    int testnumber = 1981;
+    
+    myfs.intToChar(testnumber, testBuffer, 4);
+    REQUIRE(testnumber == myfs.charToInt(testBuffer, 4));
 }
 
 

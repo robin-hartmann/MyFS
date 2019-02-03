@@ -108,8 +108,12 @@ public:
     int writeSBLOCK();
     int writeROOT(u_int32_t position, const char* filename, size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock);
     int readSBlock();
+    void readRoot();
     int sizeToBlocks(size_t size);
     u_int32_t getFirstPointer(int filePosition);
+    void clearCharArray(char* buffer, size_t size);
+    u_int32_t createFATEntrie(u_int32_t startposition, size_t oldFATSize, size_t newFATSize);
+    void getFATList(u_int32_t* list, u_int32_t startposition, int numberOfBlocks, int startnumber);
 };
 
 #endif /* myfs_h */

@@ -28,8 +28,8 @@ int main(int argc, char *argv[]) {
     mode_t mode;
 
 
-    filesystem.writeROOT(0, ".", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
-    filesystem.writeROOT(1, "..", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+    //filesystem.writeROOT(0, ".", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+    //filesystem.writeROOT(1, "..", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
     char *memblock;
     for (int i = 2; i < argc; ++i) {
 
@@ -43,10 +43,10 @@ int main(int argc, char *argv[]) {
 
             string nameasString = argv[i];
             int pathsize = nameasString.size();
-            cout << getFilePath(argv[i], pathsize) << endl;
+            //cout << "Filename: " << getFilePath(argv[i], pathsize) << endl;
 
             int errorCode = filesystem.fuseCreate(getFilePath(argv[i], pathsize), mode, dummyinfo);
-            cout << errorCode << endl;
+            //cout << "ErrorCode: " << errorCode << endl;
             if (errorCode != EEXIST) {
                 filesystem.fuseOpen(getFilePath(argv[i], pathsize), dummyinfo);
                 filesystem.fuseWrite(getFilePath(argv[i], pathsize), memblock, size, 0, dummyinfo);
@@ -63,7 +63,8 @@ int main(int argc, char *argv[]) {
     }
 
 
-    filesystem.fuseDestroy();
+    filesystem.fuseReleasedir("/", nullptr);
+    //filesystem.fuseDestroy();
 }
 
 char *getFilePath(char *path, int size) {
