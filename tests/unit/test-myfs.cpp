@@ -84,6 +84,10 @@ TEST_CASE( "intToChar / charToInt" ) {
     
     myfs.intToChar(testnumber, testBuffer, 4);
     REQUIRE(testnumber == myfs.charToInt(testBuffer, 4));
+
+    testnumber = 61601;
+    myfs.intToChar(testnumber, testBuffer, 4);
+    REQUIRE(testnumber == myfs.charToInt(testBuffer, 4));
 }
 
 

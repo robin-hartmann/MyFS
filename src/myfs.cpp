@@ -101,6 +101,10 @@ int MyFS::fuseMkdir(const char *path, mode_t mode) {
 int MyFS::fuseUnlink(const char *path) {
     LOGM();
     LOGF("Path: %s", path);
+    LOGF("Total Number of DATA Blocks: %d", NUM_DATA_BLOCKS);
+    LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
+    LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
+    LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
     if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
         LOG("Fehler 1");
         RETURN(-ENOENT);
@@ -115,9 +119,14 @@ int MyFS::fuseUnlink(const char *path) {
     }
 
     numberOfwrittenBytes -= getFileSize(filePosition);
-    numberOfUsedDATABLOCKS -= sizeToBlocks(getFileSize(filePosition));
+    //numberOfUsedDATABLOCKS -= sizeToBlocks(getFileSize(filePosition));
+    numberOfFiles--;
     transferBytes("\0", 1, 0, FILENAME[filePosition], 0);
     writeROOT(filePosition, "\0", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+
+    LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
+    LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
+    LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
 
     RETURN(0);
 }
@@ -179,17 +188,13 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
     LOGF("Path: %s; Size: %d; Offset: %d", path, (int) size, (int) offset);
 
     if(isFileExisting(path) && openFiles[getFilePosition(path)] && size > 0) {
-        LOGF("CHeck1 SIze: %d; OFF: %d", (int) size,(int) offset);
         size = size > getFileSize(getFilePosition(path)) ? getFileSize(getFilePosition(path)) : size;
         int numberOfBlocks = sizeToBlocks(size + offset);
         char buffer[NUM_FILE_SIZE_BYTE];
-        LOGF("CHeck2 SIze: %d; OFF: %d", (int) size,(int) offset);
         readBlock(getFilePosition(path) + START_ROOT_BLOCKS, buffer, NUM_POINTER_BYTE, START_POINTER_BYTE);
         u_int32_t list[numberOfBlocks];
         u_int32_t aktuallFATPosition = charToInt(buffer, NUM_FILE_SIZE_BYTE);
-        LOGF("CHeck3 SIze: %d; OFF: %d", (int) size,(int) offset);
         getFATList(list, aktuallFATPosition, numberOfBlocks, START_DATA_BLOCKS);
-        LOGF("CALL READSECTION SIze: %d; OFF: %d", (int) size,(int) offset);
         readSectionByList(list, buf, size, offset);
         RETURN(size);
     }
@@ -199,29 +204,40 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
 int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
     LOGF("Path: %s; Size: %d; Offset: %d", path, (int) size, (int) offset);
+    LOGF("Total Number of DATA Blocks: %d", NUM_DATA_BLOCKS);
+    LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
+    LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
+    LOGF("Number of needed Blocks: %d", sizeToBlocks(size));
+    LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
     if (!isFileExisting(path)) {
+        LOG("Fehler 1");
         RETURN(-EEXIST);
     }
     int filePosition = getFilePosition(path);
     size_t oldFileSize = getFileSize(filePosition);
     if (!openFiles[filePosition]) {
+        LOG("Fehler 2");
         RETURN(-EBADF);
     } else if (sizeToBlocks(size + offset) - sizeToBlocks(oldFileSize) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) { //abändern
+        LOG("Fehler 3");
         RETURN(-ENOSPC);
     }
 
     const char* filename = remDirPath(path);
-    int firstPointer;
+    int firstPointer = 0;
     if(oldFileSize > 0) {
-        firstPointer = getFilePosition(path);
+        firstPointer = getFirstPointer(filePosition);
     }
+    LOGF("WRITE readedFIRSTPointer = %d", firstPointer);
     firstPointer = createFATEntrie(firstPointer,oldFileSize, size + offset);
-    u_int32_t list[size + offset];
+    u_int32_t list[sizeToBlocks(size + offset)];
     getFATList(list, firstPointer, -1, START_DATA_BLOCKS);
     writeSectionByList(list, buf, size, offset);
     getFATList(list, firstPointer, -1, 0);
-    LOGF("FIRST FATBLOCK: %d", (int) list[0]);
     writeROOT(filePosition, filename, size + offset, "\0", "\0", "\0", "\0", "\0", "\0", list[0]);
+    LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
+    LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
+    LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
     RETURN(size);
 }
 
@@ -766,7 +782,7 @@ int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offse
     for(int i = 0; size > 0; i++) {
         readBytes = size + offset > BLOCK_SIZE ? (offset > BLOCK_SIZE ? 0 : BLOCK_SIZE - offset ): size;
         if(readBytes > 0) {
-            LOGF("Section: READ BLOCK %d", list[i]);
+            //LOGF("Section: READ BLOCK %d", list[i]);
             readBlock(list[i], buf + writtenBytes, readBytes, offset);
             writtenBytes += readBytes;
             size -= readBytes;
@@ -912,6 +928,7 @@ void MyFS::clearCharArray(char* buffer, size_t size) {
 
 u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, size_t newFileSize) {
     LOGM();
+    LOGF("Startposition: %d; oldFileSize: %d; newFileSize: %d", startposition, oldFileSize, newFileSize);
     int oldNumberOfBlocks = sizeToBlocks(oldFileSize);
     int newNumberOfBlocks = sizeToBlocks(newFileSize);
     LOGF("Old Nr of Blocks: %d", oldNumberOfBlocks);
@@ -922,6 +939,7 @@ u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, siz
         LOG("Checkpoint 2");
         getFATList(list, startposition, -1, 0);
     }
+    LOG("Checkpoint 2.5");
 
     if (oldNumberOfBlocks > newNumberOfBlocks) {
         LOG("Checkpoint 3");
@@ -966,11 +984,14 @@ u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, siz
             return oldNumberOfBlocks > 0 ? list[0] : freeBlocks[0];
         }
     }
+    LOG("Checkpoint END");
     numberOfwrittenBytes += newFileSize - oldFileSize;
     return startposition;
 }
 
 void MyFS::getFATList(u_int32_t* list, u_int32_t startposition, int numberOfBlocks, int startnumber) {
+    LOG("getFatList() START");
+    LOGF("startposition: %d, Startnumber: %d", startposition, startnumber);
     u_int32_t aktuallPosition = startposition;
     int i = 0;
 
@@ -978,5 +999,7 @@ void MyFS::getFATList(u_int32_t* list, u_int32_t startposition, int numberOfBloc
         list[i] = aktuallPosition + startnumber;
         aktuallPosition = FAT[aktuallPosition];
     }
+    LOGF("list[%d] = %d", i, aktuallPosition + startnumber);
     list[i] = aktuallPosition + startnumber;
+    LOG("END");
 }
