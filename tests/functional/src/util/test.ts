@@ -1,6 +1,6 @@
 import ava, { ExecutionContext as GenericExecutionContext, TestInterface } from 'ava';
 
-export interface Context {
+interface Context {
   containerFile: string;
   logFile: string;
   mountDir: string;

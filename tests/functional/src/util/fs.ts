@@ -1,8 +1,7 @@
-import { ExecutionContext } from 'ava';
 import { statSync } from 'fs';
 import { resolve } from 'path';
 
-import { Context } from './test';
+import { ExecutionContext } from './test';
 
-export const getStats = (t: ExecutionContext<Context>, entryName: string) =>
+export const getStats = (t: ExecutionContext, entryName: string) =>
   statSync(resolve(t.context.mountDir, entryName));
