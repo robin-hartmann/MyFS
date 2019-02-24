@@ -51,15 +51,24 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     if(isDirPath(path)){
         statbuf->st_mode = S_IFDIR | 0555;
         statbuf->st_nlink = 2;
-        LOG("Verzeichnis");
+        //statbuf->st_size = numberOfwrittenBytes;
+        statbuf->st_blksize = BLOCK_SIZE;
+        statbuf->st_blocks = numberOfUsedDATABLOCKS;
         RETURN(0);
     } else if (isFilenameCorrect(path) && isFileExisting(path)) {
-        char buffer[4];
-        //readBlock((u_int32_t) getFilePosition(path) + START_ROOT_BLOCKS, buffer, NUM_ACCESS_RIGHT_BYTE, START_ACCESS_RIGHT_BYTE);
-        statbuf->st_size = getFileSize(getFilePosition(path));
-        statbuf->st_mode = S_IFREG | 0444;//charToInt(buffer, NUM_ACCESS_RIGHT_BYTE);
+        char rootBLOCK[BLOCK_SIZE];
+        readBlock((u_int32_t) getFilePosition(path) + START_ROOT_BLOCKS, rootBLOCK, BLOCK_SIZE, 0);
+
+        statbuf->st_size = charToInt(rootBLOCK + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE);
+
+        statbuf->st_atim.tv_sec = charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        statbuf->st_mtim.tv_sec = charToInt(rootBLOCK + START_SECOND_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        statbuf->st_ctim.tv_sec = charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+
+        statbuf->st_mode = S_IFREG | 0444;//charToInt(rootBlock + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
         statbuf->st_nlink = 1;
-        LOG("Datei");
+
+
         RETURN (0);
     }
 
@@ -84,12 +93,16 @@ int MyFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     u_int32_t freePosition = 0;
     const char* filename = remDirPath(path);
     size_t lentghOFFilename = getSizeOfCharArray(filename);
+    char timestamp[NUM_TIMESTAMP_BYTE];
+    clearCharArray(timestamp, NUM_TIMESTAMP_BYTE);
+
+    intToChar((int) time(NULL), timestamp, NUM_TIMESTAMP_BYTE);
 
     for(;FILENAME[freePosition][0] != '\0'; freePosition++);
 
     transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
     numberOfFiles++;
-    writeROOT(freePosition, filename, 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+    writeROOT(freePosition, filename, 0, "\0", "\0", "\0", timestamp, timestamp, timestamp, 0);
     RETURN(0);;
 }
 
@@ -101,6 +114,10 @@ int MyFS::fuseMkdir(const char *path, mode_t mode) {
 int MyFS::fuseUnlink(const char *path) {
     LOGM();
     LOGF("Path: %s", path);
+    LOGF("Total Number of DATA Blocks: %d", NUM_DATA_BLOCKS);
+    LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
+    LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
+    LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
     if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
         LOG("Fehler 1");
         RETURN(-ENOENT);
@@ -115,9 +132,14 @@ int MyFS::fuseUnlink(const char *path) {
     }
 
     numberOfwrittenBytes -= getFileSize(filePosition);
-    numberOfUsedDATABLOCKS -= sizeToBlocks(getFileSize(filePosition));
+    //numberOfUsedDATABLOCKS -= sizeToBlocks(getFileSize(filePosition));
+    numberOfFiles--;
     transferBytes("\0", 1, 0, FILENAME[filePosition], 0);
     writeROOT(filePosition, "\0", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+
+    LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
+    LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
+    LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
 
     RETURN(0);
 }
@@ -180,17 +202,13 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
     LOGF("Path: %s; Size: %d; Offset: %d", path, (int) size, (int) offset);
 
     if(isFileExisting(path) && openFiles[getFilePosition(path)] && size > 0) {
-        LOGF("CHeck1 SIze: %d; OFF: %d", (int) size,(int) offset);
         size = size > getFileSize(getFilePosition(path)) ? getFileSize(getFilePosition(path)) : size;
         int numberOfBlocks = sizeToBlocks(size + offset);
         char buffer[NUM_FILE_SIZE_BYTE];
-        LOGF("CHeck2 SIze: %d; OFF: %d", (int) size,(int) offset);
         readBlock(getFilePosition(path) + START_ROOT_BLOCKS, buffer, NUM_POINTER_BYTE, START_POINTER_BYTE);
         u_int32_t list[numberOfBlocks];
         u_int32_t aktuallFATPosition = charToInt(buffer, NUM_FILE_SIZE_BYTE);
-        LOGF("CHeck3 SIze: %d; OFF: %d", (int) size,(int) offset);
         getFATList(list, aktuallFATPosition, numberOfBlocks, START_DATA_BLOCKS);
-        LOGF("CALL READSECTION SIze: %d; OFF: %d", (int) size,(int) offset);
         readSectionByList(list, buf, size, offset);
         RETURN(size);
     }
@@ -200,29 +218,51 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
 int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
     LOGF("Path: %s; Size: %d; Offset: %d", path, (int) size, (int) offset);
+    LOGF("Total Number of DATA Blocks: %d", NUM_DATA_BLOCKS);
+    LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
+    LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
+    LOGF("Number of needed Blocks: %d", sizeToBlocks(size));
+    LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
     if (!isFileExisting(path)) {
+        LOG("Fehler 1");
         RETURN(-EEXIST);
     }
     int filePosition = getFilePosition(path);
-    size_t oldFileSize = getFileSize(filePosition);
+    char rootBlock[BLOCK_SIZE];
+    readBlock((u_int32_t) START_ROOT_BLOCKS + filePosition, rootBlock, BLOCK_SIZE, 0);
+
+    size_t oldFileSize = (size_t) charToInt((rootBlock + START_FILE_SIZE_BYTE), NUM_FILE_SIZE_BYTE);
     if (!openFiles[filePosition]) {
+        LOG("Fehler 2");
         RETURN(-EBADF);
     } else if (sizeToBlocks(size + offset) - sizeToBlocks(oldFileSize) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) { //abändern
+        LOG("Fehler 3");
         RETURN(-ENOSPC);
     }
 
     const char* filename = remDirPath(path);
-    int firstPointer;
+
+    char atime[NUM_TIMESTAMP_BYTE];
+    transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_FIRST_TIMESTAMP_BYTE, atime, 0);
+    char mtime[NUM_TIMESTAMP_BYTE];
+    intToChar(time(NULL), mtime, NUM_TIMESTAMP_BYTE);
+    char ctime[NUM_TIMESTAMP_BYTE];
+    intToChar(time(NULL), ctime, NUM_TIMESTAMP_BYTE);
+
+    int firstPointer = 0;
     if(oldFileSize > 0) {
-        firstPointer = getFilePosition(path);
+        firstPointer = getFirstPointer(filePosition);
     }
+    LOGF("WRITE readedFIRSTPointer = %d", firstPointer);
     firstPointer = createFATEntrie(firstPointer,oldFileSize, size + offset);
-    u_int32_t list[size + offset];
+    u_int32_t list[sizeToBlocks(size + offset)];
     getFATList(list, firstPointer, -1, START_DATA_BLOCKS);
     writeSectionByList(list, buf, size, offset);
     getFATList(list, firstPointer, -1, 0);
-    LOGF("FIRST FATBLOCK: %d", (int) list[0]);
-    writeROOT(filePosition, filename, size + offset, "\0", "\0", "\0", "\0", "\0", "\0", list[0]);
+    writeROOT(filePosition, filename, size + offset, "\0", "\0", "\0", atime, mtime, ctime, list[0]);
+    LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
+    LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
+    LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
     RETURN(size);
 }
 
@@ -724,6 +764,7 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
     for (int i = 0; foundBlocks < nrOfBlocks && !exit; i++) {
         if (!DMAP[i]) {
             blockAdressBuffer[foundBlocks] = i;
+            //LOGF("blockAdressBuffer[%d] = %d", foundBlocks, i);
             foundBlocks++;
         }
         if(i == NUM_DATA_BLOCKS - 1) {
@@ -741,6 +782,7 @@ int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offse
     for(int i = 0; size > 0; i++) {
         readBytes = size + offset > BLOCK_SIZE ? (offset > BLOCK_SIZE ? 0 : BLOCK_SIZE - offset ): size;
         if(readBytes > 0) {
+            //LOGF("Section: READ BLOCK %d", list[i]);
             readBlock(list[i], buf + writtenBytes, readBytes, offset);
             writtenBytes += readBytes;
             size -= readBytes;
@@ -856,7 +898,7 @@ int MyFS::writeROOT(u_int32_t position, const char* filename, size_t size, char*
     char buffer[4];
     clearCharArray(ROOTBlock, BLOCK_SIZE);
     int lengthOfFilename = getSizeOfCharArray(filename);
-    transferBytes(filename, lengthOfFilename < NUM_FILENAME_BYTE? lengthOfFilename + 1 : NUM_FILENAME_BYTE, 0, ROOTBlock, START_FILENAME_BYTE);
+    transferBytes(filename, lengthOfFilename < NUM_FILENAME_BYTE ? lengthOfFilename + 1 : NUM_FILENAME_BYTE, 0, ROOTBlock, START_FILENAME_BYTE);
 
     intToChar((int) size, buffer, NUM_FILE_SIZE_BYTE);
     transferBytes(buffer, NUM_FILE_SIZE_BYTE, 0, ROOTBlock, START_FILE_SIZE_BYTE);
@@ -864,6 +906,12 @@ int MyFS::writeROOT(u_int32_t position, const char* filename, size_t size, char*
     intToChar(firstDataBlock, buffer, NUM_POINTER_BYTE);
     transferBytes(buffer, NUM_POINTER_BYTE, 0, ROOTBlock, START_POINTER_BYTE);
 
+    transferBytes(firstTimestamp, NUM_TIMESTAMP_BYTE, 0, ROOTBlock, START_FIRST_TIMESTAMP_BYTE);
+    transferBytes(secondTimestamp, NUM_TIMESTAMP_BYTE, 0, ROOTBlock, START_SECOND_TIMESTAMP_BYTE);
+    transferBytes(thirdTimestamp, NUM_TIMESTAMP_BYTE, 0, ROOTBlock, START_THIRD_TIMESTAMP_BYTE);
+
+    LOGF("WRITE ROOTBLOCK: %d;Size: %d; Pointer: %d", position + START_ROOT_BLOCKS, size, firstDataBlock);
+    LOGF("atime: %d, mtime: %d, ctime: %d",charToInt(firstTimestamp, NUM_TIMESTAMP_BYTE), charToInt(secondTimestamp, NUM_TIMESTAMP_BYTE), charToInt(thirdTimestamp, NUM_TIMESTAMP_BYTE));
     return blockDevice->write(position + START_ROOT_BLOCKS, ROOTBlock);
 }
 
@@ -884,12 +932,15 @@ void MyFS::clearCharArray(char* buffer, size_t size) {
 }
 
 u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, size_t newFileSize) {
+    LOGM();
+    LOGF("Startposition: %d; oldFileSize: %d; newFileSize: %d", startposition, oldFileSize, newFileSize);
     int oldNumberOfBlocks = sizeToBlocks(oldFileSize);
     int newNumberOfBlocks = sizeToBlocks(newFileSize);
     u_int32_t list[oldNumberOfBlocks];
     if (oldFileSize > 0) {
         getFATList(list, startposition, -1, 0);
     }
+    LOG("Checkpoint 2.5");
 
     if (oldNumberOfBlocks > newNumberOfBlocks) {
         if (newNumberOfBlocks > 0) {
@@ -904,13 +955,18 @@ u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, siz
         searchfreeBlocks(newFileSize - oldFileSize, freeBlocks);
         if (freeBlocks != nullptr) {
             if (oldNumberOfBlocks > 0) {
+                LOG("Checkpoint 11");
+                //LOGF("FAT[%d] = %d", list[oldNumberOfBlocks - 1], freeBlocks[0]);
                 FAT[list[oldNumberOfBlocks - 1]] = freeBlocks[0];
             }
             int i = 0;
             for (; i < newNumberOfBlocks - oldNumberOfBlocks - 1; i++) {
+                //LOGF("FAT[%d] = %d", freeBlocks[i], freeBlocks[i + 1]);
                 FAT[freeBlocks[i]] = freeBlocks[i + 1];
                 DMAP[freeBlocks[i]] = true;
             }
+            LOG("Checkpoint 13");
+            //LOGF("FAT[%d] = %d", freeBlocks[i], freeBlocks[i]);
             FAT[freeBlocks[i]] = freeBlocks[i];
             DMAP[freeBlocks[i]] = true;
             numberOfUsedDATABLOCKS += newNumberOfBlocks - oldNumberOfBlocks;
@@ -918,11 +974,14 @@ u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, siz
             return oldNumberOfBlocks > 0 ? list[0] : freeBlocks[0];
         }
     }
+    LOG("Checkpoint END");
     numberOfwrittenBytes += newFileSize - oldFileSize;
     return startposition;
 }
 
 void MyFS::getFATList(u_int32_t* list, u_int32_t startposition, int numberOfBlocks, int startnumber) {
+    LOG("getFatList() START");
+    LOGF("startposition: %d, Startnumber: %d", startposition, startnumber);
     u_int32_t aktuallPosition = startposition;
     int i = 0;
 
@@ -930,5 +989,7 @@ void MyFS::getFATList(u_int32_t* list, u_int32_t startposition, int numberOfBloc
         list[i] = aktuallPosition + startnumber;
         aktuallPosition = FAT[aktuallPosition];
     }
+    LOGF("list[%d] = %d", i, aktuallPosition + startnumber);
     list[i] = aktuallPosition + startnumber;
+    LOG("END");
 }
