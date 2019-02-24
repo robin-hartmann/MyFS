@@ -15,16 +15,16 @@ printf "\n*** mkfs ***\n"
 $mkfs $scriptDir/tmp/container $helloWorld
 
 printf "\n*** mount ***\n"
-$mount $scriptDir/tmp/container $scriptDir/tmp/log $scriptDir/tmp/mnt/
+$mount $scriptDir/tmp/container $scriptDir/tmp/log.txt $scriptDir/tmp/mnt/ -s
 
 printf "\n*** read pre-initialized file ***\n"
 cat $scriptDir/tmp/mnt/hello-world.txt
 
 printf "\n*** create file manually ***\n"
-printf Hello World! > $scriptDir/tmp/mnt/hello-world-manual.txt
+printf Hello Manual World! > $scriptDir/tmp/mnt/hello-manual-world.txt
 
 printf "\n*** read manually created file ***\n"
-cat $scriptDir/tmp/mnt/hello-world-manual.txt
+cat $scriptDir/tmp/mnt/hello-manual-world.txt
 
 printf "\n*** unmount ***\n"
 sudo umount $scriptDir/tmp/mnt/
