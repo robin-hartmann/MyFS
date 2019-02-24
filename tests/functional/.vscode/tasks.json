@@ -12,8 +12,9 @@
         "isDefault": true
       },
       "presentation": {
-        "reveal": "always",
-        "panel": "shared"
+        "panel": "shared",
+        "reveal": "silent",
+        "showReuseMessage": false
       },
       "problemMatcher": [
         "$tsc",
@@ -29,8 +30,9 @@
         "isDefault": true
       },
       "presentation": {
-        "reveal": "always",
-        "panel": "shared"
+        "panel": "shared",
+        "reveal": "silent",
+        "showReuseMessage": false
       },
       "problemMatcher": [
         "$tsc",
@@ -43,8 +45,9 @@
       "command": "npm run test-only --silent",
       "group": "test",
       "presentation": {
+        "panel": "shared",
         "reveal": "always",
-        "panel": "shared"
+        "showReuseMessage": false
       },
       "problemMatcher": []
     }
