@@ -11,6 +11,9 @@
     "@types/pkg-dir": "2.0.0",
     "@types/tmp": "0.0.33",
     "ava": "1.0.1",
+    "eslint": "5.14.1",
+    "eslint-config-airbnb-base": "13.1.0",
+    "eslint-plugin-import": "2.16.0",
     "pkg-dir": "3.0.0",
     "tmp": "0.0.33",
     "ts-node": "8.0.2",
@@ -20,9 +23,10 @@
     "umount": "1.1.6"
   },
   "scripts": {
-    "prebuild": "npm run lint",
+    "prebuild": "npm run lint-js && npm run lint-ts",
     "build": "echo \"Building...\" && tsc && echo \"OK\"",
-    "lint": "echo \"Linting...\" && tslint --project . && echo \"OK\"",
+    "lint-js": "echo \"Linting JavaScript...\" && eslint *.js && echo \"OK\"",
+    "lint-ts": "echo \"Linting TypeScript...\" && tslint --project . && echo \"OK\"",
     "pretest": "npm run build",
     "test": "npm run test-only",
     "test-only": "echo \"Testing...\" && ava && echo \"OK\""
