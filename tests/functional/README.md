@@ -32,7 +32,7 @@ npm install
 
 ⚠️ The MyFS binaries are not built automatically before running the tests. So if the sources of MyFS have changed or haven't been built at all, make sure you run the build before running the tests. Otherwise the old binaries will be tested or the tests will fail altogether. ⚠️
 
-### Using the Terminal
+### With the Terminal
 
 Run the following command in the directory containing the `package.json` file:
 
@@ -40,14 +40,13 @@ Run the following command in the directory containing the `package.json` file:
 npm test
 ```
 
-### Using VS Code
+### With VS Code
 
 This project includes task definitions for Visual Studio Code. Just open the parent folder of the `package.json` file in VS Code and then run the task `Run tests`.
 
 ## Debugging with VS Code
 
 1. Set a breakpoint in a file inside the `src` folder
-1. Inside the folder `transpiled` open the `.spec` test file you want to run
 1. Run the debugger (by default `F5`)
 
 ## Built With

@@ -7,16 +7,19 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Run AVA test",
-      "program": "${workspaceRoot}/node_modules/ava/profile.js",
+      "name": "Run AVA test serially",
+      "program": "${workspaceFolder}/node_modules/ava/profile.js",
       "args": [
         "${file}",
         "--serial"
       ],
+      "env": {
+        "AVA_DEBUG": "true",
+        "TS_NODE_FILES": "true" // instructs ts-node to load files from tsconfig.json
+      },
       "skipFiles": [
         "<node_internals>/**/*.js"
-      ],
-      "preLaunchTask": "Build"
+      ]
     }
   ]
 }
