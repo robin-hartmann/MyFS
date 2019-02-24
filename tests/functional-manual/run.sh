@@ -21,7 +21,7 @@ printf "\n*** read pre-initialized file ***\n"
 cat $scriptDir/tmp/mnt/hello-world.txt
 
 printf "\n*** create file manually ***\n"
-printf Hello Manual World! > $scriptDir/tmp/mnt/hello-manual-world.txt
+printf "Hello Manual World!" > $scriptDir/tmp/mnt/hello-manual-world.txt
 
 printf "\n*** read manually created file ***\n"
 cat $scriptDir/tmp/mnt/hello-manual-world.txt
