@@ -98,7 +98,7 @@ Je Inode:
 - Zugriffsrechte
 	- 10 Bit
 - 3x Zugriffs-Timestamps
-	- 3x 6 Byte
+	- 3x 4 Byte
 - Zeiger auf ersten Datenblock (relativ zur Startadresse der Daten-Blöcke)
 	- 2 Byte
 
