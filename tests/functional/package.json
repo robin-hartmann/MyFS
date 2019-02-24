@@ -23,8 +23,9 @@
     "umount": "1.1.6"
   },
   "scripts": {
-    "prebuild": "npm run lint-js && npm run lint-ts",
+    "prebuild": "npm run lint-js && npm run lint-ts && npm run clean",
     "build": "echo \"Building...\" && tsc && echo \"OK\"",
+    "clean": "echo \"Cleaning...\" && rm -rf ./transpiled && echo \"OK\"",
     "lint-js": "echo \"Linting JavaScript...\" && eslint *.js && echo \"OK\"",
     "lint-ts": "echo \"Linting TypeScript...\" && tslint --project . && echo \"OK\"",
     "pretest": "npm run build",
