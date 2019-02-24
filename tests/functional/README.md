@@ -16,7 +16,8 @@ These instructions will get you a copy of the project up and running on your loc
 
 This project is intended to be used with Visual Studio Code and the following extensions are recommended:
 
-* [TSLint](https://marketplace.visualstudio.com/items?itemName=eg2.tslint) - TSLint for Visual Studio Code
+* [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) - Integrates ESLint JavaScript into VS Code
+* [TSLint](https://marketplace.visualstudio.com/items?itemName=eg2.tslint) - TSLint support for Visual Studio Code
 
 ### Preparing the Project
 
