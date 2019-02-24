@@ -33,6 +33,38 @@ test('contains no entries', (t) => {
   t.is(dirEntries.length, 0);
 });
 
+test('all entries are files', (t) => {
+  const dirCount = readdirSync(t.context.mountDir)
+    .filter(entryName => getStats(t, entryName).isDirectory())
+    .length;
+  t.is(dirCount, 0);
+});
+
+test('all files have proper attributes', (t) => {
+  const userInfo = getUserInfo();
+  const files = readdirSync(t.context.mountDir)
+    .map(entryName => ({
+      entryName,
+      stats: getStats(t, entryName),
+    }))
+    .filter(entryInfo => entryInfo.stats.isFile());
+
+  if (!files.length) {
+    return t.pass();
+  }
+
+  files.forEach((fileInfo) => {
+    const stats = fileInfo.stats;
+
+    t.is(stats.mode & fsConstants.S_IFMT, fsConstants.S_IFREG);
+    t.is(stats.mode & ~fsConstants.S_IFMT, 0o444);
+    t.is(stats.nlink, 1);
+    t.is(stats.uid, userInfo.uid);
+    t.is(stats.gid, userInfo.gid);
+    // @todo check other attributes and content
+  });
+});
+
 test('root directory has proper attributes', (t) => {
   const stats = getStats(t, '.');
   const userInfo = getUserInfo();
