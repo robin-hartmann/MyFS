@@ -274,7 +274,16 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
 
 int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
     LOGM();
-    return 0;
+    LOGF("PATH: %s", path);
+    if(isDirPath(path)){
+        statInfo->f_blocks = NUM_DATA_BLOCKS;
+        statInfo->f_bfree = NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS;
+        statInfo->f_bavail = NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS;
+        statInfo->f_bsize = BLOCK_SIZE;
+        //statInfo->f_ffree = NUM_DIR_ENTRIES - numberOfFiles;
+        RETURN(0);
+    }
+    RETURN(-ENOTDIR);
 }
 
 int MyFS::fuseFlush(const char *path, struct fuse_file_info *fileInfo) {
