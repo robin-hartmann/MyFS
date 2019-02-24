@@ -147,3 +147,4 @@ Mounts the block device.
     - Verzeichnis anlegen
         - muss Fehler `EACCES` verursachen
     - Auch zuvor über `mkfs.myfs` angelegte Dateien testen
+    - Unmounten und gleichen Container wieder mounten, um Persistenz zu testen
