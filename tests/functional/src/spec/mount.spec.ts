@@ -33,7 +33,7 @@ test('contains no entries', (t) => {
   t.is(dirEntries.length, 0);
 });
 
-test.failing('root directory has proper attributes', (t) => {
+test('root directory has proper attributes', (t) => {
   const stats = getStats(t, '.');
   const userInfo = getUserInfo();
 
