@@ -19,7 +19,8 @@
       },
       "skipFiles": [
         "<node_internals>/**/*.js"
-      ]
+      ],
+      "smartStep": false
     }
   ]
 }
