@@ -30,7 +30,6 @@ const configDebug = {
   ],
 };
 
-
 const configExtension = process.env.AVA_DEBUG
   ? configDebug
   : configProper;
