@@ -21,10 +21,10 @@ printf "\n*** read pre-initialized file ***\n"
 cat $scriptDir/tmp/mnt/hello-world.txt
 
 printf "\n*** create file manually ***\n"
-printf Hello World! > $scriptDir/tmp/mnt/hello-world-manual.txt
+printf Hello Manual World! > $scriptDir/tmp/mnt/hello-manual-world.txt
 
 printf "\n*** read manually created file ***\n"
-cat $scriptDir/tmp/mnt/hello-world-manual.txt
+cat $scriptDir/tmp/mnt/hello-manual-world.txt
 
 printf "\n*** unmount ***\n"
 sudo umount $scriptDir/tmp/mnt/
