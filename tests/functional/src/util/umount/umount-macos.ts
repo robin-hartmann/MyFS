@@ -3,7 +3,7 @@ import { umount as cbBasedUmount, isMounted as cbBasedIsMounted } from 'umount';
 import { IUmount, IsMountedResult } from './interface';
 
 const umount = (device: string) =>
-  new Promise((resolve, reject) =>
+  new Promise<void>((resolve, reject) =>
     cbBasedUmount(device, (error) => {
       if (error) {
         reject(error);

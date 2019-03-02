@@ -5,7 +5,7 @@ import { IUmount, IsMountedResult } from './interface';
 
 const exec = promisify(cbBasedExec);
 
-const umount = (device: string) => exec(`fusermount -u "${device}"`);
+const umount = (device: string) => exec(`fusermount -u "${device}"`).then(() => {});
 
 const isMounted = (device: string) =>
   new Promise<IsMountedResult>((resolve, reject) => {
