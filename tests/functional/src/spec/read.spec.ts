@@ -29,7 +29,6 @@ test.serial.before('mounts properly', async (t) => {
 });
 
 test.serial.after.always('unmounts properly', async (t) => {
-  t.log(t.context);
   await unmount(t);
   t.false(await isMounted(t));
 });

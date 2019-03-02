@@ -1,17 +1,15 @@
 import { exec as cbBasedExec } from 'child_process';
 import { realpathSync } from 'fs';
 import { dirSync, fileSync, setGracefulCleanup } from 'tmp';
-import { umount as cbBasedUmount, isMounted as cbBasedIsMounted } from 'umount';
+import { umount, isMounted as promiseBasedIsMounted } from './umount/umount';
 import { promisify } from 'util';
 
-import { ExecutionContext } from '../util/test';
+import { ExecutionContext } from './test';
 import config from '../config';
 
 setGracefulCleanup();
 
 const exec = promisify(cbBasedExec);
-const umount = promisify(cbBasedUmount);
-const promiseBasedIsMounted = promisify(cbBasedIsMounted);
 
 export const mount = async (t: ExecutionContext) => {
   const logFile = fileSync({ prefix: 'myfs-log-', postfix: '.log' });

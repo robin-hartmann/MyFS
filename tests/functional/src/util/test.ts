@@ -24,6 +24,11 @@ export const init = (t: ExecutionContext) => {
 };
 
 export const cleanup = (t: ExecutionContext) => {
-  t.log(t.context);
+  t.log({
+    containerFile: t.context.containerFile,
+    initFilesDir: t.context.initFilesDir,
+    logFile: t.context.logFile,
+    mountDir: t.context.mountDir,
+  });
   t.context.cleanupCbs.forEach(cleanupCb => cleanupCb());
 };

@@ -10,7 +10,7 @@
     "@types/node": "10.12.11",
     "@types/pkg-dir": "2.0.0",
     "@types/tmp": "0.0.33",
-    "ava": "1.0.1",
+    "ava": "1.2.1",
     "eslint": "5.14.1",
     "eslint-config-airbnb-base": "13.1.0",
     "eslint-plugin-import": "2.16.0",
