@@ -48,6 +48,7 @@ This project includes task definitions for Visual Studio Code. Just open the par
 ## Debugging with VS Code
 
 1. Set a breakpoint in a file inside the `src` folder
+1. Go to `src/spec` and open the `.spec` file you want to run
 1. Run the debugger (by default `F5`)
 
 ## Built With
