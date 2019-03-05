@@ -1,0 +1,126 @@
+> myfs-test@0.1.0 pretest /home/robin/Dokumente/Schule und Uni/HochschuleKarlsruhe/WinterSemester2018-2019/Betriebsysteme/Labor/Projekt/betriebsysteme/tests/functional
+> npm run build
+
+
+> myfs-test@0.1.0 prebuild /home/robin/Dokumente/Schule und Uni/HochschuleKarlsruhe/WinterSemester2018-2019/Betriebsysteme/Labor/Projekt/betriebsysteme/tests/functional
+> npm run lint-js && npm run lint-ts && npm run clean
+
+
+> myfs-test@0.1.0 lint-js /home/robin/Dokumente/Schule und Uni/HochschuleKarlsruhe/WinterSemester2018-2019/Betriebsysteme/Labor/Projekt/betriebsysteme/tests/functional
+> echo "Linting JavaScript..." && eslint *.js && echo "OK"
+
+Linting JavaScript...
+OK
+
+> myfs-test@0.1.0 lint-ts /home/robin/Dokumente/Schule und Uni/HochschuleKarlsruhe/WinterSemester2018-2019/Betriebsysteme/Labor/Projekt/betriebsysteme/tests/functional
+> echo "Linting TypeScript..." && tslint --project . && echo "OK"
+
+Linting TypeScript...
+OK
+
+> myfs-test@0.1.0 clean /home/robin/Dokumente/Schule und Uni/HochschuleKarlsruhe/WinterSemester2018-2019/Betriebsysteme/Labor/Projekt/betriebsysteme/tests/functional
+> echo "Cleaning..." && rm -rf ./transpiled && echo "OK"
+
+Cleaning...
+OK
+
+> myfs-test@0.1.0 build /home/robin/Dokumente/Schule und Uni/HochschuleKarlsruhe/WinterSemester2018-2019/Betriebsysteme/Labor/Projekt/betriebsysteme/tests/functional
+> echo "Building..." && tsc && echo "OK"
+
+Building...
+OK
+
+> myfs-test@0.1.0 test /home/robin/Dokumente/Schule und Uni/HochschuleKarlsruhe/WinterSemester2018-2019/Betriebsysteme/Labor/Projekt/betriebsysteme/tests/functional
+> npm run test-only
+
+
+> myfs-test@0.1.0 test-only /home/robin/Dokumente/Schule und Uni/HochschuleKarlsruhe/WinterSemester2018-2019/Betriebsysteme/Labor/Projekt/betriebsysteme/tests/functional
+> echo "Testing..." && ava && echo "OK"
+
+Testing...
+
+  - allows to open a maximum of 64 files
+  ✖ creates container with 65 files Rejected promise returned by test
+  ✖ unmounts properly Rejected promise returned by test
+    cleanup
+    ℹ {
+        containerFile: '/tmp/myfs-container-3376K5YEvhpS8PIL.bin',
+        initFilesDir: '/tmp/myfs-init-files-3376mwSzFpGSA9Ai',
+        logFile: undefined,
+        mountDir: undefined,
+      }
+  ✖ 3 tests remaining in transpiled/spec/read.spec.js
+
+  2 hooks failed
+  1 test todo
+
+  creates container with 65 files
+
+  /home/robin/Dokumente/Schule und Uni/HochschuleKarlsruhe/WinterSemester2018-2019/Betriebsysteme/Labor/Projekt/betriebsysteme/tests/functional/src/util/mkfs.ts:40
+
+   39:   } catch (e) {                                             
+   40:     throw new Error(`Error while creating container\n${e}`);
+   41:   }                                                         
+
+  Rejected promise returned by test. Reason:
+
+  Error {
+    message: `Error while creating container␊
+    Error: stderr maxBuffer exceeded`,
+  }
+
+  Object.<anonymous> (src/util/mkfs.ts:40:11)
+  step (transpiled/util/mkfs.js:32:23)
+  Object.throw (transpiled/util/mkfs.js:13:53)
+  rejected (transpiled/util/mkfs.js:5:65)
+
+
+
+  unmounts properly
+
+  /home/robin/Dokumente/Schule und Uni/HochschuleKarlsruhe/WinterSemester2018-2019/Betriebsysteme/Labor/Projekt/betriebsysteme/tests/functional/src/util/mount.ts:38
+
+   37:   if (!t.context.mountDir) {                                           
+   38:     throw new Error('Context is missing required attribute "mountDir"'…
+   39:   }                                                                    
+
+  Rejected promise returned by test. Reason:
+
+  Error {
+    message: 'Context is missing required attribute "mountDir"',
+  }
+
+  Object.<anonymous> (src/util/mount.ts:38:11)
+  step (transpiled/util/mount.js:32:23)
+  Object.next (transpiled/util/mount.js:13:53)
+  transpiled/util/mount.js:7:71
+  __awaiter (transpiled/util/mount.js:3:12)
+  Object.exports.unmount (src/util/mount.ts:36:50)
+  src/spec/read.spec.ts:32:9
+  step (transpiled/spec/read.spec.js:124:17)
+  Object.next (transpiled/spec/read.spec.js:55:14)
+
+
+npm ERR! Linux 4.15.0-45-generic
+npm ERR! argv "/usr/bin/node" "/usr/bin/npm" "run" "test-only"
+npm ERR! node v8.10.0
+npm ERR! npm  v3.5.2
+npm ERR! code ELIFECYCLE
+npm ERR! myfs-test@0.1.0 test-only: `echo "Testing..." && ava && echo "OK"`
+npm ERR! Exit status 1
+npm ERR! 
+npm ERR! Failed at the myfs-test@0.1.0 test-only script 'echo "Testing..." && ava && echo "OK"'.
+npm ERR! Make sure you have the latest version of node.js and npm installed.
+npm ERR! If you do, this is most likely a problem with the myfs-test package,
+npm ERR! not with npm itself.
+npm ERR! Tell the author that this fails on your system:
+npm ERR!     echo "Testing..." && ava && echo "OK"
+npm ERR! You can get information on how to open an issue for this project with:
+npm ERR!     npm bugs myfs-test
+npm ERR! Or if that isn't available, you can get their info via:
+npm ERR!     npm owner ls myfs-test
+npm ERR! There is likely additional logging output above.
+
+npm ERR! Please include the following file with any support request:
+npm ERR!     /home/robin/Dokumente/Schule und Uni/HochschuleKarlsruhe/WinterSemester2018-2019/Betriebsysteme/Labor/Projekt/betriebsysteme/tests/functional/npm-debug.log
+npm ERR! Test failed.  See above for more details.
