@@ -51,7 +51,7 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     if(isDirPath(path)){
         statbuf->st_mode = S_IFDIR | 0555;
         statbuf->st_nlink = 2;
-        //statbuf->st_size = numberOfwrittenBytes;
+        statbuf->st_size = numberOfwrittenBytes;
         statbuf->st_blksize = BLOCK_SIZE;
         statbuf->st_blocks = numberOfUsedDATABLOCKS;
         RETURN(0);
