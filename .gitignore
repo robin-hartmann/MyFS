@@ -85,3 +85,6 @@ fabric.properties
 
 # macOS folder settings
 .DS_STORE
+
+# node
+/node_modules/
