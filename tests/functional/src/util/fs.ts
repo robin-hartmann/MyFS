@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 
-import { ExecutionContext } from './test';
+import { ExecutionContext } from 'util/test';
 
 export const getPath = (t: ExecutionContext, entryName: string) =>
   resolve(t.context.mountDir, entryName);

@@ -4,9 +4,9 @@ import { tmpNameSync, setGracefulCleanup, dirSync } from 'tmp';
 import { unlinkSync } from 'fs';
 import { resolve } from 'path';
 
-import { ExecutionContext, FileInfo } from '../util/test';
-import config from '../config';
-import { generateFile } from './data';
+import config from 'config';
+import { ExecutionContext, FileInfo } from 'util/test';
+import { generateFile } from 'util/data';
 
 setGracefulCleanup();
 

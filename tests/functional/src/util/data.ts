@@ -1,7 +1,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
 
-import config from '../config';
+import config from 'config';
 
 const LOREM_IPSUM = readFileSync(config.RESOURCES.LOREM_IPSUM);
 

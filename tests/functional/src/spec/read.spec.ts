@@ -3,10 +3,10 @@ import {
 } from 'fs';
 import { userInfo as getUserInfo } from 'os';
 
-import { mkfs } from '../util/mkfs';
-import { mount, unmount, isMounted } from '../util/mount';
-import { test, cleanup, init } from '../util/test';
-import { getPath } from '../util/fs';
+import { mkfs } from 'util/mkfs';
+import { mount, unmount, isMounted } from 'util/mount';
+import { test, cleanup, init } from 'util/test';
+import { getPath } from 'util/fs';
 
 test.serial.before('init', init);
 

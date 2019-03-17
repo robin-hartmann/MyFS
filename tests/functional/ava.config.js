@@ -3,6 +3,9 @@ const configBase = {
   cache: true,
   failFast: false,
   verbose: true,
+  require: [
+    './scripts/tsconfig-paths-bootstrap',
+  ],
 };
 
 // config for running tests with magic assert enabled
@@ -34,4 +37,24 @@ const configExtension = process.env.AVA_DEBUG
   ? configDebug
   : configProper;
 
-export default Object.assign(configBase, configExtension);
+// this overwrites arrays instead of merging them
+const configExtended = {
+  ...configBase,
+  ...configExtension,
+};
+
+// merge all arrays
+Object
+  .keys(configExtended)
+  .filter(key => Array.isArray(configExtended[key]))
+  .forEach((key) => {
+    const configBaseValue = configBase[key] || [];
+    const configExtensionValue = configExtension[key] || [];
+
+    configExtended[key] = [
+      ...configBaseValue,
+      ...configExtensionValue,
+    ];
+  });
+
+export default configExtended;

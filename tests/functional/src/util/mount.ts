@@ -1,11 +1,11 @@
 import { exec as cbBasedExec } from 'child_process';
 import { realpathSync } from 'fs';
 import { dirSync, fileSync, setGracefulCleanup } from 'tmp';
-import { umount, isMounted as promiseBasedIsMounted } from './umount/umount';
 import { promisify } from 'util';
 
-import { ExecutionContext } from './test';
-import config from '../config';
+import config from 'config';
+import { ExecutionContext } from 'util/test';
+import { umount, isMounted as promiseBasedIsMounted } from 'util/umount/umount';
 
 setGracefulCleanup();
 
