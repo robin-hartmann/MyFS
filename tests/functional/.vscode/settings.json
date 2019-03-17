@@ -1,4 +1,5 @@
 {
+  "editor.formatOnSave": true,
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,
@@ -9,5 +10,7 @@
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
   "files.eol": "\n",
-  "tslint.ignoreDefinitionFiles": false
+  "javascript.format.insertSpaceBeforeFunctionParenthesis": true,
+  "tslint.ignoreDefinitionFiles": false,
+  "typescript.tsdk": "./node_modules/typescript/lib"
 }
