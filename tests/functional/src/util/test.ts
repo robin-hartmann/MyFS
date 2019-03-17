@@ -1,12 +1,12 @@
 import ava, { ExecutionContext as GenericExecutionContext, TestInterface } from 'ava';
 
 interface Context {
+  cleanupCbs: (() => void)[];
   containerFile: string;
+  initFiles: FileInfo[];
+  initFilesDir: string;
   logFile: string;
   mountDir: string;
-  initFilesDir: string;
-  initFiles: FileInfo[];
-  cleanupCbs: (() => void)[];
 }
 
 export interface FileInfo {
@@ -24,8 +24,10 @@ export const init = (t: ExecutionContext) => {
 };
 
 export const cleanup = (t: ExecutionContext) => {
-  t.log({
+  t.log('The following context was used:', {
+    cleanupCbsCount: t.context.cleanupCbs.length,
     containerFile: t.context.containerFile,
+    initFilesCount: t.context.initFiles.length,
     initFilesDir: t.context.initFilesDir,
     logFile: t.context.logFile,
     mountDir: t.context.mountDir,
