@@ -15,6 +15,10 @@
 #include <string.h>
 #include "blockdevice.h"
 #include "myfs-structs.h"
+#include <unistd.h>
+#include <sys/types.h>
+
+
 
 class MyFS {
 private:

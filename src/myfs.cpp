@@ -60,6 +60,8 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
         readBlock((u_int32_t) getFilePosition(path) + START_ROOT_BLOCKS, rootBLOCK, BLOCK_SIZE, 0);
 
         statbuf->st_size = charToInt(rootBLOCK + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE);
+        statbuf ->st_uid = charToInt(rootBLOCK + START_USERID_BYTE, NUM_USERID_BYTE);
+        statbuf ->st_gid = charToInt(rootBLOCK + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
 
         #ifdef __APPLE__
         statbuf->st_atimespec.tv_sec = charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
@@ -255,6 +257,11 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     char ctime[NUM_TIMESTAMP_BYTE];
     intToChar(time(NULL), ctime, NUM_TIMESTAMP_BYTE);
 
+    char userID[NUM_USERID_BYTE];
+    intToChar(getuid(),userID,NUM_USERID_BYTE);
+    char groupID[NUM_GROUPID_BYTE];
+    intToChar(getgid(),groupID,NUM_GROUPID_BYTE);
+
     int firstPointer = 0;
     if(oldFileSize > 0) {
         firstPointer = getFirstPointer(filePosition);
@@ -265,7 +272,7 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     getFATList(list, firstPointer, -1, START_DATA_BLOCKS);
     writeSectionByList(list, buf, size, offset);
     getFATList(list, firstPointer, -1, 0);
-    writeROOT(filePosition, filename, size + offset, "\0", "\0", "\0", atime, mtime, ctime, list[0]);
+    writeROOT(filePosition, filename, size + offset, userID, groupID, "\0", atime, mtime, ctime, list[0]);
     LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
     LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
     LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
@@ -934,6 +941,9 @@ int MyFS::writeROOT(u_int32_t position, const char* filename, size_t size, char*
     transferBytes(firstTimestamp, NUM_TIMESTAMP_BYTE, 0, ROOTBlock, START_FIRST_TIMESTAMP_BYTE);
     transferBytes(secondTimestamp, NUM_TIMESTAMP_BYTE, 0, ROOTBlock, START_SECOND_TIMESTAMP_BYTE);
     transferBytes(thirdTimestamp, NUM_TIMESTAMP_BYTE, 0, ROOTBlock, START_THIRD_TIMESTAMP_BYTE);
+
+    transferBytes(userID, NUM_USERID_BYTE, 0, ROOTBlock, START_USERID_BYTE);
+    transferBytes(groupID, NUM_GROUPID_BYTE, 0, ROOTBlock, START_GROUPID_BYTE);
 
     LOGF("WRITE ROOTBLOCK: %d;Size: %d; Pointer: %d", position + START_ROOT_BLOCKS, size, firstDataBlock);
     LOGF("atime: %d, mtime: %d, ctime: %d",charToInt(firstTimestamp, NUM_TIMESTAMP_BYTE), charToInt(secondTimestamp, NUM_TIMESTAMP_BYTE), charToInt(thirdTimestamp, NUM_TIMESTAMP_BYTE));
