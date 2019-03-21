@@ -54,14 +54,18 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
         statbuf->st_size = numberOfwrittenBytes;
         statbuf->st_blksize = BLOCK_SIZE;
         statbuf->st_blocks = numberOfUsedDATABLOCKS;
+
+        // @todo uid und gid im container abspeichern
+        statbuf->st_uid = geteuid();
+        statbuf->st_gid = getegid();
         RETURN(0);
     } else if (isFilenameCorrect(path) && isFileExisting(path)) {
         char rootBLOCK[BLOCK_SIZE];
         readBlock((u_int32_t) getFilePosition(path) + START_ROOT_BLOCKS, rootBLOCK, BLOCK_SIZE, 0);
 
         statbuf->st_size = charToInt(rootBLOCK + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE);
-        statbuf ->st_uid = charToInt(rootBLOCK + START_USERID_BYTE, NUM_USERID_BYTE);
-        statbuf ->st_gid = charToInt(rootBLOCK + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
+        statbuf->st_uid = charToInt(rootBLOCK + START_USERID_BYTE, NUM_USERID_BYTE);
+        statbuf->st_gid = charToInt(rootBLOCK + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
 
         #ifdef __APPLE__
         statbuf->st_atimespec.tv_sec = charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
@@ -110,7 +114,16 @@ int MyFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
 
     transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
     numberOfFiles++;
-    writeROOT(freePosition, filename, 0, "\0", "\0", "\0", timestamp, timestamp, timestamp, 0);
+
+    char userID[NUM_USERID_BYTE];
+    intToChar(geteuid(),userID,NUM_USERID_BYTE);
+    char groupID[NUM_GROUPID_BYTE];
+    intToChar(getegid(),groupID,NUM_GROUPID_BYTE);
+
+    LOGF("euid: %i", geteuid());
+    LOGF("egid: %i", getegid());
+
+    writeROOT(freePosition, filename, 0, userID, groupID, "\0", timestamp, timestamp, timestamp, 0);
     RETURN(0);
 }
 
@@ -258,9 +271,9 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     intToChar(time(NULL), ctime, NUM_TIMESTAMP_BYTE);
 
     char userID[NUM_USERID_BYTE];
-    intToChar(getuid(),userID,NUM_USERID_BYTE);
+    transferBytes(rootBlock, NUM_USERID_BYTE, START_USERID_BYTE, userID, 0);
     char groupID[NUM_GROUPID_BYTE];
-    intToChar(getgid(),groupID,NUM_GROUPID_BYTE);
+    transferBytes(rootBlock, NUM_GROUPID_BYTE, START_GROUPID_BYTE, groupID, 0);
 
     int firstPointer = 0;
     if(oldFileSize > 0) {
