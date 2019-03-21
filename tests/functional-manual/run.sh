@@ -15,13 +15,16 @@ printf "\n*** mkfs ***\n"
 $mkfs $scriptDir/tmp/container $helloWorld
 
 printf "\n*** mount ***\n"
-$mount $scriptDir/tmp/container $scriptDir/tmp/log.txt $scriptDir/tmp/mnt/ -s
+sudo $mount $scriptDir/tmp/container $scriptDir/tmp/log.txt $scriptDir/tmp/mnt/ -s -o allow_other
+# alternatively: run without -o allow_other:
+# sudo $mount $scriptDir/tmp/container $scriptDir/tmp/log.txt $scriptDir/tmp/mnt/ -s
+# but then all read access to files needs to be done with sudo, as well
 
 printf "\n*** read pre-initialized file ***\n"
 cat $scriptDir/tmp/mnt/hello-world.txt
 
 printf "\n*** create file manually ***\n"
-printf "Hello Manual World!" > $scriptDir/tmp/mnt/hello-manual-world.txt
+sudo bash -c "echo 'Hello Manual World!' > $scriptDir/tmp/mnt/hello-manual-world.txt"
 
 printf "\n*** read manually created file ***\n"
 cat $scriptDir/tmp/mnt/hello-manual-world.txt
