@@ -405,6 +405,8 @@ int MyFS::fuseTruncate(const char *path, off_t offset, struct fuse_file_info *fi
 
 int MyFS::fuseCreate(const char *path, mode_t mode, struct fuse_file_info *fileInfo) {
     // Doesn't need to be implemented, because it is not used by the wrapper
+    LOGM();
+    RETURN(0);
 }
 
 void MyFS::fuseDestroy() {
