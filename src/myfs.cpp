@@ -289,11 +289,6 @@ int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
         statInfo->f_bsize = BLOCK_SIZE;
         statInfo->f_ffree = NUM_DIR_ENTRIES - numberOfFiles;
         statInfo->f_files = numberOfFiles;
-        #ifdef __APPLE__
-        statInfo->f_iosize = NUM_DATA_BLOCKS;
-        statInfo->f_fsid = -1;
-        statInfo->f_owner = -1;
-        #endif
         RETURN(0);
     }
     RETURN(-ENOTDIR);
