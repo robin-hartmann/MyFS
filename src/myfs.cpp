@@ -49,7 +49,7 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     LOGF("Path: %s", path);
 
     if(isDirPath(path)){
-        statbuf->st_mode = S_IFDIR | 0555;
+        statbuf->st_mode = S_IFDIR | 0755;
         statbuf->st_nlink = 2;
         statbuf->st_size = numberOfwrittenBytes;
         statbuf->st_blksize = BLOCK_SIZE;
@@ -77,7 +77,7 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
         statbuf->st_ctim.tv_sec = charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
         #endif
 
-        statbuf->st_mode = S_IFREG | 0444;//charToInt(rootBlock + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
+        statbuf->st_mode = S_IFREG | 0644;//charToInt(rootBlock + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
         statbuf->st_nlink = 1;
 
 
