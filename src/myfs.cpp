@@ -390,31 +390,8 @@ int MyFS::fuseTruncate(const char *path, off_t offset, struct fuse_file_info *fi
     RETURN(0);
 }
 
-//Fertig 2.0
 int MyFS::fuseCreate(const char *path, mode_t mode, struct fuse_file_info *fileInfo) {
-    LOGM();
-    LOGF("Path: %s", path);
-    if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
-        RETURN(-ENOTDIR);
-    } else if (isFileExisting(path)) {
-        RETURN(EEXIST);
-    } else if (numberOfFiles >= 64) {
-        RETURN(-ENOSPC);
-    }
-    u_int32_t freePosition = 0;
-    const char* filename = remDirPath(path);
-    size_t lentghOFFilename = getSizeOfCharArray(filename);
-    char timestamp[NUM_TIMESTAMP_BYTE];
-    clearCharArray(timestamp, NUM_TIMESTAMP_BYTE);
-
-    intToChar((int) time(NULL), timestamp, NUM_TIMESTAMP_BYTE);
-
-    for(;FILENAME[freePosition][0] != '\0'; freePosition++);
-
-    transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
-    numberOfFiles++;
-    writeROOT(freePosition, filename, 0, "\0", "\0", "\0", timestamp, timestamp, timestamp, 0);
-    RETURN(0);
+    // Doesn't need to be implemented, because it is not used by the wrapper
 }
 
 void MyFS::fuseDestroy() {
