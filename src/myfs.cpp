@@ -225,12 +225,18 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
     if(isFileExisting(path) && openFiles[getFilePosition(path)] && size > 0) {
         size = size > getFileSize(getFilePosition(path)) ? getFileSize(getFilePosition(path)) : size;
         int numberOfBlocks = sizeToBlocks(size + offset);
-        char buffer[NUM_FILE_SIZE_BYTE];
-        readBlock(getFilePosition(path) + START_ROOT_BLOCKS, buffer, NUM_POINTER_BYTE, START_POINTER_BYTE);
+        char ROOTBlock[BLOCK_SIZE];
+        int fileposition = getFilePosition(path);
+        char atime[NUM_TIMESTAMP_BYTE];
+        intToChar(time(NULL), atime, NUM_TIMESTAMP_BYTE);
+
+        readBlock(fileposition + START_ROOT_BLOCKS, ROOTBlock, BLOCK_SIZE, 0);
         u_int32_t list[numberOfBlocks];
-        u_int32_t aktuallFATPosition = charToInt(buffer, NUM_FILE_SIZE_BYTE);
+        u_int32_t aktuallFATPosition = charToInt(ROOTBlock + START_POINTER_BYTE, NUM_POINTER_BYTE);
         getFATList(list, aktuallFATPosition, numberOfBlocks, START_DATA_BLOCKS);
         readSectionByList(list, buf, size, offset);
+
+        writeROOT(fileposition, ROOTBlock + START_FILENAME_BYTE, charToInt(ROOTBlock + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE), ROOTBlock + START_USERID_BYTE, ROOTBlock + START_GROUPID_BYTE, ROOTBlock + START_ACCESS_RIGHT_BYTE, atime, ROOTBlock + START_SECOND_TIMESTAMP_BYTE, ROOTBlock + START_THIRD_TIMESTAMP_BYTE, charToInt(ROOTBlock + START_POINTER_BYTE, NUM_POINTER_BYTE));
         RETURN(size);
     }
     RETURN(-ENOENT);
