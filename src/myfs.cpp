@@ -876,6 +876,8 @@ int MyFS::writeSBLOCK() {
     char SBLOCK[BLOCK_SIZE];
     char buffer[4];
     clearCharArray(SBLOCK, BLOCK_SIZE);
+    clearCharArray(buffer, 4);
+    clearCharArray(SBLOCK, BLOCK_SIZE);
     transferBytes(NAME_FILESYSTEM, NUM_NAME_FILESYSTEM_BYTE, 0, SBLOCK, START_FILENAME_BYTE);
     intToChar(numberOfFiles, buffer, NUM_RESERVED_ENTRIES_BYTE);
     transferBytes(buffer, NUM_RESERVED_ENTRIES_BYTE, 0 , SBLOCK, START_RESERVED_ENTRIES_BYTE);
