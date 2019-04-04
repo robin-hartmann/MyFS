@@ -525,6 +525,7 @@ int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
     u_int32_t i = 0;
     int64_t j = offset;
     char buffer[BLOCK_SIZE];
+    clearCharArray(buffer, BLOCK_SIZE);
     blockDevice->read(blockNo, buffer); //wird unötig gelesen wenn size = 0
     if (size + offset <= BLOCK_SIZE){
         transferBytes(buffer, size, offset, buf, 0);
@@ -697,7 +698,7 @@ void MyFS::readDMap(){
         int whichBitinChar = i % 8;
         DMAP[i] = (buffer[whichChar] >> whichBitinChar) & 0b1;
         if(i < 50) {
-            LOGF("DMAP[%d] = %d", i, DMAP[i]);
+            LOGF("BUFFER[%i] = %c", i , buffer[i]);
         }
     }
 
@@ -810,11 +811,16 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
 int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset) {
    size_t writtenBytes = 0;
    size_t readBytes = 0;
+   int j = 0;
     for(int i = 0; size > 0; i++) {
         readBytes = size + offset > BLOCK_SIZE ? (offset > BLOCK_SIZE ? 0 : BLOCK_SIZE - offset ): size;
         if(readBytes > 0) {
             //LOGF("Section: READ BLOCK %d", list[i]);
             readBlock(list[i], buf + writtenBytes, readBytes, offset);
+            while (i < 1 && j < 50) {
+                LOGF("BLOCK[%d] = %c", j, buf[j]);
+                j++;
+            }
             writtenBytes += readBytes;
             size -= readBytes;
         }
