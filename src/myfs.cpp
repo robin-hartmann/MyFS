@@ -258,9 +258,11 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     intToChar(time(NULL), ctime, NUM_TIMESTAMP_BYTE);
 
     char userID[NUM_USERID_BYTE];
-    intToChar(getuid(),userID,NUM_USERID_BYTE);
+    intToChar(geteuid(),userID,NUM_USERID_BYTE);
     char groupID[NUM_GROUPID_BYTE];
-    intToChar(getgid(),groupID,NUM_GROUPID_BYTE);
+    intToChar(getegid(),groupID,NUM_GROUPID_BYTE);
+
+    //LOGF("USERNAME: %d", gete)
 
     int firstPointer = 0;
     if(oldFileSize > 0) {
@@ -947,6 +949,7 @@ int MyFS::writeROOT(u_int32_t position, const char* filename, size_t size, char*
 
     LOGF("WRITE ROOTBLOCK: %d;Size: %d; Pointer: %d", position + START_ROOT_BLOCKS, size, firstDataBlock);
     LOGF("atime: %d, mtime: %d, ctime: %d",charToInt(firstTimestamp, NUM_TIMESTAMP_BYTE), charToInt(secondTimestamp, NUM_TIMESTAMP_BYTE), charToInt(thirdTimestamp, NUM_TIMESTAMP_BYTE));
+    LOGF("UID: %d; GID: %d", charToInt(userID, NUM_USERID_BYTE), charToInt(groupID, NUM_GROUPID_BYTE));
     return blockDevice->write(position + START_ROOT_BLOCKS, ROOTBlock);
 }
 
