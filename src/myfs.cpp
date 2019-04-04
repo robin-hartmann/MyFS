@@ -73,8 +73,11 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
         statbuf->st_ctimespec.tv_sec = charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
         #else
         statbuf->st_atim.tv_sec = charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        LOGF("aTime: %d", charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE));
         statbuf->st_mtim.tv_sec = charToInt(rootBLOCK + START_SECOND_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        LOGF("mTime: %d", charToInt(rootBLOCK + START_SECOND_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE));
         statbuf->st_ctim.tv_sec = charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        LOGF("cTime: %d", charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE));
         #endif
 
         statbuf->st_mode = S_IFREG | 0644;//charToInt(rootBlock + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
@@ -395,9 +398,9 @@ int MyFS::fuseReleasedir(const char *path, struct fuse_file_info *fileInfo) {
         RETURN(-ENOTDIR);
     }
     isDirOpen = false;
-    //writeSBLOCK();
-    //writeDMap();
-    //writeFAT();
+    writeSBLOCK();
+    writeDMap();
+    writeFAT();
     RETURN(0);
 }
 
@@ -448,10 +451,10 @@ void* MyFS::fuseInit(struct fuse_conn_info *conn) {
         newblockDevice->open(((MyFsInfo *) fuse_get_context()->private_data)->contFile);
         this->blockDevice = newblockDevice;
 
-        //readSBlock();
-        //readDMap();
-        //readFAT();
-        //readRoot();
+        readSBlock();
+        readDMap();
+        readFAT();
+        readRoot();
         LOG("END OF INIT()");
     }
     
@@ -686,12 +689,15 @@ void MyFS::intToChar(int number, char* buffer, int numberOfChars) {
 }
 
 void MyFS::readDMap(){
-            char buffer[NUM_DMAP_BLOCKS*BLOCK_SIZE];
-           readSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS*BLOCK_SIZE,0);
+    char buffer[NUM_DMAP_BLOCKS*BLOCK_SIZE];
+    readSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS*BLOCK_SIZE,0);
     for (int i = 0; i<NUM_DATA_BLOCKS; i++) {
         int whichChar = (i - (i % 8))/8 ;
         int whichBitinChar = i % 8;
-        DMAP[i] = (buffer[whichChar] >> whichBitinChar) & 1;
+        DMAP[i] = (buffer[whichChar] >> whichBitinChar) & 0b1;
+        if(i < 50) {
+            LOGF("DMAP[%d] = %d", i, DMAP[i]);
+        }
     }
 
 }
@@ -784,9 +790,10 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
     int foundBlocks = 0;
 
     for (int i = 0; foundBlocks < nrOfBlocks && !exit; i++) {
+        LOGF("DMAP[%d] = %d", i, DMAP[i]);
         if (!DMAP[i]) {
             blockAdressBuffer[foundBlocks] = i;
-            //LOGF("blockAdressBuffer[%d] = %d", foundBlocks, i);
+            LOGF("blockAdressBuffer[%d] = %d", foundBlocks, i);
             foundBlocks++;
         }
         if(i == NUM_DATA_BLOCKS - 1) {
@@ -837,7 +844,9 @@ void MyFS::writeFAT() {
     for (int i = 0; i < NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++) {
         intToChar(FAT[i], numberbuffer, ADRESS_LENGTH_BYTE);
         transferBytes(numberbuffer, ADRESS_LENGTH_BYTE, 0, buffer, ADRESS_LENGTH_BYTE * i);
-
+       /* if (i < 50) {
+            LOGF("FAT[%d] = %d", i, FAT[i]);
+        }*/
     }
     writeSection(START_FAT_BLOCKS,buffer,NUM_FAT_BLOCKS * BLOCK_SIZE, 0);
 
@@ -850,6 +859,9 @@ void MyFS::readFAT() {
     for(int i = 0; i< NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++){
         transferBytes(buffer, ADRESS_LENGTH_BYTE, i*ADRESS_LENGTH_BYTE, numberbuffer, 0);
         FAT[i]= charToInt(numberbuffer, ADRESS_LENGTH_BYTE);
+       /* if (i < 50) {
+            LOGF("FAT[%d] = %d", i, FAT[i]);
+        }*/
     }
 }
 
