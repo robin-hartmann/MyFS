@@ -680,9 +680,9 @@ void MyFS::intToChar(int number, char* buffer, int numberOfChars) {
 }
 
 void MyFS::readDMap(){
-            char buffer[BLOCK_SIZE];
+            char buffer[NUM_DMAP_BLOCKS*BLOCK_SIZE];
            readSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS*BLOCK_SIZE,0);
-    for (int i = 0; i<NUM_DATA_BLOCKS*NUM_DMAP_BLOCKS; i++) {
+    for (int i = 0; i<NUM_DATA_BLOCKS; i++) {
         int whichChar = (i - (i % 8))/8 ;
         int whichBitinChar = i % 8;
         DMAP[i] = (buffer[whichChar] >> whichBitinChar) & 1;
@@ -690,27 +690,22 @@ void MyFS::readDMap(){
 
 }
 
-
-
-
-void::MyFS::setBitinChar(int position, bool value, char* buffer){
-    int whichChar = (position - (position % 8))/8 ;
-    int whichBitinChar = position % 8;
-
-    if (value){
-        buffer[whichChar] |= 1 << whichBitinChar;
-    }else {
-        buffer[whichChar] &= ~(1 << whichBitinChar);
-    }
-
-}
-
-
 void MyFS::writeDMap(){
     LOGM();
-    char buffer[NUM_DATA_BLOCKS];
-    for(int i=0; i<NUM_DATA_BLOCKS ; i++) {
-        setBitinChar(i, DMAP[i], buffer);
+    char buffer[NUM_DMAP_BLOCKS*BLOCK_SIZE];
+    int whichChar = 0;
+    int whichBitinChar = 0;
+
+
+    for(int position=0; position<NUM_DATA_BLOCKS ; position++) {
+         whichChar = (position - (position % 8))/8 ;
+         whichBitinChar = position % 8;
+        if (DMAP[position]){
+            buffer[whichChar] |= 1 << whichBitinChar;
+        }else {
+            buffer[whichChar] &= ~(1 << whichBitinChar);
+        }
+
     }
     writeSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS * BLOCK_SIZE, 0);
 }
