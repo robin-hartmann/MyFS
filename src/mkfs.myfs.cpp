@@ -24,7 +24,8 @@ int main(int argc, char *argv[]) {
     MyFS filesystem;
     size_t size;
     filesystem.blockDevice = device;
-    fuse_file_info *dummyinfo = nullptr;
+    fuse_file_info *emptyInfo = nullptr;
+    dev_t emptyDev = 0;
     mode_t mode;
 
 
@@ -45,12 +46,12 @@ int main(int argc, char *argv[]) {
             int pathsize = nameasString.size();
             //cout << "Filename: " << getFilePath(argv[i], pathsize) << endl;
 
-            int errorCode = filesystem.fuseCreate(getFilePath(argv[i], pathsize), mode, dummyinfo);
+            int errorCode = filesystem.fuseMknod(getFilePath(argv[i], pathsize), mode, emptyDev);
             //cout << "ErrorCode: " << errorCode << endl;
             if (errorCode != EEXIST) {
-                filesystem.fuseOpen(getFilePath(argv[i], pathsize), dummyinfo);
-                filesystem.fuseWrite(getFilePath(argv[i], pathsize), memblock, size, 0, dummyinfo);
-                filesystem.fuseRelease(getFilePath(argv[i], pathsize), dummyinfo);
+                filesystem.fuseOpen(getFilePath(argv[i], pathsize), emptyInfo);
+                filesystem.fuseWrite(getFilePath(argv[i], pathsize), memblock, size, 0, emptyInfo);
+                filesystem.fuseRelease(getFilePath(argv[i], pathsize), emptyInfo);
             } else {
                 delete[] memblock;
                 cout << "error" << endl;

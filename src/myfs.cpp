@@ -49,19 +49,23 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     LOGF("Path: %s", path);
 
     if(isDirPath(path)){
-        statbuf->st_mode = S_IFDIR | 0555;
+        statbuf->st_mode = S_IFDIR | 0755;
         statbuf->st_nlink = 2;
         statbuf->st_size = numberOfwrittenBytes;
         statbuf->st_blksize = BLOCK_SIZE;
         statbuf->st_blocks = numberOfUsedDATABLOCKS;
+
+        // @todo uid und gid im container abspeichern
+        statbuf->st_uid = geteuid();
+        statbuf->st_gid = getegid();
         RETURN(0);
     } else if (isFilenameCorrect(path) && isFileExisting(path)) {
         char rootBLOCK[BLOCK_SIZE];
         readBlock((u_int32_t) getFilePosition(path) + START_ROOT_BLOCKS, rootBLOCK, BLOCK_SIZE, 0);
 
         statbuf->st_size = charToInt(rootBLOCK + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE);
-        statbuf ->st_uid = charToInt(rootBLOCK + START_USERID_BYTE, NUM_USERID_BYTE);
-        statbuf ->st_gid = charToInt(rootBLOCK + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
+        statbuf->st_uid = charToInt(rootBLOCK + START_USERID_BYTE, NUM_USERID_BYTE);
+        statbuf->st_gid = charToInt(rootBLOCK + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
 
         #ifdef __APPLE__
         statbuf->st_atimespec.tv_sec = charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
@@ -73,7 +77,7 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
         statbuf->st_ctim.tv_sec = charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
         #endif
 
-        statbuf->st_mode = S_IFREG | 0444;//charToInt(rootBlock + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
+        statbuf->st_mode = S_IFREG | 0644;//charToInt(rootBlock + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
         statbuf->st_nlink = 1;
 
 
@@ -110,7 +114,16 @@ int MyFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
 
     transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
     numberOfFiles++;
-    writeROOT(freePosition, filename, 0, "\0", "\0", "\0", timestamp, timestamp, timestamp, 0);
+
+    char userID[NUM_USERID_BYTE];
+    intToChar(geteuid(),userID,NUM_USERID_BYTE);
+    char groupID[NUM_GROUPID_BYTE];
+    intToChar(getegid(),groupID,NUM_GROUPID_BYTE);
+
+    LOGF("euid: %i", geteuid());
+    LOGF("egid: %i", getegid());
+
+    writeROOT(freePosition, filename, 0, userID, groupID, "\0", timestamp, timestamp, timestamp, 0);
     RETURN(0);
 }
 
@@ -291,11 +304,6 @@ int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
         statInfo->f_bsize = BLOCK_SIZE;
         statInfo->f_ffree = NUM_DIR_ENTRIES - numberOfFiles;
         statInfo->f_files = numberOfFiles;
-        #ifdef __APPLE__
-        statInfo->f_iosize = NUM_DATA_BLOCKS;
-        statInfo->f_fsid = -1;
-        statInfo->f_owner = -1;
-        #endif
         RETURN(0);
     }
     RETURN(-ENOTDIR);
@@ -397,30 +405,9 @@ int MyFS::fuseTruncate(const char *path, off_t offset, struct fuse_file_info *fi
     RETURN(0);
 }
 
-//Fertig 2.0
 int MyFS::fuseCreate(const char *path, mode_t mode, struct fuse_file_info *fileInfo) {
+    // Doesn't need to be implemented, because it is not used by the wrapper
     LOGM();
-    LOGF("Path: %s", path);
-    if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
-        RETURN(-ENOTDIR);
-    } else if (isFileExisting(path)) {
-        RETURN(EEXIST);
-    } else if (numberOfFiles >= 64) {
-        RETURN(-ENOSPC);
-    }
-    u_int32_t freePosition = 0;
-    const char* filename = remDirPath(path);
-    size_t lentghOFFilename = getSizeOfCharArray(filename);
-    char timestamp[NUM_TIMESTAMP_BYTE];
-    clearCharArray(timestamp, NUM_TIMESTAMP_BYTE);
-
-    intToChar((int) time(NULL), timestamp, NUM_TIMESTAMP_BYTE);
-
-    for(;FILENAME[freePosition][0] != '\0'; freePosition++);
-
-    transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
-    numberOfFiles++;
-    writeROOT(freePosition, filename, 0, "\0", "\0", "\0", timestamp, timestamp, timestamp, 0);
     RETURN(0);
 }
 
