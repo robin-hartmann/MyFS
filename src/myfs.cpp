@@ -690,6 +690,7 @@ void MyFS::intToChar(int number, char* buffer, int numberOfChars) {
 
 void MyFS::readDMap(){
     char buffer[NUM_DMAP_BLOCKS*BLOCK_SIZE];
+    clearCharArray(buffer,NUM_DMAP_BLOCKS*BLOCK_SIZE);
     readSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS*BLOCK_SIZE,0);
     for (int i = 0; i<NUM_DATA_BLOCKS; i++) {
         int whichChar = (i - (i % 8))/8 ;
@@ -705,6 +706,7 @@ void MyFS::readDMap(){
 void MyFS::writeDMap(){
     LOGM();
     char buffer[NUM_DMAP_BLOCKS*BLOCK_SIZE];
+    clearCharArray(buffer,NUM_DMAP_BLOCKS*BLOCK_SIZE);
     int whichChar = 0;
     int whichBitinChar = 0;
 
@@ -840,7 +842,9 @@ int MyFS::readSection(u_int32_t startblock, char* buffer, size_t size, off_t off
 void MyFS::writeFAT() {
     LOGM();
     char buffer[NUM_FAT_BLOCKS * BLOCK_SIZE];
+    clearCharArray(buffer,NUM_FAT_BLOCKS * BLOCK_SIZE);
     char numberbuffer[ADRESS_LENGTH_BYTE];
+    clearCharArray(numberbuffer,ADRESS_LENGTH_BYTE);
     for (int i = 0; i < NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++) {
         intToChar(FAT[i], numberbuffer, ADRESS_LENGTH_BYTE);
         transferBytes(numberbuffer, ADRESS_LENGTH_BYTE, 0, buffer, ADRESS_LENGTH_BYTE * i);
@@ -854,7 +858,9 @@ void MyFS::writeFAT() {
 
 void MyFS::readFAT() {
     char buffer[NUM_FAT_BLOCKS * BLOCK_SIZE];
+    clearCharArray(buffer,NUM_FAT_BLOCKS * BLOCK_SIZE);
     char numberbuffer[ADRESS_LENGTH_BYTE];
+    clearCharArray(numberbuffer,ADRESS_LENGTH_BYTE);
     readSection(START_FAT_BLOCKS, buffer, NUM_FAT_BLOCKS*BLOCK_SIZE,0);
     for(int i = 0; i< NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++){
         transferBytes(buffer, ADRESS_LENGTH_BYTE, i*ADRESS_LENGTH_BYTE, numberbuffer, 0);
