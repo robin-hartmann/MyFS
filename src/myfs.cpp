@@ -606,7 +606,7 @@ bool MyFS::isFilenameCorrect(const char *path) {
 
 //Fetig 2.0
 /**
- * Überprüft ob der übergebene Dateipfad Correct ist.
+ * Überprüft ob der übergebene Dateipfad korrect ist.
  * Achtung: Der Dateipfad darf davor nicht durch remDirPath() gelaufen sein! Das verfälscht das Ergebnis.
  * @param path Dateipfad
  * @return true, wenn Dateipfad korrekt ist
@@ -697,9 +697,6 @@ void MyFS::readDMap(){
         int whichChar = (i - (i % 8))/8 ;
         int whichBitinChar = i % 8;
         DMAP[i] = (buffer[whichChar] >> whichBitinChar) & 0b1;
-        if(i < 50) {
-            LOGF("BUFFER[%i] = %c", i , buffer[i]);
-        }
     }
 
 }
@@ -710,7 +707,6 @@ void MyFS::writeDMap(){
     clearCharArray(buffer,NUM_DMAP_BLOCKS*BLOCK_SIZE);
     int whichChar = 0;
     int whichBitinChar = 0;
-
 
     for(int position=0; position<NUM_DATA_BLOCKS ; position++) {
          whichChar = (position - (position % 8))/8 ;
@@ -793,7 +789,6 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
     int foundBlocks = 0;
 
     for (int i = 0; foundBlocks < nrOfBlocks && !exit; i++) {
-        LOGF("DMAP[%d] = %d", i, DMAP[i]);
         if (!DMAP[i]) {
             blockAdressBuffer[foundBlocks] = i;
             LOGF("blockAdressBuffer[%d] = %d", foundBlocks, i);
@@ -811,16 +806,10 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
 int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset) {
    size_t writtenBytes = 0;
    size_t readBytes = 0;
-   int j = 0;
     for(int i = 0; size > 0; i++) {
         readBytes = size + offset > BLOCK_SIZE ? (offset > BLOCK_SIZE ? 0 : BLOCK_SIZE - offset ): size;
         if(readBytes > 0) {
-            //LOGF("Section: READ BLOCK %d", list[i]);
             readBlock(list[i], buf + writtenBytes, readBytes, offset);
-            while (i < 1 && j < 50) {
-                LOGF("BLOCK[%d] = %c", j, buf[j]);
-                j++;
-            }
             writtenBytes += readBytes;
             size -= readBytes;
         }

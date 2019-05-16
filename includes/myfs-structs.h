@@ -18,7 +18,7 @@
 // TODO: Add structures of your file system here
 #define NAME_FILESYSTEM "MYFS"
 
-#define NUM_SUPER_BLOCKS  1
+#define NUM_SUPER_BLOCKS 1
 #define NUM_DMAP_BLOCKS 16
 #define NUM_FAT_BLOCKS 256
 #define NUM_ROOT_BLOCKS NUM_DIR_ENTRIES
