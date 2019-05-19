@@ -16,7 +16,7 @@
     "registry": "https://registry.npmjs.org"
   },
   "dependencies": {
-    "myfs-test": "0.1.5"
+    "myfs-test": "0.1.6"
   },
   "scripts": {
     "test-functional": "tests/functional/run.sh",
