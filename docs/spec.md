@@ -124,7 +124,7 @@ Mounts the block device.
         - Inhalt mehrfach lesen (und an verschiedenen Stellen)
         - Metadaten lesen
             - User und Group ID entsprechen dem aktuellen Nutzer
-            - Zugriffsrechte gesetzt auf `S_IFREG | 0444`
+            - Zugriffsrechte gesetzt auf `S_IFREG | 0644`
             - `nlink` ist `1`
             - übrige Attribute entsprechen der Originaldatei
         - genau 64 Dateien öffnen
@@ -142,7 +142,7 @@ Mounts the block device.
         - Dateiname existiert nicht
         - mehrfach löschen und wieder anlegen
     - Root-Verzeichnis lesen
-        - Zugriffsrechte gesetzt auf `S_IFDIR | 0555`
+        - Zugriffsrechte gesetzt auf `S_IFDIR | 0755`
         - `nlink` ist `2`
     - Verzeichnis anlegen
         - muss Fehler `EACCES` verursachen
