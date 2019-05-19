@@ -2,22 +2,25 @@
   "name": "myfs",
   "version": "0.1.0",
   "description": "FUSE-based file system",
+  "license": "UNLICENSED",
   "directories": {
     "doc": "docs",
     "test": "tests"
   },
-  "scripts": {
-    "test-functional": "./tests/functional/run.sh",
-    "test-functional-manual": "./tests/functional-manual/run.sh",
-    "test-unit": "./cmake-build-debug/bin/unittests"
-  },
+  "homepage": "https://github.com/luluhue/betriebsysteme#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/luluhue/betriebsysteme.git"
   },
-  "license": "UNLICENSED",
-  "homepage": "https://github.com/luluhue/betriebsysteme#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
   "dependencies": {
     "myfs-test": "0.1.5"
+  },
+  "scripts": {
+    "test-functional": "tests/functional/run.sh",
+    "test-functional-manual": "tests/functional-manual/run.sh",
+    "test-unit": "cmake-build-debug/bin/unittests"
   }
 }
