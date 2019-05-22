@@ -110,8 +110,6 @@ public:
     void writeFAT();
     void readFAT();
     int writeSBLOCK();
-    int createROOT(u_int32_t position, const char *filename, size_t size, char *userID, char *groupID, char *accesRight,
-                   char *firstTimestamp, char *secondTimestamp, char *thirdTimestamp, int firstDataBlock);
     int readSBlock();
     void readRoot();
     int sizeToBlocks(size_t size);
