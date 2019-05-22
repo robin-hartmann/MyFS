@@ -57,7 +57,9 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
 
         // @todo uid und gid im container abspeichern
         statbuf->st_uid = geteuid();
+        LOGF("UID: %d", getuid());
         statbuf->st_gid = getegid();
+        LOGF("GID: %d", getegid());
         RETURN(0);
     } else if (isFilenameCorrect(path) && isFileExisting(path)) {
         char rootBLOCK[BLOCK_SIZE];
@@ -65,7 +67,9 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
 
         statbuf->st_size = charToInt(rootBLOCK + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE);
         statbuf->st_uid = charToInt(rootBLOCK + START_USERID_BYTE, NUM_USERID_BYTE);
+        LOGF("UID: %d", charToInt(rootBLOCK + START_USERID_BYTE, NUM_USERID_BYTE));
         statbuf->st_gid = charToInt(rootBLOCK + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
+        LOGF("GID: %d", charToInt(rootBLOCK + START_GROUPID_BYTE, NUM_GROUPID_BYTE));
 
         #ifdef __APPLE__
         statbuf->st_atimespec.tv_sec = charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
@@ -127,7 +131,6 @@ int MyFS::fuseUnlink(const char *path) {
     }
 
     numberOfwrittenBytes -= getFileSize(filePosition);
-    //numberOfUsedDATABLOCKS -= sizeToBlocks(getFileSize(filePosition));
     numberOfFiles--;
     transferBytes("\0", 1, 0, FILENAME[filePosition], 0);
 
@@ -242,20 +245,24 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     if(oldFileSize > 0) {
         firstPointer = getFirstPointer(filePosition);
     }
-    firstPointer = createFATEntrie(firstPointer,oldFileSize, size + offset);
+    if (size + offset > oldFileSize) {
+        firstPointer = createFATEntrie(firstPointer, oldFileSize, size + offset);
+    }
     u_int32_t list[sizeToBlocks(size + offset)];
     getFATList(list, firstPointer, -1, START_DATA_BLOCKS);
     writeSectionByList(list, buf, size, offset);
-    getFATList(list, firstPointer, -1, 0);
+    getFATList(list, firstPointer, 1, 0);
 
     intToChar(time(nullptr), rootBlock + START_SECOND_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
     transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_SECOND_TIMESTAMP_BYTE, rootBlock, START_THIRD_TIMESTAMP_BYTE);
 
     intToChar(list[0], rootBlock + START_POINTER_BYTE, NUM_POINTER_BYTE);
 
-    intToChar(size + offset, rootBlock + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE);
+    if (size + offset > oldFileSize) {
+        intToChar(size + offset, rootBlock + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE);
+    }
     writeRoot(filePosition, rootBlock);
-    RETURN(size);
+    RETURN(size + offset > oldFileSize ? size + offset : oldFileSize);
 }
 
 int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
@@ -689,6 +696,7 @@ void MyFS::writeSection(u_int32_t startblock, const char* buffer, size_t size, o
 
 void MyFS::writeSectionByList(u_int32_t* list, const char* buf, size_t size, off_t offset) {
     char buffer[BLOCK_SIZE];
+    clearCharArray(buffer, BLOCK_SIZE);
     size_t numberOfWriteBytes = 0;
     size_t numberOfWrittenBytes = 0;
     for(int i = 0; size > 0; i++) {
