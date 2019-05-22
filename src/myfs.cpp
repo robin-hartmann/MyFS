@@ -703,7 +703,9 @@ void MyFS::writeSectionByList(u_int32_t* list, const char* buf, size_t size, off
         if(offset < BLOCK_SIZE) {
             clearCharArray(buffer, BLOCK_SIZE);
             numberOfWriteBytes = size > BLOCK_SIZE ? BLOCK_SIZE : size;
-            readBlock(list[i], buffer, offset, 0);
+            if (numberOfWriteBytes < BLOCK_SIZE) {
+                readBlock(list[i], buffer, offset, 0);
+            }
             transferBytes(buf, numberOfWriteBytes, numberOfWrittenBytes, buffer, offset);
             numberOfWrittenBytes += numberOfWriteBytes;
             size -= numberOfWriteBytes;
@@ -836,6 +838,7 @@ int MyFS::writeSBLOCK() {
 
 int MyFS::readSBlock(){
     char SBLOCK[BLOCK_SIZE];
+    clearCharArray(SBLOCK, BLOCK_SIZE);
     char fileNAME[NUM_FILENAME_BYTE];
     blockDevice->read(START_SUPER_BLOCKS, SBLOCK);
     transferBytes(SBLOCK,NUM_FILE_SIZE_BYTE,0,fileNAME,0);
