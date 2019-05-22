@@ -92,6 +92,10 @@ TEST_CASE( "intToChar / charToInt" ) {
     testnumber = (int) time(NULL);
     myfs.intToChar(testnumber, testBuffer, 4);
     REQUIRE(testnumber == myfs.charToInt(testBuffer, 4));
+
+    testnumber = (int) S_IFREG | 0644;
+    myfs.intToChar(testnumber, testBuffer, 4);
+    REQUIRE(testnumber == myfs.charToInt(testBuffer, 4));
 }
 
 
