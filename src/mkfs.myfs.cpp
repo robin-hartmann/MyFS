@@ -29,8 +29,8 @@ int main(int argc, char *argv[]) {
     mode_t mode;
 
 
-    //filesystem.writeROOT(0, ".", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
-    //filesystem.writeROOT(1, "..", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+    //filesystem.createROOT(0, ".", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+    //filesystem.createROOT(1, "..", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
     char *memblock;
     for (int i = 2; i < argc; ++i) {
 

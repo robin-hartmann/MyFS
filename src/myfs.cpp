@@ -80,7 +80,7 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
         LOGF("cTime: %d", charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE));
         #endif
 
-        statbuf->st_mode = S_IFREG | 0644;//charToInt(rootBlock + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
+        statbuf->st_mode = charToInt(rootBLOCK + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
         statbuf->st_nlink = 1;
 
 
@@ -97,37 +97,8 @@ int MyFS::fuseReadlink(const char *path, char *link, size_t size) {
 
 int MyFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     LOGM();
-    LOGF("Path: %s", path);
-    if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
-        RETURN(-ENOTDIR);
-    } else if (isFileExisting(path)) {
-        RETURN(EEXIST);
-    } else if (numberOfFiles >= 64) {
-        RETURN(-ENOSPC);
-    }
-    u_int32_t freePosition = 0;
-    const char* filename = remDirPath(path);
-    size_t lentghOFFilename = getSizeOfCharArray(filename);
-    char timestamp[NUM_TIMESTAMP_BYTE];
-    clearCharArray(timestamp, NUM_TIMESTAMP_BYTE);
-
-    intToChar((int) time(NULL), timestamp, NUM_TIMESTAMP_BYTE);
-
-    for(;FILENAME[freePosition][0] != '\0'; freePosition++);
-
-    transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
-    numberOfFiles++;
-
-    char userID[NUM_USERID_BYTE];
-    intToChar(geteuid(),userID,NUM_USERID_BYTE);
-    char groupID[NUM_GROUPID_BYTE];
-    intToChar(getegid(),groupID,NUM_GROUPID_BYTE);
-
-    LOGF("euid: %i", geteuid());
-    LOGF("egid: %i", getegid());
-
-    writeROOT(freePosition, filename, 0, userID, groupID, "\0", timestamp, timestamp, timestamp, 0);
-    RETURN(0);
+    int returnValue = createNewFile(path, mode);
+    RETURN(returnValue);
 }
 
 int MyFS::fuseMkdir(const char *path, mode_t mode) {
@@ -159,7 +130,7 @@ int MyFS::fuseUnlink(const char *path) {
     //numberOfUsedDATABLOCKS -= sizeToBlocks(getFileSize(filePosition));
     numberOfFiles--;
     transferBytes("\0", 1, 0, FILENAME[filePosition], 0);
-    writeROOT(filePosition, "\0", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
+    createROOT(filePosition, "\0", 0, "\0", "\0", "\0", "\0", "\0", "\0", 0);
 
     LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
     LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
@@ -230,16 +201,21 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
         int numberOfBlocks = sizeToBlocks(size + offset);
         char ROOTBlock[BLOCK_SIZE];
         int fileposition = getFilePosition(path);
-        char atime[NUM_TIMESTAMP_BYTE];
-        intToChar(time(NULL), atime, NUM_TIMESTAMP_BYTE);
 
         readBlock(fileposition + START_ROOT_BLOCKS, ROOTBlock, BLOCK_SIZE, 0);
+        intToChar(time(NULL), ROOTBlock + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        writeRoot(fileposition, ROOTBlock);
+
         u_int32_t list[numberOfBlocks];
         u_int32_t aktuallFATPosition = charToInt(ROOTBlock + START_POINTER_BYTE, NUM_POINTER_BYTE);
         getFATList(list, aktuallFATPosition, numberOfBlocks, START_DATA_BLOCKS);
         readSectionByList(list, buf, size, offset);
 
-        writeROOT(fileposition, ROOTBlock + START_FILENAME_BYTE, charToInt(ROOTBlock + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE), ROOTBlock + START_USERID_BYTE, ROOTBlock + START_GROUPID_BYTE, ROOTBlock + START_ACCESS_RIGHT_BYTE, atime, ROOTBlock + START_SECOND_TIMESTAMP_BYTE, ROOTBlock + START_THIRD_TIMESTAMP_BYTE, charToInt(ROOTBlock + START_POINTER_BYTE, NUM_POINTER_BYTE));
+        /*createROOT(fileposition, ROOTBlock + START_FILENAME_BYTE,
+                   charToInt(ROOTBlock + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE), ROOTBlock + START_USERID_BYTE,
+                   ROOTBlock + START_GROUPID_BYTE, ROOTBlock + START_ACCESS_RIGHT_BYTE, atime,
+                   ROOTBlock + START_SECOND_TIMESTAMP_BYTE, ROOTBlock + START_THIRD_TIMESTAMP_BYTE,
+                   charToInt(ROOTBlock + START_POINTER_BYTE, NUM_POINTER_BYTE));*/
         RETURN(size);
     }
     RETURN(-ENOENT);
@@ -284,7 +260,8 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     char groupID[NUM_GROUPID_BYTE];
     intToChar(getegid(),groupID,NUM_GROUPID_BYTE);
 
-    //LOGF("USERNAME: %d", gete)
+    char mode[NUM_ACCESS_RIGHT_BYTE];
+    intToChar(S_IFREG | 0644, mode, NUM_ACCESS_RIGHT_BYTE);
 
     int firstPointer = 0;
     if(oldFileSize > 0) {
@@ -296,7 +273,7 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     getFATList(list, firstPointer, -1, START_DATA_BLOCKS);
     writeSectionByList(list, buf, size, offset);
     getFATList(list, firstPointer, -1, 0);
-    writeROOT(filePosition, filename, size + offset, userID, groupID, "\0", atime, mtime, ctime, list[0]);
+    createROOT(filePosition, filename, size + offset, userID, groupID, mode, atime, mtime, ctime, list[0]);
     LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
     LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
     LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
@@ -364,10 +341,6 @@ int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
     LOGM();
     LOGF("Path: %s", path);
 
-    if(isFileExisting(path)) {
-       // RETURN (0);
-    }
-
     if(!isDirOpen) {
         RETURN(-EPERM);
     }
@@ -375,7 +348,7 @@ int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
         RETURN(-ENOTDIR);
     }
 
-    if(isFileExisting(path)) {
+    if(isFileExisting(path)) { //TODO Was ist das?
         RETURN (0);
     }
 
@@ -522,8 +495,6 @@ int MyFS::getFileSize(int position) {
  * @return
  */
 int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
-    u_int32_t i = 0;
-    int64_t j = offset;
     char buffer[BLOCK_SIZE];
     clearCharArray(buffer, BLOCK_SIZE);
     blockDevice->read(blockNo, buffer); //wird unötig gelesen wenn size = 0
@@ -698,7 +669,6 @@ void MyFS::readDMap(){
         int whichBitinChar = i % 8;
         DMAP[i] = (buffer[whichChar] >> whichBitinChar) & 0b1;
     }
-
 }
 
 void MyFS::writeDMap(){
@@ -791,7 +761,6 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
     for (int i = 0; foundBlocks < nrOfBlocks && !exit; i++) {
         if (!DMAP[i]) {
             blockAdressBuffer[foundBlocks] = i;
-            LOGF("blockAdressBuffer[%d] = %d", foundBlocks, i);
             foundBlocks++;
         }
         if(i == NUM_DATA_BLOCKS - 1) {
@@ -843,9 +812,6 @@ void MyFS::writeFAT() {
     for (int i = 0; i < NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++) {
         intToChar(FAT[i], numberbuffer, ADRESS_LENGTH_BYTE);
         transferBytes(numberbuffer, ADRESS_LENGTH_BYTE, 0, buffer, ADRESS_LENGTH_BYTE * i);
-       /* if (i < 50) {
-            LOGF("FAT[%d] = %d", i, FAT[i]);
-        }*/
     }
     writeSection(START_FAT_BLOCKS,buffer,NUM_FAT_BLOCKS * BLOCK_SIZE, 0);
 
@@ -860,9 +826,6 @@ void MyFS::readFAT() {
     for(int i = 0; i< NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++){
         transferBytes(buffer, ADRESS_LENGTH_BYTE, i*ADRESS_LENGTH_BYTE, numberbuffer, 0);
         FAT[i]= charToInt(numberbuffer, ADRESS_LENGTH_BYTE);
-       /* if (i < 50) {
-            LOGF("FAT[%d] = %d", i, FAT[i]);
-        }*/
     }
 }
 
@@ -891,7 +854,7 @@ int MyFS::readSBlock(){
     blockDevice->read(START_SUPER_BLOCKS, SBLOCK);
     transferBytes(SBLOCK,NUM_FILE_SIZE_BYTE,0,fileNAME,0);
     if( strcmp(fileNAME, NAME_FILESYSTEM) != 0){
-        return EIO;
+        return -EIO;
     }
     char numOfFiles[NUM_RESERVED_ENTRIES_BYTE];
     transferBytes(SBLOCK, NUM_RESERVED_ENTRIES_BYTE, NUM_FILE_SIZE_BYTE, numOfFiles, 0);
@@ -930,7 +893,9 @@ void MyFS::readRoot() {
  * @param firstDataBlock Pointer auf den ersten DataBlock
  * @return
  */
-int MyFS::writeROOT(u_int32_t position, const char* filename, size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock) {
+int MyFS::createROOT(u_int32_t position, const char *filename, size_t size, char *userID, char *groupID,
+                     char *accesRight, char *firstTimestamp, char *secondTimestamp, char *thirdTimestamp,
+                     int firstDataBlock) {
     char ROOTBlock[BLOCK_SIZE];
     char buffer[4];
     clearCharArray(ROOTBlock, BLOCK_SIZE);
@@ -949,6 +914,8 @@ int MyFS::writeROOT(u_int32_t position, const char* filename, size_t size, char*
 
     transferBytes(userID, NUM_USERID_BYTE, 0, ROOTBlock, START_USERID_BYTE);
     transferBytes(groupID, NUM_GROUPID_BYTE, 0, ROOTBlock, START_GROUPID_BYTE);
+
+    transferBytes(accesRight, NUM_ACCESS_RIGHT_BYTE, 0, ROOTBlock, START_ACCESS_RIGHT_BYTE);
 
     LOGF("WRITE ROOTBLOCK: %d;Size: %d; Pointer: %d", position + START_ROOT_BLOCKS, size, firstDataBlock);
     LOGF("atime: %d, mtime: %d, ctime: %d",charToInt(firstTimestamp, NUM_TIMESTAMP_BYTE), charToInt(secondTimestamp, NUM_TIMESTAMP_BYTE), charToInt(thirdTimestamp, NUM_TIMESTAMP_BYTE));
@@ -1030,7 +997,48 @@ void MyFS::getFATList(u_int32_t* list, u_int32_t startposition, int numberOfBloc
         list[i] = aktuallPosition + startnumber;
         aktuallPosition = FAT[aktuallPosition];
     }
-    LOGF("list[%d] = %d", i, aktuallPosition + startnumber);
     list[i] = aktuallPosition + startnumber;
     LOG("END");
+}
+
+int MyFS::writeRoot(u_int32_t position, char *buf) {
+    return blockDevice->write(position + START_ROOT_BLOCKS, buf);
+}
+
+int MyFS::createNewFile(const char *path, mode_t mode) {
+    LOGF("Path: %s", path);
+
+    if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
+        return -ENOTDIR;
+    } else if (isFileExisting(path)) {
+        LOG("FILE EXISTIERT SCHON");
+        return -EEXIST;
+    } else if (numberOfFiles >= 64) {
+        return -ENOSPC;
+    }
+
+    char rootBlock[BLOCK_SIZE];
+    clearCharArray(rootBlock, BLOCK_SIZE);
+    u_int32_t freePosition = 0;
+    const char* filename = remDirPath(path);
+    size_t lentghOFFilename = getSizeOfCharArray(filename);
+
+    for(;FILENAME[freePosition][0] != '\0'; freePosition++);
+
+    //S_IFREG | 0644 -> mode ?
+    intToChar(S_IFREG | 0644, rootBlock + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
+
+    transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
+    transferBytes(filename, lentghOFFilename + 1, 0 ,rootBlock, START_FILENAME_BYTE);
+    numberOfFiles++;
+
+    intToChar((int) time(nullptr), rootBlock + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+    transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_FIRST_TIMESTAMP_BYTE,rootBlock, START_SECOND_TIMESTAMP_BYTE);
+    transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_FIRST_TIMESTAMP_BYTE,rootBlock, START_THIRD_TIMESTAMP_BYTE);
+
+    intToChar(geteuid(),rootBlock + START_USERID_BYTE, NUM_USERID_BYTE);
+    intToChar(getegid(),rootBlock + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
+
+    int returnValue = writeRoot(freePosition, rootBlock);
+    RETURN(returnValue);
 }

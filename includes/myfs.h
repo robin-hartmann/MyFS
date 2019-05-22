@@ -110,7 +110,8 @@ public:
     void writeFAT();
     void readFAT();
     int writeSBLOCK();
-    int writeROOT(u_int32_t position, const char* filename, size_t size, char* userID, char* groupID, char* accesRight, char* firstTimestamp, char* secondTimestamp, char* thirdTimestamp, int firstDataBlock);
+    int createROOT(u_int32_t position, const char *filename, size_t size, char *userID, char *groupID, char *accesRight,
+                   char *firstTimestamp, char *secondTimestamp, char *thirdTimestamp, int firstDataBlock);
     int readSBlock();
     void readRoot();
     int sizeToBlocks(size_t size);
@@ -118,6 +119,8 @@ public:
     void clearCharArray(char* buffer, size_t size);
     u_int32_t createFATEntrie(u_int32_t startposition, size_t oldFATSize, size_t newFATSize);
     void getFATList(u_int32_t* list, u_int32_t startposition, int numberOfBlocks, int startnumber);
+    int writeRoot(u_int32_t position, char* buf);
+    int createNewFile(const char *path, mode_t mode);
 };
 
 #endif /* myfs_h */
