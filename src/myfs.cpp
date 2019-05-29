@@ -66,6 +66,7 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
         readBlock((u_int32_t) getFilePosition(path) + START_ROOT_BLOCKS, rootBLOCK, BLOCK_SIZE, 0);
 
         statbuf->st_size = charToInt(rootBLOCK + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE);
+        LOGF("FILESIZE: %d", charToInt(rootBLOCK + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE));
         statbuf->st_uid = charToInt(rootBLOCK + START_USERID_BYTE, NUM_USERID_BYTE);
         LOGF("UID: %d", charToInt(rootBLOCK + START_USERID_BYTE, NUM_USERID_BYTE));
         statbuf->st_gid = charToInt(rootBLOCK + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
@@ -235,6 +236,7 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     readBlock((u_int32_t) START_ROOT_BLOCKS + filePosition, rootBlock, BLOCK_SIZE, 0);
 
     size_t oldFileSize = (size_t) charToInt((rootBlock + START_FILE_SIZE_BYTE), NUM_FILE_SIZE_BYTE);
+    LOGF("OLDFILESIZE: %d", oldFileSize);
     if (!openFiles[filePosition]) {
         RETURN(-EBADF);
     } else if (sizeToBlocks(size + offset) - sizeToBlocks(oldFileSize) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) { //abändern
@@ -262,7 +264,7 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
         intToChar(size + offset, rootBlock + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE);
     }
     writeRoot(filePosition, rootBlock);
-    RETURN(size + offset > oldFileSize ? size + offset : oldFileSize);
+    RETURN(size);
 }
 
 int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
