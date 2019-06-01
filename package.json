@@ -21,6 +21,7 @@
   "scripts": {
     "test-functional": "tests/functional/run.sh",
     "test-functional-manual": "tests/functional-manual/run.sh",
-    "test-unit": "cmake-build-debug/bin/unittests"
+    "test-unit": "cmake-build-debug/bin/unittests",
+    "test": "npm run test-unit && npm run test-functional"
   }
 }

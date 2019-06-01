@@ -40,4 +40,7 @@ npm run test-functional
 
 # manual functional tests
 npm run test-functional-manual
+
+# all tests except manual
+npm test
 ```
