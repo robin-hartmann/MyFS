@@ -17,8 +17,6 @@ Konstante Werte, von denen wir ausgehen:
 
 ### Selbst definiert
 
-- Texte werden in UTF-8 (de)kodiert
-
 Konstante Werte, von denen wir ausgehen:
 
 - NUM_DATA_BLOCKS
