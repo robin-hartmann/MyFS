@@ -51,9 +51,7 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     if(isDirPath(path)){
         statbuf->st_mode = S_IFDIR | 0755;
         statbuf->st_nlink = 2;
-        statbuf->st_size = numberOfwrittenBytes;
         statbuf->st_blksize = BLOCK_SIZE;
-        statbuf->st_blocks = numberOfUsedDATABLOCKS;
 
         // @todo uid und gid im container abspeichern
         statbuf->st_uid = geteuid();
@@ -87,7 +85,7 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
 
         statbuf->st_mode = charToInt(rootBLOCK + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
         statbuf->st_nlink = 1;
-
+        statbuf->st_blksize = BLOCK_SIZE;
 
         RETURN (0);
     }
