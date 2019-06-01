@@ -19,9 +19,9 @@
     "myfs-test": "0.1.10"
   },
   "scripts": {
-    "test-functional": "tests/functional/run.sh",
-    "test-functional-manual": "tests/functional-manual/run.sh",
-    "test-unit": "cmake-build-debug/bin/unittests",
+    "test-functional": "echo \"Running functional tests\" && tests/functional/run.sh && echo \"OK\"",
+    "test-functional-manual": "echo \"Running manual functional tests\" && tests/functional-manual/run.sh && echo \"OK\"",
+    "test-unit": "echo \"Running unit tests\" && cmake-build-debug/bin/unittests && echo \"OK\"",
     "test": "npm run test-unit && npm run test-functional"
   }
 }
