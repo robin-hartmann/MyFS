@@ -49,43 +49,53 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     LOGF("Path: %s", path);
 
     if(isDirPath(path)){
-        statbuf->st_mode = S_IFDIR | 0755;
-        statbuf->st_nlink = 2;
-        statbuf->st_blksize = BLOCK_SIZE;
-
         // @todo uid und gid im container abspeichern
         statbuf->st_uid = geteuid();
-        LOGF("UID: %d", getuid());
+        LOGF("uid: %d", statbuf->st_uid);
         statbuf->st_gid = getegid();
-        LOGF("GID: %d", getegid());
+        LOGF("gid: %d", statbuf->st_gid);
+
+        statbuf->st_mode = S_IFDIR | 0755;
+        LOGF("mode: %d", statbuf->st_mode);
+        statbuf->st_nlink = 2;
+        LOGF("nlink: %d", statbuf->st_nlink);
+        statbuf->st_blksize = BLOCK_SIZE;
+        LOGF("blksize: %d", statbuf->st_blksize);
+
         RETURN(0);
     } else if (isFilenameCorrect(path) && isFileExisting(path)) {
         char rootBLOCK[BLOCK_SIZE];
         readBlock((u_int32_t) getFilePosition(path) + START_ROOT_BLOCKS, rootBLOCK, BLOCK_SIZE, 0);
 
         statbuf->st_size = charToInt(rootBLOCK + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE);
-        LOGF("FILESIZE: %d", charToInt(rootBLOCK + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE));
+        LOGF("size: %d", statbuf->st_size);
         statbuf->st_uid = charToInt(rootBLOCK + START_USERID_BYTE, NUM_USERID_BYTE);
-        LOGF("UID: %d", charToInt(rootBLOCK + START_USERID_BYTE, NUM_USERID_BYTE));
+        LOGF("uid: %d", statbuf->st_uid);
         statbuf->st_gid = charToInt(rootBLOCK + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
-        LOGF("GID: %d", charToInt(rootBLOCK + START_GROUPID_BYTE, NUM_GROUPID_BYTE));
+        LOGF("gid: %d", statbuf->st_gid);
 
         #ifdef __APPLE__
         statbuf->st_atimespec.tv_sec = charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        LOGF("atimespec: %d", statbuf->st_atimespec.tv_sec);
         statbuf->st_mtimespec.tv_sec = charToInt(rootBLOCK + START_SECOND_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        LOGF("mtimespec: %d", statbuf->st_mtimespec.tv_sec);
         statbuf->st_ctimespec.tv_sec = charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        LOGF("ctimespec: %d", statbuf->st_ctimespec.tv_sec);
         #else
         statbuf->st_atim.tv_sec = charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
-        LOGF("aTime: %d", charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE));
+        LOGF("atim: %d", statbuf->st_atim.tv_sec);
         statbuf->st_mtim.tv_sec = charToInt(rootBLOCK + START_SECOND_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
-        LOGF("mTime: %d", charToInt(rootBLOCK + START_SECOND_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE));
+        LOGF("mtim: %d", statbuf->st_mtim.tv_sec);
         statbuf->st_ctim.tv_sec = charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
-        LOGF("cTime: %d", charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE));
+        LOGF("ctim: %d", statbuf->st_ctim.tv_sec);
         #endif
 
         statbuf->st_mode = charToInt(rootBLOCK + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
+        LOGF("mode: %d", statbuf->st_mode);
         statbuf->st_nlink = 1;
+        LOGF("nlink: %d", statbuf->st_nlink);
         statbuf->st_blksize = BLOCK_SIZE;
+        LOGF("blksize: %d", statbuf->st_blksize);
 
         RETURN (0);
     }
@@ -270,11 +280,17 @@ int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
     LOGF("PATH: %s", path);
     if(isDirPath(path)){
         statInfo->f_blocks = NUM_DATA_BLOCKS;
+        LOGF("block: %d", statInfo->f_blocks);
         statInfo->f_bfree = NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS;
+        LOGF("bfree: %d", statInfo->f_bfree);
         statInfo->f_bavail = NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS;
+        LOGF("bavail: %d", statInfo->f_bavail);
         statInfo->f_bsize = BLOCK_SIZE;
+        LOGF("bsize: %lu", statInfo->f_bsize);
         statInfo->f_ffree = NUM_DIR_ENTRIES - numberOfFiles;
+        LOGF("ffree: %d", statInfo->f_ffree);
         statInfo->f_files = numberOfFiles;
+        LOGF("files: %d", statInfo->f_files);
         RETURN(0);
     }
     RETURN(-ENOTDIR);
