@@ -17,6 +17,9 @@ $mkfs $scriptDir/tmp/container $helloWorld
 printf "\n*** mount ***\n"
 $mount $scriptDir/tmp/container $scriptDir/tmp/log.txt $scriptDir/tmp/mnt/ -s
 
+printf "\n*** read block size ***\n"
+stat -f %k $scriptDir/tmp/mnt/
+
 printf "\n*** read pre-initialized file ***\n"
 cat $scriptDir/tmp/mnt/hello-world.txt
 
