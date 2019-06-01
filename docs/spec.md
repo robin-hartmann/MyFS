@@ -14,7 +14,7 @@ Creates and initializes the block device.
     - most attributes (name, size, `atime`, `mtime`, `ctime`) are copied from the original files
         - length of name is limited to `NAME_LENGTH`
     - user and group id are set depending on the current user
-    - access rights (mode) of files are set to `S_IFREG | 0444`
+    - access rights (mode) of files are set to `S_IFREG | 0644`
 
 ### build `mount.myfs`
 
@@ -23,7 +23,7 @@ Mounts the block device.
 - is called like this:<br>
   `mount.myfs <container-file> <log-file> <mount-dir>`
 - the root directory returns the following values for...
-    - ...its own access rights (mode): `S_IFDIR | 0555`
+    - ...its own access rights (mode): `S_IFDIR | 0755`
     - ...its own nlink: `2`
     - ...a file's nlink: `1`
 - amount of opened files is limited to `NUM_OPEN_FILES`
