@@ -1,46 +1,46 @@
 # MyFS
 
-## Prerequisites
-To be able to build and run this project, the following software has to be installed:
+## Voraussetzungen
+Um dieses Projekt bauen und ausführen zu können, muss die folgende Software installiert sein:
 * fuse
 * pkg-config
 
-For running the functional tests, the following needs to be installed additionally:
-* [Node.js](https://nodejs.org) - JavaScript run-time environment
+Zum Ausführen der funktionalen Tests muss zudem Folgendes installiert sein:
+* [Node.js](https://nodejs.org) - JavaScript Laufzeitumgebung
 
-### Setup on macOS
-1. Download and install [osxfuse](https://osxfuse.github.io/) from [here](https://github.com/osxfuse/osxfuse/releases)
-1. Install [Homebrew](https://brew.sh/) as described [here](https://docs.brew.sh/Installation)
-1. Use Homebrew to install the package [`pkg-config`](https://brewformulas.org/Pkg-config):<br>
+### Installation auf macOS
+1. [osxfuse](https://osxfuse.github.io/) herunterladen von [hier](https://github.com/osxfuse/osxfuse/releases) und installieren
+1. [Homebrew](https://brew.sh/) installieren wie [hier](https://docs.brew.sh/Installation) beschrieben
+1. Homebrew verwenden um das Package [`pkg-config`](https://brewformulas.org/Pkg-config) zu installieren:<br>
   `brew install pkg-config`
 
-## Documentation
+## Dokumentation
 
 ### [Design](docs/design.md)
 
-### [Specification](docs/spec.md)
+### [Spezifikation](docs/spec.md)
 
-### [Notes](docs/notes.md)
+### [Notizen zur Aufgabenstellung](docs/notes.md)
 
-## Running the Tests
+## Ausführen der Tests
 
-⚠️ The MyFS binaries are not built automatically before running the tests. So if the sources of MyFS have changed or haven't been built at all, make sure you run the build before running the tests. Otherwise the old binaries will be tested or the tests will fail altogether. ⚠️
+⚠️ Die MyFS Binärdateien werden NICHT automatisch gebaut wenn man die Tests ausführt. Falls also der Quellcode von MyFS geändert wurde oder überhaupt noch nicht gebaut wurde, dann müssen die Binärdateien vor dem Ausführen der Tests gebaut werden. Ansonsten werden stattdessen die alten Binärdateien getestet oder die Tests schlagen komplett fehl. ⚠️
 
-### With the Terminal
+### Über das Terminal
 
-Run the following command in the directory containing the `package.json` file:
+Einen (oder mehrere) der folgenden Befehle in dem Verzeichnis ausführen, das die `package.json` Datei enthält:
 
 ```bash
-# unit tests
+# Unittests
 npm run test-unit
 
-# functional tests
-npm install # only required for initial installation and updates
+# funktionale Tests
+npm install # nur notwendig bei der initialen Installation oder für Updates
 npm run test-functional
 
-# manual functional tests
+# manuelle funktionale Tests
 npm run test-functional-manual
 
-# all tests except manual
+# alle Tests außer die manuellen
 npm test
 ```

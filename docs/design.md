@@ -22,7 +22,7 @@ Konstante Werte, von denen wir ausgehen:
 - NUM_DATA_BLOCKS
 	- 2^16 Blöcke
 
-## S-Block
+## Superblock
 Informationen über das Dateisystem.
 
 - Namen des Dateisystems = "MYFS"
@@ -38,18 +38,18 @@ Informationen über das Dateisystem.
 
 1 Block
 
-## D-Map
+## DMAP
 Array von Bits zur Angabe, ob Block frei ist. So viele Einträge, wie es Datenblöcke gibt. 1 = belegt, 0 = frei. Nicht verwendete Bits werden auf 1 gesetzt.
 
 ```
-// determine if block is used
+// Überprüfen ob Block belegt ist
 isBlockUsed = (bool) dMap[relativeAddress];
 ```
 
 ### Größe
 
 ```
-// calculate amount of blocks occupied by D-Map
+// Berechnen der von der DMAP belegten Blöcke
 dMapSize = NUM_DATA_BLOCKS * 1/8;
 dMapBlockCount = roundUp(dMapSize / BLOCK_SIZE);
 ```
@@ -60,20 +60,20 @@ dMapBlockCount = roundUp(dMapSize / BLOCK_SIZE);
 Array der Folgeblöcke. So viele Einträge, wie es Datenblöcke gibt. Wenn ein Block keinen Folgeblock hat, referenziert er sich selbst.
 
 ```
-// get a data block's following relative address
+// Bestimmen der relativen Folgeadresse eines Datenblocks
 nextRelativeAddress = fat[currentRelativeAddress];
 
-// check if there is no following relative address
+// Überprüfen ob es keine weitere Folgeadresse gibt
 isEndBlock = currentRelativeAddress == fat[currentRelativeAddress];
-// the end block references itself
+// der EndBlock referenziert sich selbst
 
-// determine a data block's absolute address
+// Bestimmen der absoluten Adressen eines Datenblocks
 absoluteAddress = dataStartAddress + relativeAddress;
 ```
 
 ### Größe
 ```
-// calculate amount of blocks occupied by FAT
+// Berechnen der von dem FAT belegten Blöcke
 addressByteCount = sizeof(NUM_DATA_BLOCKS);
 fatSize = NUM_DATA_BLOCKS * addressByteCount;
 fatBlockCount = roundUp(fatSize / BLOCK_SIZE));
@@ -82,7 +82,7 @@ fatBlockCount = roundUp(fatSize / BLOCK_SIZE));
 256 Blöcke
 
 ## Root-Verzeichnis
-65 Inodes, jeweils in einem Block. 64 für Dateien, 1 für Root-Verzeichnis. Root-Verzeichnis liegt in erstem Block und wird über "." und ".." referenziert. Wenn Größe 0 ist, wird der Zeiger auf den ersten Datenblock ignoriert.
+65 Inodes, jeweils in einem Block. 64 für Dateien, 1 für Root-Verzeichnis. Root-Verzeichnis liegt in erstem Block und wird über `.` und `..` referenziert. Wenn Größe 0 ist, wird der Zeiger auf den ersten Datenblock ignoriert.
 
 Je Inode:
 - Dateiname

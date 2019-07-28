@@ -1,125 +1,127 @@
-# Notes
+# Notizen zur Aufgabenstellung
 
-## Part 1: Read-Only File System
+## Teil 1: Read-Only Dateisystem
 
-### [Specification](spec.md#Part-1:-Read-Only-File-System)
+### [Spezifikation](spec.md#Teil-1:-Read-Only-Dateisystem)
 
-### Part 1a
+### Teil 1a
 
-Definition of the file system's structure and of the software architecture.
+Definition der Struktur des Dateisystems und der Softwarearchitektur.
 
-### Part 1b
+### Teil 1b
 
-Creation and initialization of the block device using `mkfs.myfs <container-file> [file1, file2, ...]`.
+Erstellen und Initialisieren des Block Devices (Container) über `mkfs.myfs <container-datei> [datei1, datei2, ...]`.
 
-- to read the attributes of the original files use `stat()`
-- fuse operations are not needed necessarily
-    - `BlockDevice` can be used directly
-    - but operations could be implemented and re-used by the next step
+- um die Attribute der Originaldateien zu lesen wird `stat()` verwendet
+- es müssen nicht unbedingt FUSE Operationen verwendet werden
+    - `BlockDevice` can direkt verwendet werden
+    - aber FUSE Operationen könnten implementiert und in Teil 2 wiederverwendet werden
 
-### Part 1c
+### Teil 1c
 
-Mouting the block device using `mount.myfs <container-file> <log-file> <mount-dir>`
+Einhängen des Block Devices über `mount.myfs <container-datei> <log-datei> <ziel-verzeichnis>`.
 
-- can be dismounted using `fusermount --unmount`
+- kann ausgehängt werden über...
+    - Linux: `fusermount --unmount`
+    - macOS: `umount`
 
-### Part 1d
+### Teil 1d
 
-Extensive testing
+Ausgiebiges Testen
 
-- calling `mount.myfs -s` causes fuse to run in single mode for easier debugging
+- mit dem Aufruf `mount.myfs -s` kann man FUSE zwingen nur einen Thread zu verwenden, um das Debugging zu vereinfachen
 
-## Part 2: Read-Write File System
+## Teil 2: Read-Write Dateisystem
 
-### [Specification](spec.md#Part-2:-Read-Write-File-System)
+### [Spezifikation](spec.md#Teil-2:-Read-Write-Dateisystem)
 
-## Part 3: Documentation
+## Teil 3: Dokumentation
 
-## Additional Information
+## Zusätzliche Informationen
 
-### Deadline for Submission: 30.01.19
+### [Dokumentation für libfuse](http://libfuse.github.io/doxygen/)
 
-### [libfuse documentation](http://libfuse.github.io/doxygen/)
+### [Beispiele für libfuse](https://github.com/libfuse/libfuse/tree/master/example)
 
-### [libfuse examples](https://github.com/libfuse/libfuse/tree/master/example)
-
-### Structure of MyFS container files (minimum)
-- Super Block
-    - information about the file system (size, position of entries, ...)
+### Struktur des MyFS Containers (minimal)
+- Superblock
+    - Informationen über das Dateisystem (Größe, Position von Einträngen, etc.)
 - DMAP
-    - location of empty data blocks
+    - Positionen leerer Datenblöcke
 - File Allocation Table (FAT)
-- Root Directory of file in the file system
-    - file name
-    - file size
-    - user and group id
-    - access rights (mode)
-    - timestamps
-        - last access (`atime`)
-        - last change (`mtime`)
-        - last status change (`ctime`)
-    - pointer to first data block
-- Data Blocks
+    - Positionen zusammengehöriger Datenblöcke
+- Root-Verzeichnis der Dateien
+    - Dateiattribute
+        - Name
+        - Größe
+        - Besitzer (`uid` und `gid`)
+        - Zugriffsrechte (`mode`)
+        - Zeitstempel
+            - letzter Zugriff (`atime`)
+            - letzte Änderung der Metadaten (`ctime`)
+            - letzte Modifikation des Dateiinhalts (`mtime`)
+        - Pointer auf den ersten Datenblock
+- Datenblöcke
 
-### Operations
-- directory
+### Operationen
+- Verzeichnis
     - readdir(path)
-        - get content
+        - enthaltene Einträge auflisten
     - mkdir(path, mode)
-        - create
+        - anlegen
     - rmdir(path)
-        - delete
-- file
+        - löschen
+- Datei
     - mknod(path, mode, dev)
-        - create
+        - anlegen
     - unlink(path)
-        - delete
+        - löschen
     - rename(old, new)
-        - rename or move
+        - umbenennen bzw. verschieben
     - open(path, flags)
-        - open
+        - öffnen
     - read(path, buf, length, offset, fh)
-        - read
+        - lesen
     - write(path, buf, size, offset, fh)
-        - write
+        - schreiben
     - truncate(path, len, fh)
-        - cut to length
+        - auf Länge zuschneiden
     - flush(path, fh)
-        - write to disk
+        - auf Datenträger persistieren
     - release(path, fh)
-        - close finally
-- metadata
+        - endgültig schließen
+- Metadaten
     - getattr(path)
-        - read metadata
+        - lesen
     - chmod(path, mode)
-        - change access rights
+        - Zugriffsrechte ändern
     - chown(path, uid, gid)
-        - change owner
+        - Besitzer ändern
     - fsinit(self)
-        - initialize
+        - Dateisystem initialisieren
 
-### Proper Error Codes
-- functions called by fuse return on...
-    - ...success: `value` >= 0
-    - ...error: `-errorCode`
-- codes defined in `errno.h`
+### Passende Fehlercodes
+- von FUSE aufgerufene Funktionen geben zurück bei...
+    - ...Erfolg: `value` >= 0
+    - ...Fehler: `-errorCode`
+- Fehlercodes definiert in `errno.h`
     - ENOSYS
-        - function not implemented
+        - Funktion nicht implementiert
     - EROFS
-        - read-only file system
+        - Read-Only Dateisystem
     - EPERM
-        - operation not allowed
+        - Operation nicht erlaubt
     - EACCES
-        - access denied
+        - Zugriff verweigert
     - ENOENT
-        - file or directory does not exist
+        - Eintrag existiert nicht
     - EIO
-        - I/O exception
+        - E/A-Fehler
     - EEXIST
-        - file exists
+        - Eintrag existiert bereits
     - ENOTDIR
-        - file is not a directory
+        - Eintrag ist kein Verzeichnis
     - EISDIR
-        - file is a directory
+        - Eintrag ist ein Verzeichnis
     - ENOTEMPTY
-        - directory is not empty
+        - Verzeichnis ist nicht leer
