@@ -64,5 +64,10 @@
 #define START_CTIME_BYTE START_MTIME_BYTE + NUM_TIMESTAMP_BYTE
 #define START_POINTER_BYTE START_CTIME_BYTE + NUM_TIMESTAMP_BYTE
 
+struct fileCacheInfo {
+    u_int32_t cachedBlockNo;
+    char *cachedBlock;
+};
+
 
 #endif /* myfs_structs_h */

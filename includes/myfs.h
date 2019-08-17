@@ -35,6 +35,7 @@ public:
     bool DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8] = {};
     char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH + 1];
     int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK] = {};
+    fileCacheInfo fileCacheInfos[NUM_ROOT_BLOCKS];
 
     int numberOfFiles = 0;
     int numberOfUsedDATABLOCKS = 0;
@@ -101,7 +102,7 @@ public:
     void setBitinChar(int position, bool value, char* buffer);
     void setDataBlocksUnused(u_int32_t position);
     void searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer);
-    int readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset);
+    int readSectionByList(int filePosition, u_int32_t* list, char* buf, size_t size, off_t offset);
     int readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset);
     void writeSection(u_int32_t startblock,const char* buffer, size_t size, off_t offset);
     void writeSectionByList(u_int32_t* list, const char* buf, size_t size, off_t offset);

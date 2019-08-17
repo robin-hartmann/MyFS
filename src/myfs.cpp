@@ -125,6 +125,7 @@ int MyFS::fuseUnlink(const char *path) {
     LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
     LOGF("Free DATA Blocks: %d", NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
     LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
+
     if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
         RETURN(-ENOENT);
     } else if (!isFileExisting(path)) {
@@ -143,6 +144,11 @@ int MyFS::fuseUnlink(const char *path) {
     char rootBlock[BLOCK_SIZE];
     clearCharArray(rootBlock, BLOCK_SIZE);
     writeRoot(filePosition, rootBlock);
+
+    fileCacheInfos[filePosition] = {
+            .cachedBlockNo = 0,
+            .cachedBlock = nullptr
+    };
 
     LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
     LOGF("Free DATA Blocks: %d", NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
@@ -202,7 +208,7 @@ int MyFS::fuseUtime(const char *path, struct utimbuf *ubuf) {
 int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
     LOG("not implemented");
-        RETURN(0);
+    RETURN(0);
 }
 
 int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
@@ -224,7 +230,7 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
         u_int32_t list[numberOfBlocks];
         u_int32_t aktuallFATPosition = charToInt(rootBlock + START_POINTER_BYTE, NUM_POINTER_BYTE);
         getFATList(list, aktuallFATPosition, numberOfBlocks, START_DATA_BLOCKS);
-        readSectionByList(list, buf, size, offset);
+        readSectionByList(filePosition, list, buf, size, offset);
 
         RETURN(size);
     }
@@ -274,6 +280,11 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_MTIME_BYTE, rootBlock, START_CTIME_BYTE);
 
     writeRoot(filePosition, rootBlock);
+
+    fileCacheInfos[filePosition] = {
+            .cachedBlock = nullptr,
+            .cachedBlockNo = 0
+    };
 
     RETURN(size);
 }
@@ -396,6 +407,10 @@ void MyFS::fuseDestroy() {
     LOGM();
     blockDevice->close();
     delete blockDevice;
+
+    for (int i = 0; i < NUM_ROOT_BLOCKS; i++) {
+        delete fileCacheInfos[i].cachedBlock;
+    }
 }
 
 void *MyFS::fuseInit(struct fuse_conn_info *conn) {
@@ -761,7 +776,6 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t *blockAdressBuffer) {
             foundBlocks++;
         }
         if (i == NUM_DATA_BLOCKS - 1) {
-            LOG("KEINE FREIen Blöcke");
             exit = true;
             blockAdressBuffer = nullptr;
         }
@@ -769,16 +783,42 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t *blockAdressBuffer) {
 }
 
 
-int MyFS::readSectionByList(u_int32_t *list, char *buf, size_t size, off_t offset) {
+int MyFS::readSectionByList(int filePosition, u_int32_t *list, char *buf, size_t size, off_t offset) {
     size_t writtenBytes = 0;
-    size_t readBytes = 0;
+    size_t bytesRead = 0;
+    fileCacheInfo *fileCacheInfo = filePosition > -1
+            ? &fileCacheInfos[filePosition]
+            : nullptr;
+
     for (int i = 0; size > 0; i++) {
-        readBytes = size + offset > BLOCK_SIZE ? (offset > BLOCK_SIZE ? 0 : BLOCK_SIZE - offset) : size;
-        if (readBytes > 0) {
-            readBlock(list[i], buf + writtenBytes, readBytes, offset);
-            writtenBytes += readBytes;
-            size -= readBytes;
+        bytesRead = size + offset > BLOCK_SIZE ? (offset > BLOCK_SIZE ? 0 : BLOCK_SIZE - offset) : size;
+
+        if (bytesRead > 0) {
+            u_int32_t blockNo = list[i];
+
+            if (fileCacheInfo != nullptr
+                && fileCacheInfo->cachedBlock != nullptr
+                && fileCacheInfo->cachedBlockNo == blockNo) {
+                transferBytes(fileCacheInfo->cachedBlock, bytesRead, offset, buf + writtenBytes, 0);
+                LOGF("Reading content of block %d of file %d from cache", blockNo, filePosition);
+            } else {
+                readBlock(blockNo, buf + writtenBytes, bytesRead, offset);
+
+                if (fileCacheInfo != nullptr) {
+                    if (fileCacheInfo->cachedBlock == nullptr) {
+                        fileCacheInfo->cachedBlock = new char[BLOCK_SIZE];
+                    }
+
+                    transferBytes(buf + writtenBytes, bytesRead, offset, fileCacheInfo->cachedBlock, 0);
+                    fileCacheInfo->cachedBlockNo = blockNo;
+                    LOGF("Caching content of block %d of file %d", blockNo, filePosition);
+                }
+            }
+
+            writtenBytes += bytesRead;
+            size -= bytesRead;
         }
+
         offset > BLOCK_SIZE ? offset -= BLOCK_SIZE : offset = 0;
     }
 }
@@ -797,7 +837,7 @@ int MyFS::readSection(u_int32_t startblock, char *buffer, size_t size, off_t off
     for (u_int32_t i = 0; i < numberOfBlocks; i++) {
         list[i] = startblock + i;
     }
-    return readSectionByList(list, buffer, size, offset);
+    return readSectionByList(-1, list, buffer, size, offset);
 }
 
 void MyFS::writeFAT() {
