@@ -201,21 +201,15 @@ int MyFS::fuseUtime(const char *path, struct utimbuf *ubuf) {
 
 int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-    LOGF("Args: path: %s", path);
-
-    if(isFileExisting(path)) {
-        openFiles[getFilePosition(path)] = true;
+    LOG("not implemented");
         RETURN(0);
-    }
-
-    RETURN(-EEXIST);
 }
 
 int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
     LOGF("Args: path: %s, size: %d, offset: %d", path, (int) size, (int) offset);
 
-    if(isFileExisting(path) && openFiles[getFilePosition(path)] && size > 0) {
+    if (isFileExisting(path) && size > 0) {
         size = size > getFileSize(getFilePosition(path)) ? getFileSize(getFilePosition(path)) : size;
 
         int numberOfBlocks = sizeToBlocks(size + offset);
@@ -254,9 +248,7 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     size_t oldFileSize = (size_t) charToInt((rootBlock + START_FILE_SIZE_BYTE), NUM_FILE_SIZE_BYTE);
     LOGF("OLDFILESIZE: %d", oldFileSize);
 
-    if (!openFiles[filePosition]) {
-        RETURN(-EBADF);
-    } else if (sizeToBlocks(size + offset) - sizeToBlocks(oldFileSize) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) {
+    if (sizeToBlocks(size + offset) - sizeToBlocks(oldFileSize) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) {
         RETURN(-ENOSPC);
     }
 
@@ -319,8 +311,7 @@ int MyFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
     LOGF("Args: path: %s", path);
 
-    if(isFileExisting(path)) {
-        openFiles[getFilePosition(path)] = false;
+    if (isFileExisting(path)) {
         writeSBLOCK();
         writeDMap();
         writeFAT();

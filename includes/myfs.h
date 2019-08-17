@@ -35,7 +35,6 @@ public:
     bool DMAP[NUM_DMAP_BLOCKS * BLOCK_SIZE * 8] = {};
     char FILENAME[NUM_ROOT_BLOCKS][NAME_LENGTH + 1];
     int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK] = {};
-    bool openFiles[NUM_ROOT_BLOCKS];
 
     int numberOfFiles = 0;
     int numberOfUsedDATABLOCKS = 0;
