@@ -70,21 +70,21 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
         statbuf->st_gid = charToInt(rootBLOCK + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
         LOGF("gid: %d", statbuf->st_gid);
 
-        #ifdef __APPLE__
-        statbuf->st_atimespec.tv_sec = charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+#ifdef __APPLE__
+        statbuf->st_atimespec.tv_sec = charToInt(rootBLOCK + START_ATIME_BYTE, NUM_TIMESTAMP_BYTE);
         LOGF("atimespec: %d", statbuf->st_atimespec.tv_sec);
-        statbuf->st_mtimespec.tv_sec = charToInt(rootBLOCK + START_SECOND_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        statbuf->st_mtimespec.tv_sec = charToInt(rootBLOCK + START_MTIME_BYTE, NUM_TIMESTAMP_BYTE);
         LOGF("mtimespec: %d", statbuf->st_mtimespec.tv_sec);
-        statbuf->st_ctimespec.tv_sec = charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        statbuf->st_ctimespec.tv_sec = charToInt(rootBLOCK + START_CTIME_BYTE, NUM_TIMESTAMP_BYTE);
         LOGF("ctimespec: %d", statbuf->st_ctimespec.tv_sec);
-        #else
-        statbuf->st_atim.tv_sec = charToInt(rootBLOCK + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+#else
+        statbuf->st_atim.tv_sec = charToInt(rootBLOCK + START_ATIME_BYTE, NUM_TIMESTAMP_BYTE);
         LOGF("atim: %d", statbuf->st_atim.tv_sec);
-        statbuf->st_mtim.tv_sec = charToInt(rootBLOCK + START_SECOND_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        statbuf->st_mtim.tv_sec = charToInt(rootBLOCK + START_MTIME_BYTE, NUM_TIMESTAMP_BYTE);
         LOGF("mtim: %d", statbuf->st_mtim.tv_sec);
-        statbuf->st_ctim.tv_sec = charToInt(rootBLOCK + START_THIRD_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
+        statbuf->st_ctim.tv_sec = charToInt(rootBLOCK + START_CTIME_BYTE, NUM_TIMESTAMP_BYTE);
         LOGF("ctim: %d", statbuf->st_ctim.tv_sec);
-        #endif
+#endif
 
         statbuf->st_mode = charToInt(rootBLOCK + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
         LOGF("mode: %d", statbuf->st_mode);
@@ -217,14 +217,15 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
 
     if(isFileExisting(path) && openFiles[getFilePosition(path)] && size > 0) {
         size = size > getFileSize(getFilePosition(path)) ? getFileSize(getFilePosition(path)) : size;
-        int numberOfBlocks = sizeToBlocks(size + offset);
-        char rootBlock[BLOCK_SIZE];
-        clearCharArray(rootBlock, BLOCK_SIZE);
-        int fileposition = getFilePosition(path);
 
-        readBlock(fileposition + START_ROOT_BLOCKS, rootBlock, BLOCK_SIZE, 0);
-        intToChar(time(NULL), rootBlock + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
-        writeRoot(fileposition, rootBlock);
+        int numberOfBlocks = sizeToBlocks(size + offset);
+        int filePosition = getFilePosition(path);
+        char rootBlock[BLOCK_SIZE];
+
+        clearCharArray(rootBlock, BLOCK_SIZE);
+        readBlock((u_int32_t) filePosition + START_ROOT_BLOCKS, rootBlock, BLOCK_SIZE, 0);
+        intToChar((int) time(nullptr), rootBlock + START_ATIME_BYTE, NUM_TIMESTAMP_BYTE);
+        writeRoot(filePosition, rootBlock);
 
         u_int32_t list[numberOfBlocks];
         u_int32_t aktuallFATPosition = charToInt(rootBlock + START_POINTER_BYTE, NUM_POINTER_BYTE);
@@ -271,15 +272,17 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
     writeSectionByList(list, buf, size, offset);
     getFATList(list, firstPointer, 1, 0);
 
-    intToChar(time(nullptr), rootBlock + START_SECOND_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
-    transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_SECOND_TIMESTAMP_BYTE, rootBlock, START_THIRD_TIMESTAMP_BYTE);
-
     intToChar(list[0], rootBlock + START_POINTER_BYTE, NUM_POINTER_BYTE);
 
     if (size + offset > oldFileSize) {
         intToChar(size + offset, rootBlock + START_FILE_SIZE_BYTE, NUM_FILE_SIZE_BYTE);
     }
+
+    intToChar((int) time(nullptr), rootBlock + START_MTIME_BYTE, NUM_TIMESTAMP_BYTE);
+    transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_MTIME_BYTE, rootBlock, START_CTIME_BYTE);
+
     writeRoot(filePosition, rootBlock);
+
     RETURN(size);
 }
 
@@ -988,9 +991,9 @@ int MyFS::createNewFile(const char *path, mode_t mode) {
     transferBytes(filename, lentghOFFilename + 1, 0, rootBlock, START_FILENAME_BYTE);
     numberOfFiles++;
 
-    intToChar((int) time(nullptr), rootBlock + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
-    transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_FIRST_TIMESTAMP_BYTE,rootBlock, START_SECOND_TIMESTAMP_BYTE);
-    transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_FIRST_TIMESTAMP_BYTE,rootBlock, START_THIRD_TIMESTAMP_BYTE);
+    intToChar((int) time(nullptr), rootBlock + START_ATIME_BYTE, NUM_TIMESTAMP_BYTE);
+    transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_ATIME_BYTE, rootBlock, START_MTIME_BYTE);
+    transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_ATIME_BYTE, rootBlock, START_CTIME_BYTE);
 
     intToChar(geteuid(), rootBlock + START_USERID_BYTE, NUM_USERID_BYTE);
     intToChar(getegid(), rootBlock + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
