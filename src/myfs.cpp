@@ -322,6 +322,9 @@ int MyFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
 
     if(isFileExisting(path)) {
         openFiles[getFilePosition(path)] = false;
+        writeSBLOCK();
+        writeDMap();
+        writeFAT();
     }
 
     RETURN(0);
