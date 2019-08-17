@@ -426,18 +426,16 @@ void MyFS::fuseDestroy() {
 void* MyFS::fuseInit(struct fuse_conn_info *conn) {
     // Open logfile
     this->logFile= fopen(((MyFsInfo *) fuse_get_context()->private_data)->logFile, "w+");
+
     if(this->logFile == NULL) {
         fprintf(stderr, "ERROR: Cannot open logfile %s\n", ((MyFsInfo *) fuse_get_context()->private_data)->logFile);
     } else {
-        //    this->logFile= ((MyFsInfo *) fuse_get_context()->private_data)->logFile;
-        
-        // turn of logfile buffering
+        // turn off logfile buffering
         setvbuf(this->logFile, NULL, _IOLBF, 0);
         
         LOG("Starting logging...\n");
         LOGM();
 
-        // you can get the containfer file name here:
         LOGF("Container file name: %s", ((MyFsInfo *) fuse_get_context()->private_data)->contFile);
         
         // TODO: Implement your initialization methods here
