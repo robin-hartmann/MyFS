@@ -46,7 +46,7 @@ MyFS::~MyFS() {
 
 int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     LOGM();
-    LOGF("Path: %s", path);
+    LOGF("Args: path: %s", path);
 
     if(isDirPath(path)){
         // @todo uid und gid im container abspeichern
@@ -110,6 +110,7 @@ int MyFS::fuseReadlink(const char *path, char *link, size_t size) {
 
 int MyFS::fuseMknod(const char *path, mode_t mode, dev_t dev) {
     LOGM();
+    LOGF("Args: path: %s, mode: %d", path, mode);
     int returnValue = createNewFile(path, mode);
     RETURN(returnValue);
 }
@@ -121,16 +122,14 @@ int MyFS::fuseMkdir(const char *path, mode_t mode) {
 
 int MyFS::fuseUnlink(const char *path) {
     LOGM();
-    LOGF("Path: %s", path);
+    LOGF("Args: path: %s", path);
     LOGF("Total Number of DATA Blocks: %d", NUM_DATA_BLOCKS);
     LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
     LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
     LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
     if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
-        LOG("Fehler 1");
         RETURN(-ENOENT);
     } else if (!isFileExisting(path)) {
-        LOG("Fehler 2");
         RETURN(-EEXIST);
     }
 
@@ -166,7 +165,6 @@ int MyFS::fuseSymlink(const char *path, const char *link) {
 
 int MyFS::fuseRename(const char *path, const char *newpath) {
     LOGM();
-    LOGF("PATH: %s; NEWPATH: %s", path, newpath);
     return 0;
 }
 
@@ -198,7 +196,8 @@ int MyFS::fuseUtime(const char *path, struct utimbuf *ubuf) {
 //Fertig
 int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-    LOGF("Path: %s", path);
+    LOGF("Args: path: %s", path);
+
     if(isFileExisting(path)) {
         openFiles[getFilePosition(path)] = true;
         RETURN(0);
@@ -209,7 +208,7 @@ int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
 
 int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
-    LOGF("Path: %s; Size: %d; Offset: %d", path, (int) size, (int) offset);
+    LOGF("Args: path: %s, size: %d, offset: %d", path, (int) size, (int) offset);
 
     if(isFileExisting(path) && openFiles[getFilePosition(path)] && size > 0) {
         size = size > getFileSize(getFilePosition(path)) ? getFileSize(getFilePosition(path)) : size;
@@ -229,15 +228,18 @@ int MyFS::fuseRead(const char *path, char *buf, size_t size, off_t offset, struc
 
         RETURN(size);
     }
+
     RETURN(-ENOENT);
 }
 
 int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
-    LOGF("Path: %s; Size: %d; Offset: %d", path, (int) size, (int) offset);
+    LOGF("Args: path: %s, size: %d, offset: %d", path, (int) size, (int) offset);
+
     if (!isFileExisting(path)) {
         RETURN(-EEXIST);
     }
+
     int filePosition = getFilePosition(path);
     char rootBlock[BLOCK_SIZE];
     clearCharArray(rootBlock, BLOCK_SIZE);
@@ -245,6 +247,7 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
 
     size_t oldFileSize = (size_t) charToInt((rootBlock + START_FILE_SIZE_BYTE), NUM_FILE_SIZE_BYTE);
     LOGF("OLDFILESIZE: %d", oldFileSize);
+
     if (!openFiles[filePosition]) {
         RETURN(-EBADF);
     } else if (sizeToBlocks(size + offset) - sizeToBlocks(oldFileSize) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) { //abändern
@@ -277,7 +280,8 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
 
 int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
     LOGM();
-    LOGF("PATH: %s", path);
+    LOGF("Args: path: %s", path);
+
     if(isDirPath(path)){
         statInfo->f_blocks = NUM_DATA_BLOCKS;
         LOGF("block: %d", statInfo->f_blocks);
@@ -293,6 +297,7 @@ int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
         LOGF("files: %d", statInfo->f_files);
         RETURN(0);
     }
+
     RETURN(-ENOTDIR);
 }
 
@@ -303,16 +308,17 @@ int MyFS::fuseFlush(const char *path, struct fuse_file_info *fileInfo) {
 
 int MyFS::fuseRelease(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-    LOGF("Path: %s", path);
+    LOGF("Args: path: %s", path);
+
     if(isFileExisting(path)) {
         openFiles[getFilePosition(path)] = false;
     }
+
     RETURN(0);
 }
 
 int MyFS::fuseFsync(const char *path, int datasync, struct fuse_file_info *fi) {
     LOGM();
-    LOGF("PATH: %s", path);
     return 0;
 }
 
@@ -329,7 +335,8 @@ int MyFS::fuseRemovexattr(const char *path, const char *name) {
 //Fertig
 int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-    LOGF("Path: %s", path);
+    LOGF("Args: path: %s", path);
+
     if(!isDirPathCorrect(path)) {
         RETURN(ENOTDIR);
     }
@@ -340,7 +347,7 @@ int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
 
 int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
-    LOGF("Path: %s", path);
+    LOGF("Args: path: %s", path);
 
     if(!isDirOpen) {
         RETURN(-EPERM);
@@ -360,17 +367,19 @@ int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
 
     }
     RETURN(0);
-    
+
     // <<< My new code
 }
 
 //Fertig
 int MyFS::fuseReleasedir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-    LOGF("Path: %s", path);
+    LOGF("Args: path: %s", path);
+
     if(!isDirPath(path)) {
         RETURN(-ENOTDIR);
     }
+
     isDirOpen = false;
     writeSBLOCK();
     writeDMap();
