@@ -1,0 +1,21 @@
+test: entire first block + 1
+
+fuseInit
+fuseGetattr
+  Args: path: /
+  returned 0
+fuseGetxattr
+  not implemented
+  returned 0
+fuseGetattr
+  Args: path: /lorem-ipsum.txt
+  returned 0
+fuseOpen
+  Args: path: /lorem-ipsum.txt, size: 513, offset: 0
+  returned 513
+fuseFlush
+  not implemented
+  returned 0
+fuseRelease
+  Args: path: /lorem-ipsum.txt
+  returned 0

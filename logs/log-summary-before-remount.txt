@@ -1,0 +1,41 @@
+test: entire first block + 1
+
+fuseInit
+fuseGetattr
+fuseStatfs
+fuseGetxattr
+fuseStatfs
+fuseGetattr
+  Args: path: /lorem-ipsum.txt
+  returned -2
+fuseMknod
+  Args: path: /lorem-ipsum.txt, mode: 33188
+  returned 0
+fuseGetattr
+  Args: path: /lorem-ipsum.txt
+  returned 0
+fuseGetattr
+  Args: path: /._lorem-ipsum.txt
+  returned -2
+fuseOpen
+  Args: path: /lorem-ipsum.txt
+  returned 0
+fuseWrite
+  Args: path: /lorem-ipsum.txt, size: 513, offset: 0
+  returned 513
+fuseGetattr
+  Args: path: /lorem-ipsum.txt
+  returned 0
+fuseFlush
+fuseRelease
+  Args: path: /lorem-ipsum.txt
+  returned 0
+fuseGetattr
+  Args: path: /lorem-ipsum.txt
+  returned 0
+fuseGetattr
+  Args: path: /
+  returned 0
+fuseGetxattr
+  returned 0
+fuseStatfs

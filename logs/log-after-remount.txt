@@ -1,0 +1,380 @@
+	Starting logging...
+
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:437:fuseInit()
+	Container file name: /private/var/folders/mc/3l3d_vk17yl41ww8np5hvllwjhfcdn/T/myfs-container-15840EssZ8uDGVu90.bin
+	END OF INIT()
+fuseInit() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:48:fuseGetattr()
+	Args: path: /
+	uid: 587674037
+	gid: 1616735563
+	mode: 16877
+	nlink: 2
+	blksize: 512
+fuseGetattr() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:472:fuseGetxattr()
+	not implemented
+fuseGetxattr() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:48:fuseGetattr()
+	Args: path: /lorem-ipsum.txt
+	size: 513
+	uid: 587674037
+	gid: 1616735563
+	atimespec: 1566035057
+	mtimespec: 1566035057
+	ctimespec: 1566035057
+	mode: 33188
+	nlink: 1
+	blksize: 512
+fuseGetattr() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:207:fuseOpen()
+	Args: path: /lorem-ipsum.txt
+fuseOpen() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:219:fuseRead()
+	Args: path: /lorem-ipsum.txt, size: 513, offset: 0
+	getFatList() START
+	startposition: 0, Startnumber: 337
+	END
+fuseRead() returned 513
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:314:fuseFlush()
+	not implemented
+fuseFlush() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:320:fuseRelease()
+	Args: path: /lorem-ipsum.txt
+fuseRelease() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:48:fuseGetattr()
+	Args: path: /.localized
+fuseGetattr() returned -2
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:472:fuseGetxattr()
+	not implemented
+fuseGetxattr() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:472:fuseGetxattr()
+	not implemented
+fuseGetxattr() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:48:fuseGetattr()
+	Args: path: /.localized
+fuseGetattr() returned -2
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:48:fuseGetattr()
+	Args: path: /.DS_Store
+fuseGetattr() returned -2
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:48:fuseGetattr()
+	Args: path: /.DS_Store
+fuseGetattr() returned -2
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:48:fuseGetattr()
+	Args: path: /.localized
+fuseGetattr() returned -2
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
+/Users/robin.hartmann/dev/clion/semester-3/betriebssysteme/MyFS/src/myfs.cpp:291:fuseStatfs()
+	Args: path: /
+	block: 65536
+	bfree: 65536
+	bavail: 65536
+	bsize: 512
+	ffree: 64
+	files: 0
+fuseStatfs() returned 0
