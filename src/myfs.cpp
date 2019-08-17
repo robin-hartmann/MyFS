@@ -336,7 +336,7 @@ int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
     LOGF("Args: path: %s", path);
 
     if(!isDirPathCorrect(path)) {
-        RETURN(ENOTDIR);
+        RETURN(-ENOTDIR);
     }
 
     isDirOpen = true;
