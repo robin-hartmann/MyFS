@@ -48,8 +48,8 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     LOGM();
     LOGF("Args: path: %s", path);
 
+    // @todo doesn't always seem to work for root directory
     if(isDirPath(path)){
-        // @todo uid und gid im container abspeichern
         statbuf->st_uid = geteuid();
         LOGF("uid: %d", statbuf->st_uid);
         statbuf->st_gid = getegid();
@@ -193,7 +193,6 @@ int MyFS::fuseUtime(const char *path, struct utimbuf *ubuf) {
     return 0;
 }
 
-//Fertig
 int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
     LOGF("Args: path: %s", path);
@@ -332,7 +331,6 @@ int MyFS::fuseRemovexattr(const char *path, const char *name) {
     RETURN(0);
 }
 
-//Fertig
 int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
     LOGF("Args: path: %s", path);
@@ -340,6 +338,7 @@ int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
     if(!isDirPathCorrect(path)) {
         RETURN(ENOTDIR);
     }
+
     isDirOpen = true;
     
     RETURN(0);
@@ -356,7 +355,7 @@ int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
         RETURN(-ENOTDIR);
     }
 
-    if(isFileExisting(path)) { //TODO Was ist das?
+    if(isFileExisting(path)) {
         RETURN (0);
     }
 
@@ -366,12 +365,10 @@ int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
         }
 
     }
-    RETURN(0);
 
-    // <<< My new code
+    RETURN(0);
 }
 
-//Fertig
 int MyFS::fuseReleasedir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
     LOGF("Args: path: %s", path);
@@ -405,9 +402,6 @@ int MyFS::fuseCreate(const char *path, mode_t mode, struct fuse_file_info *fileI
 
 void MyFS::fuseDestroy() {
     LOGM();
-    //writeSBLOCK();
-    //writeDMap();
-    //writeFAT();
     blockDevice->close();
     delete blockDevice;
 }
@@ -556,7 +550,6 @@ u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
     return size;
 }
 
-//Fetig 2.0
 /**
  * Entfernt den Dateipfad vom Dateinamen.
  * @param path Dateipfad / Dateiname
@@ -574,7 +567,6 @@ const char* MyFS::remDirPath(const char *path) {
     return (path + laeufer);
 }
 
-//Fertig 2.0
 /**
  * Überprüft, ob der Filename korrekt ist.
  * Achtung: Auf den Dateipfad vorher nicht removeDirPath() ausführen!
@@ -585,7 +577,6 @@ bool MyFS::isFilenameCorrect(const char *path) {
     return (isDirPathCorrect(path) && !isDirPath(path) && getSizeOfCharArray(remDirPath(path)) <= NAME_LENGTH);
 }
 
-//Fetig 2.0
 /**
  * Überprüft ob der übergebene Dateipfad korrect ist.
  * Achtung: Der Dateipfad darf davor nicht durch remDirPath() gelaufen sein! Das verfälscht das Ergebnis.
@@ -619,7 +610,6 @@ bool MyFS::isDirPathCorrect(const char *path) {
     return (path + NumOfPathChars) == remDirPath(path);
 }
 
-//Fetig 2.0
 /**
  * Überprüft ob der Pfad ein korrekter DirPfad ist und keine Datei
  * @param path Dateipfad
