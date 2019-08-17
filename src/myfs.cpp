@@ -23,25 +23,21 @@
 #include "myfs-info.h"
 
 
+MyFS *MyFS::_instance = NULL;
 
-
-
-
-MyFS* MyFS::_instance = NULL;
-
-MyFS* MyFS::Instance() {
-    if(_instance == NULL) {
+MyFS *MyFS::Instance() {
+    if (_instance == NULL) {
         _instance = new MyFS();
     }
     return _instance;
 }
 
 MyFS::MyFS() {
-    this->logFile= stderr;
+    this->logFile = stderr;
 }
 
 MyFS::~MyFS() {
-    
+
 }
 
 int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
@@ -49,7 +45,7 @@ int MyFS::fuseGetattr(const char *path, struct stat *statbuf) {
     LOGF("Args: path: %s", path);
 
     // @todo doesn't always seem to work for root directory
-    if(isDirPath(path)){
+    if (isDirPath(path)) {
         statbuf->st_uid = geteuid();
         LOGF("uid: %d", statbuf->st_uid);
         statbuf->st_gid = getegid();
@@ -127,7 +123,7 @@ int MyFS::fuseUnlink(const char *path) {
     LOGF("Args: path: %s", path);
     LOGF("Total Number of DATA Blocks: %d", NUM_DATA_BLOCKS);
     LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
-    LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
+    LOGF("Free DATA Blocks: %d", NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
     LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
     if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
         RETURN(-ENOENT);
@@ -136,7 +132,7 @@ int MyFS::fuseUnlink(const char *path) {
     }
 
     int filePosition = getFilePosition(path);
-    if(getFileSize(filePosition) > 0) {
+    if (getFileSize(filePosition) > 0) {
         setDataBlocksUnused(getFirstPointer(filePosition));
     }
 
@@ -149,7 +145,7 @@ int MyFS::fuseUnlink(const char *path) {
     writeRoot(filePosition, rootBlock);
 
     LOGF("Used Data Blocks: %d", numberOfUsedDATABLOCKS);
-    LOGF("Free DATA Blocks: %d",NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
+    LOGF("Free DATA Blocks: %d", NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS);
     LOGF("Number of written Bytes: %d", numberOfwrittenBytes);
 
     RETURN(0);
@@ -211,7 +207,7 @@ int MyFS::fuseOpen(const char *path, struct fuse_file_info *fileInfo) {
         openFiles[getFilePosition(path)] = true;
         RETURN(0);
     }
-    
+
     RETURN(-EEXIST);
 }
 
@@ -259,12 +255,12 @@ int MyFS::fuseWrite(const char *path, const char *buf, size_t size, off_t offset
 
     if (!openFiles[filePosition]) {
         RETURN(-EBADF);
-    } else if (sizeToBlocks(size + offset) - sizeToBlocks(oldFileSize) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) { //abändern
+    } else if (sizeToBlocks(size + offset) - sizeToBlocks(oldFileSize) > (NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS)) {
         RETURN(-ENOSPC);
     }
 
     int firstPointer = 0;
-    if(oldFileSize > 0) {
+    if (oldFileSize > 0) {
         firstPointer = getFirstPointer(filePosition);
     }
     if (size + offset > oldFileSize) {
@@ -291,7 +287,7 @@ int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
     LOGM();
     LOGF("Args: path: %s", path);
 
-    if(isDirPath(path)){
+    if (isDirPath(path)) {
         statInfo->f_blocks = NUM_DATA_BLOCKS;
         LOGF("block: %d", statInfo->f_blocks);
         statInfo->f_bfree = NUM_DATA_BLOCKS - numberOfUsedDATABLOCKS;
@@ -354,15 +350,16 @@ int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
     RETURN(0);
 }
 
-int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fileInfo) {
+int
+MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fileInfo) {
     LOGM();
     LOGF("Args: path: %s", path);
 
-    if(!isDirPathCorrect(path)) {
+    if (!isDirPathCorrect(path)) {
         RETURN(-ENOTDIR);
     }
 
-    if(isFileExisting(path)) {
+    if (isFileExisting(path)) {
         RETURN (0);
     }
 
@@ -407,23 +404,23 @@ void MyFS::fuseDestroy() {
     delete blockDevice;
 }
 
-void* MyFS::fuseInit(struct fuse_conn_info *conn) {
+void *MyFS::fuseInit(struct fuse_conn_info *conn) {
     // Open logfile
-    this->logFile= fopen(((MyFsInfo *) fuse_get_context()->private_data)->logFile, "w+");
+    this->logFile = fopen(((MyFsInfo *) fuse_get_context()->private_data)->logFile, "w+");
 
-    if(this->logFile == NULL) {
+    if (this->logFile == NULL) {
         fprintf(stderr, "ERROR: Cannot open logfile %s\n", ((MyFsInfo *) fuse_get_context()->private_data)->logFile);
     } else {
         // turn off logfile buffering
         setvbuf(this->logFile, NULL, _IOLBF, 0);
-        
+
         LOG("Starting logging...\n");
         LOGM();
 
         LOGF("Container file name: %s", ((MyFsInfo *) fuse_get_context()->private_data)->contFile);
-        
+
         // TODO: Implement your initialization methods here
-        BlockDevice* newblockDevice = new BlockDevice(BLOCK_SIZE);
+        BlockDevice *newblockDevice = new BlockDevice(BLOCK_SIZE);
         newblockDevice->open(((MyFsInfo *) fuse_get_context()->private_data)->contFile);
         this->blockDevice = newblockDevice;
 
@@ -433,25 +430,27 @@ void* MyFS::fuseInit(struct fuse_conn_info *conn) {
         readRoot();
         LOG("END OF INIT()");
     }
-    
+
     RETURN(0);
 }
 
 #ifdef __APPLE__
+
 int MyFS::fuseSetxattr(const char *path, const char *name, const char *value, size_t size, int flags, uint32_t x) {
 #else
-int MyFS::fuseSetxattr(const char *path, const char *name, const char *value, size_t size, int flags) {
+    int MyFS::fuseSetxattr(const char *path, const char *name, const char *value, size_t size, int flags) {
 #endif
     LOGM();
     LOG("not implemented");
     RETURN(0);
 }
 
-    
+
 #ifdef __APPLE__
+
 int MyFS::fuseGetxattr(const char *path, const char *name, char *value, size_t size, uint x) {
 #else
-int MyFS::fuseGetxattr(const char *path, const char *name, char *value, size_t size) {
+    int MyFS::fuseGetxattr(const char *path, const char *name, char *value, size_t size) {
 #endif
     LOGM();
     LOG("not implemented");
@@ -469,9 +468,9 @@ int MyFS::getFilePosition(const char *path) {
         return -1;
     }
     const char *StartOfFilename = remDirPath(path);
-    for(int i = 0; i < NUM_ROOT_BLOCKS; i++) {
-        for(int j = 0;  *(StartOfFilename + j) == (FILENAME[i][j]); j++) {
-            if(*(StartOfFilename + j) == '\0') {
+    for (int i = 0; i < NUM_ROOT_BLOCKS; i++) {
+        for (int j = 0; *(StartOfFilename + j) == (FILENAME[i][j]); j++) {
+            if (*(StartOfFilename + j) == '\0') {
                 return i;
             }
         }
@@ -499,11 +498,11 @@ int MyFS::getFileSize(int position) {
  * @param offset number of char you want to pass before reading. size + offset <= BD_Block-Size
  * @return
  */
-int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
+int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset) {
     char buffer[BLOCK_SIZE];
     clearCharArray(buffer, BLOCK_SIZE);
     blockDevice->read(blockNo, buffer); //wird unötig gelesen wenn size = 0
-    if (size + offset <= BLOCK_SIZE){
+    if (size + offset <= BLOCK_SIZE) {
         transferBytes(buffer, size, offset, buf, 0);
     }
     return 0;
@@ -517,8 +516,8 @@ int MyFS::readBlock(u_int32_t blockNo, char *buf, size_t size, off_t offset){
  * @param secondBuf Zweiter Buffer
  * @param secondOff Offset, ab welcher Stelle angefangen werden soll zu schreiben
  */
-void MyFS::transferBytes(char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff) {
-    for(u_int64_t i = 0; i < size; i++) {
+void MyFS::transferBytes(char *firstBuf, size_t size, off_t firstOff, char *secondBuf, off_t secondOff) {
+    for (u_int64_t i = 0; i < size; i++) {
         *(secondBuf + secondOff + i) = *(firstBuf + firstOff + i);
     }
 }
@@ -531,8 +530,8 @@ void MyFS::transferBytes(char *firstBuf, size_t size, off_t firstOff, char* seco
  * @param secondBuf Zweiter Buffer
  * @param secondOff Offset, ab welcher Stelle angefangen werden soll zu schreiben
  */
-void MyFS::transferBytes(const char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff) {
-    for(u_int64_t i = 0; i < size; i++) {
+void MyFS::transferBytes(const char *firstBuf, size_t size, off_t firstOff, char *secondBuf, off_t secondOff) {
+    for (u_int64_t i = 0; i < size; i++) {
         *(secondBuf + secondOff + i) = *(firstBuf + firstOff + i);
     }
 }
@@ -545,7 +544,7 @@ void MyFS::transferBytes(const char *firstBuf, size_t size, off_t firstOff, char
  */
 u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
     u_int32_t size = 0;
-    while(buf[size] != '\0') {
+    while (buf[size] != '\0') {
         size++;
     }
     return size;
@@ -556,14 +555,14 @@ u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
  * @param path Dateipfad / Dateiname
  * @return Dateiname
  */
-const char* MyFS::remDirPath(const char *path) {
+const char *MyFS::remDirPath(const char *path) {
     int laeufer = getSizeOfCharArray(path) + 1;
-    for(; laeufer > 0 && *(path + laeufer - 1) != '/'; laeufer--);
-    if (*(path +  laeufer) == '.' && *(path+  laeufer + 1) == '\0') {
-         laeufer += 1;
-    } else if (*(path +  laeufer) == '.' && *(path +  laeufer + 1) == '.' &&
-               *(path +  laeufer + 2) == '\0') {
-         laeufer += 2;
+    for (; laeufer > 0 && *(path + laeufer - 1) != '/'; laeufer--);
+    if (*(path + laeufer) == '.' && *(path + laeufer + 1) == '\0') {
+        laeufer += 1;
+    } else if (*(path + laeufer) == '.' && *(path + laeufer + 1) == '.' &&
+               *(path + laeufer + 2) == '\0') {
+        laeufer += 2;
     }
     return (path + laeufer);
 }
@@ -587,25 +586,25 @@ bool MyFS::isFilenameCorrect(const char *path) {
 bool MyFS::isDirPathCorrect(const char *path) {
     bool removedPath = false;
     int NumOfPathChars = 0;
-    if(*path == '/') {
-       NumOfPathChars++;
+    if (*path == '/') {
+        NumOfPathChars++;
     }
-    while(!removedPath) {
+    while (!removedPath) {
         removedPath = true;
-        if (*(path + NumOfPathChars) == '.' && *(path+ NumOfPathChars + 1) == '/') {
+        if (*(path + NumOfPathChars) == '.' && *(path + NumOfPathChars + 1) == '/') {
             NumOfPathChars += 2;
             removedPath = false;
         }
         if (*(path + NumOfPathChars) == '.' && *(path + NumOfPathChars + 1) == '.' &&
-        *(path + NumOfPathChars + 2) == '/') {
+            *(path + NumOfPathChars + 2) == '/') {
             NumOfPathChars += 3;
             removedPath = false;
         }
     }
-    if (*(path + NumOfPathChars) == '.' && *(path+ NumOfPathChars + 1) == '\0') {
+    if (*(path + NumOfPathChars) == '.' && *(path + NumOfPathChars + 1) == '\0') {
         NumOfPathChars += 1;
     } else if (*(path + NumOfPathChars) == '.' && *(path + NumOfPathChars + 1) == '.' &&
-        *(path + NumOfPathChars + 2) == '\0') {
+               *(path + NumOfPathChars + 2) == '\0') {
         NumOfPathChars += 2;
     }
     return (path + NumOfPathChars) == remDirPath(path);
@@ -616,7 +615,7 @@ bool MyFS::isDirPathCorrect(const char *path) {
  * @param path Dateipfad
  * @return true, wenn es ein korrekter Dirpfad ist
  */
-bool MyFS::isDirPath(const char* path) {
+bool MyFS::isDirPath(const char *path) {
     return (isDirPathCorrect(path) && *remDirPath(path) == '\0');
 }
 
@@ -635,11 +634,11 @@ bool MyFS::isFileExisting(const char *path) {
  * @param numberOfChars Anzahl der Chars, die das array hat
  * @return intege based on the input; 0, wenn 0 >= numberOfChars > 4
  */
-int MyFS::charToInt(char* chars, int numberOfChars) {
+int MyFS::charToInt(char *chars, int numberOfChars) {
     u_int32_t sum = 0;
     if (numberOfChars <= 4) {
         for (int i = 0; i < numberOfChars; i++) {
-            sum = sum| ((u_int8_t) chars[i]) << (i * 8);
+            sum = sum | ((u_int8_t) chars[i]) << (i * 8);
         }
     }
     return (int) sum;
@@ -652,7 +651,7 @@ int MyFS::charToInt(char* chars, int numberOfChars) {
  * @param buffer char-Array in den die chars geschrieben werden sollen
  * @param numberOfChars Anzahl der chars , die in das IntegerArray geschrieben werden sollen.
  */
-void MyFS::intToChar(int number, char* buffer, int numberOfChars) {
+void MyFS::intToChar(int number, char *buffer, int numberOfChars) {
     //for (; sizeOfCharArray > 1 && number == ((number << ((5 - sizeOfCharArray) * 8) >> ((5 - sizeOfCharArray) * 8))); sizeOfCharArray--);
     if (numberOfChars > 0 && numberOfChars <= 4) {
         for (int i = 0; i < numberOfChars; i++) {
@@ -661,30 +660,30 @@ void MyFS::intToChar(int number, char* buffer, int numberOfChars) {
     }
 }
 
-void MyFS::readDMap(){
-    char buffer[NUM_DMAP_BLOCKS*BLOCK_SIZE];
-    clearCharArray(buffer,NUM_DMAP_BLOCKS*BLOCK_SIZE);
-    readSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS*BLOCK_SIZE,0);
-    for (int i = 0; i<NUM_DATA_BLOCKS; i++) {
-        int whichChar = (i - (i % 8))/8 ;
+void MyFS::readDMap() {
+    char buffer[NUM_DMAP_BLOCKS * BLOCK_SIZE];
+    clearCharArray(buffer, NUM_DMAP_BLOCKS * BLOCK_SIZE);
+    readSection(START_DMAP_BLOCKS, buffer, NUM_DMAP_BLOCKS * BLOCK_SIZE, 0);
+    for (int i = 0; i < NUM_DATA_BLOCKS; i++) {
+        int whichChar = (i - (i % 8)) / 8;
         int whichBitinChar = i % 8;
         DMAP[i] = (buffer[whichChar] >> whichBitinChar) & 0b1;
     }
 }
 
-void MyFS::writeDMap(){
+void MyFS::writeDMap() {
     LOGM();
-    char buffer[NUM_DMAP_BLOCKS*BLOCK_SIZE];
-    clearCharArray(buffer,NUM_DMAP_BLOCKS*BLOCK_SIZE);
+    char buffer[NUM_DMAP_BLOCKS * BLOCK_SIZE];
+    clearCharArray(buffer, NUM_DMAP_BLOCKS * BLOCK_SIZE);
     int whichChar = 0;
     int whichBitinChar = 0;
 
-    for(int position=0; position<NUM_DATA_BLOCKS ; position++) {
-         whichChar = (position - (position % 8))/8 ;
-         whichBitinChar = position % 8;
-        if (DMAP[position]){
+    for (int position = 0; position < NUM_DATA_BLOCKS; position++) {
+        whichChar = (position - (position % 8)) / 8;
+        whichBitinChar = position % 8;
+        if (DMAP[position]) {
             buffer[whichChar] |= 1 << whichBitinChar;
-        }else {
+        } else {
             buffer[whichChar] &= ~(1 << whichBitinChar);
         }
 
@@ -700,7 +699,7 @@ void MyFS::writeDMap(){
  * @param size
  * @param offset
  */
-void MyFS::writeSection(u_int32_t startblock, const char* buffer, size_t size, off_t offset){
+void MyFS::writeSection(u_int32_t startblock, const char *buffer, size_t size, off_t offset) {
 
     int numberOfBlocks = sizeToBlocks(size);
     u_int32_t list[numberOfBlocks];
@@ -710,13 +709,13 @@ void MyFS::writeSection(u_int32_t startblock, const char* buffer, size_t size, o
     writeSectionByList(list, buffer, size, offset);
 }
 
-void MyFS::writeSectionByList(u_int32_t* list, const char* buf, size_t size, off_t offset) {
+void MyFS::writeSectionByList(u_int32_t *list, const char *buf, size_t size, off_t offset) {
     char buffer[BLOCK_SIZE];
     clearCharArray(buffer, BLOCK_SIZE);
     size_t numberOfWriteBytes = 0;
     size_t numberOfWrittenBytes = 0;
-    for(int i = 0; size > 0; i++) {
-        if(offset < BLOCK_SIZE) {
+    for (int i = 0; size > 0; i++) {
+        if (offset < BLOCK_SIZE) {
             clearCharArray(buffer, BLOCK_SIZE);
             numberOfWriteBytes = size > BLOCK_SIZE ? BLOCK_SIZE : size;
             if (numberOfWriteBytes < BLOCK_SIZE) {
@@ -734,7 +733,8 @@ void MyFS::writeSectionByList(u_int32_t* list, const char* buf, size_t size, off
 }
 
 //fehler. letzter Block wird nicht gelöscht
-void MyFS::setDataBlocksUnused(u_int32_t position){ // auf basis der position wird das FAT durchgesucht nach des restlichen Blöcken und diese werden auf unused gestzt. -> Rekursiv lösen
+void MyFS::setDataBlocksUnused(
+        u_int32_t position) { // auf basis der position wird das FAT durchgesucht nach des restlichen Blöcken und diese werden auf unused gestzt. -> Rekursiv lösen
     u_int32_t aktuallPosition = position;
     int i = 0;
 
@@ -756,8 +756,7 @@ void MyFS::setDataBlocksUnused(u_int32_t position){ // auf basis der position wi
 }
 
 
-
-void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
+void MyFS::searchfreeBlocks(size_t size, u_int32_t *blockAdressBuffer) {
     int nrOfBlocks = sizeToBlocks(size);
     bool exit = false;
     int foundBlocks = 0;
@@ -767,7 +766,7 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
             blockAdressBuffer[foundBlocks] = i;
             foundBlocks++;
         }
-        if(i == NUM_DATA_BLOCKS - 1) {
+        if (i == NUM_DATA_BLOCKS - 1) {
             LOG("KEINE FREIen Blöcke");
             exit = true;
             blockAdressBuffer = nullptr;
@@ -776,12 +775,12 @@ void MyFS::searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer){
 }
 
 
-int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offset) {
-   size_t writtenBytes = 0;
-   size_t readBytes = 0;
-    for(int i = 0; size > 0; i++) {
-        readBytes = size + offset > BLOCK_SIZE ? (offset > BLOCK_SIZE ? 0 : BLOCK_SIZE - offset ): size;
-        if(readBytes > 0) {
+int MyFS::readSectionByList(u_int32_t *list, char *buf, size_t size, off_t offset) {
+    size_t writtenBytes = 0;
+    size_t readBytes = 0;
+    for (int i = 0; size > 0; i++) {
+        readBytes = size + offset > BLOCK_SIZE ? (offset > BLOCK_SIZE ? 0 : BLOCK_SIZE - offset) : size;
+        if (readBytes > 0) {
             readBlock(list[i], buf + writtenBytes, readBytes, offset);
             writtenBytes += readBytes;
             size -= readBytes;
@@ -798,7 +797,7 @@ int MyFS::readSectionByList(u_int32_t* list, char* buf, size_t size, off_t offse
  * @param offset Stelle ab der vom Blockdevice gelesen werden soll
  * @return
  */
-int MyFS::readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset){
+int MyFS::readSection(u_int32_t startblock, char *buffer, size_t size, off_t offset) {
     int numberOfBlocks = sizeToBlocks(size + offset);
     u_int32_t list[numberOfBlocks];
     for (u_int32_t i = 0; i < numberOfBlocks; i++) {
@@ -810,26 +809,26 @@ int MyFS::readSection(u_int32_t startblock, char* buffer, size_t size, off_t off
 void MyFS::writeFAT() {
     LOGM();
     char buffer[NUM_FAT_BLOCKS * BLOCK_SIZE];
-    clearCharArray(buffer,NUM_FAT_BLOCKS * BLOCK_SIZE);
+    clearCharArray(buffer, NUM_FAT_BLOCKS * BLOCK_SIZE);
     char numberbuffer[ADRESS_LENGTH_BYTE];
-    clearCharArray(numberbuffer,ADRESS_LENGTH_BYTE);
+    clearCharArray(numberbuffer, ADRESS_LENGTH_BYTE);
     for (int i = 0; i < NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++) {
         intToChar(FAT[i], numberbuffer, ADRESS_LENGTH_BYTE);
         transferBytes(numberbuffer, ADRESS_LENGTH_BYTE, 0, buffer, ADRESS_LENGTH_BYTE * i);
     }
-    writeSection(START_FAT_BLOCKS,buffer,NUM_FAT_BLOCKS * BLOCK_SIZE, 0);
+    writeSection(START_FAT_BLOCKS, buffer, NUM_FAT_BLOCKS * BLOCK_SIZE, 0);
 
 }
 
 void MyFS::readFAT() {
     char buffer[NUM_FAT_BLOCKS * BLOCK_SIZE];
-    clearCharArray(buffer,NUM_FAT_BLOCKS * BLOCK_SIZE);
+    clearCharArray(buffer, NUM_FAT_BLOCKS * BLOCK_SIZE);
     char numberbuffer[ADRESS_LENGTH_BYTE];
-    clearCharArray(numberbuffer,ADRESS_LENGTH_BYTE);
-    readSection(START_FAT_BLOCKS, buffer, NUM_FAT_BLOCKS*BLOCK_SIZE,0);
-    for(int i = 0; i< NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++){
-        transferBytes(buffer, ADRESS_LENGTH_BYTE, i*ADRESS_LENGTH_BYTE, numberbuffer, 0);
-        FAT[i]= charToInt(numberbuffer, ADRESS_LENGTH_BYTE);
+    clearCharArray(numberbuffer, ADRESS_LENGTH_BYTE);
+    readSection(START_FAT_BLOCKS, buffer, NUM_FAT_BLOCKS * BLOCK_SIZE, 0);
+    for (int i = 0; i < NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK; i++) {
+        transferBytes(buffer, ADRESS_LENGTH_BYTE, i * ADRESS_LENGTH_BYTE, numberbuffer, 0);
+        FAT[i] = charToInt(numberbuffer, ADRESS_LENGTH_BYTE);
     }
 }
 
@@ -842,23 +841,23 @@ int MyFS::writeSBLOCK() {
     clearCharArray(SBLOCK, BLOCK_SIZE);
     transferBytes(NAME_FILESYSTEM, NUM_NAME_FILESYSTEM_BYTE, 0, SBLOCK, START_FILENAME_BYTE);
     intToChar(numberOfFiles, buffer, NUM_RESERVED_ENTRIES_BYTE);
-    transferBytes(buffer, NUM_RESERVED_ENTRIES_BYTE, 0 , SBLOCK, START_RESERVED_ENTRIES_BYTE);
+    transferBytes(buffer, NUM_RESERVED_ENTRIES_BYTE, 0, SBLOCK, START_RESERVED_ENTRIES_BYTE);
     intToChar(numberOfUsedDATABLOCKS, buffer, NUM_RESERVED_BLOCKS_BYTE);
     transferBytes(buffer, NUM_RESERVED_BLOCKS_BYTE, 0, SBLOCK, START_RESERVED_BLOCKS_BYTE);
-    intToChar((int) numberOfwrittenBytes,buffer, NUM_RESERVED_DATA_BYTES_BYTE);
+    intToChar((int) numberOfwrittenBytes, buffer, NUM_RESERVED_DATA_BYTES_BYTE);
     transferBytes(buffer, NUM_RESERVED_DATA_BYTES_BYTE, 0, SBLOCK, START_RESERVED_DATA_BYTES_BYTE);
 
-    blockDevice->write(START_SUPER_BLOCKS,SBLOCK);
+    blockDevice->write(START_SUPER_BLOCKS, SBLOCK);
     return 0;
 }
 
-int MyFS::readSBlock(){
+int MyFS::readSBlock() {
     char SBLOCK[BLOCK_SIZE];
     clearCharArray(SBLOCK, BLOCK_SIZE);
     char fileNAME[NUM_FILENAME_BYTE];
     blockDevice->read(START_SUPER_BLOCKS, SBLOCK);
-    transferBytes(SBLOCK,NUM_FILE_SIZE_BYTE,0,fileNAME,0);
-    if( strcmp(fileNAME, NAME_FILESYSTEM) != 0){
+    transferBytes(SBLOCK, NUM_FILE_SIZE_BYTE, 0, fileNAME, 0);
+    if (strcmp(fileNAME, NAME_FILESYSTEM) != 0) {
         return -EIO;
     }
     char numOfFiles[NUM_RESERVED_ENTRIES_BYTE];
@@ -866,11 +865,12 @@ int MyFS::readSBlock(){
     numberOfFiles = charToInt(numOfFiles, NUM_RESERVED_ENTRIES_BYTE);
 
     char numOfDataBlocks[NUM_RESERVED_BLOCKS_BYTE];
-    transferBytes(SBLOCK,NUM_RESERVED_BLOCKS_BYTE, NUM_FILE_SIZE_BYTE+NUM_RESERVED_ENTRIES_BYTE, numOfDataBlocks, 0 );
+    transferBytes(SBLOCK, NUM_RESERVED_BLOCKS_BYTE, NUM_FILE_SIZE_BYTE + NUM_RESERVED_ENTRIES_BYTE, numOfDataBlocks, 0);
     numberOfUsedDATABLOCKS = charToInt(numOfDataBlocks, NUM_RESERVED_BLOCKS_BYTE);
 
     char numOfwrittenBytes[NUM_RESERVED_DATA_BYTES_BYTE];
-    transferBytes(SBLOCK,NUM_RESERVED_DATA_BYTES_BYTE, NUM_FILE_SIZE_BYTE+NUM_RESERVED_ENTRIES_BYTE+NUM_RESERVED_BLOCKS_BYTE, numOfwrittenBytes, 0 );
+    transferBytes(SBLOCK, NUM_RESERVED_DATA_BYTES_BYTE,
+                  NUM_FILE_SIZE_BYTE + NUM_RESERVED_ENTRIES_BYTE + NUM_RESERVED_BLOCKS_BYTE, numOfwrittenBytes, 0);
     numberOfwrittenBytes = (u_int64_t) charToInt(numOfwrittenBytes, NUM_RESERVED_DATA_BYTES_BYTE);
 
 
@@ -878,7 +878,7 @@ int MyFS::readSBlock(){
 }
 
 void MyFS::readRoot() {
-    for (int i = 0; i < NUM_ROOT_BLOCKS ;i++) {
+    for (int i = 0; i < NUM_ROOT_BLOCKS; i++) {
         readBlock((u_int32_t) START_ROOT_BLOCKS + i, FILENAME[i], NUM_FILENAME_BYTE, 0);
     }
 }
@@ -889,13 +889,13 @@ int MyFS::sizeToBlocks(size_t size) {
 
 u_int32_t MyFS::getFirstPointer(int filePosition) {
     char pointer[NUM_POINTER_BYTE];
-    readBlock(START_ROOT_BLOCKS + filePosition,pointer, NUM_POINTER_BYTE, START_POINTER_BYTE);
+    readBlock(START_ROOT_BLOCKS + filePosition, pointer, NUM_POINTER_BYTE, START_POINTER_BYTE);
     return (u_int32_t) charToInt(pointer, NUM_POINTER_BYTE);
 }
 
-void MyFS::clearCharArray(char* buffer, size_t size) {
+void MyFS::clearCharArray(char *buffer, size_t size) {
     for (int i = 0; i < size; i++) {
-    buffer[i] = '\0';
+        buffer[i] = '\0';
     }
 }
 
@@ -947,7 +947,7 @@ u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, siz
     return startposition;
 }
 
-void MyFS::getFATList(u_int32_t* list, u_int32_t startposition, int numberOfBlocks, int startnumber) {
+void MyFS::getFATList(u_int32_t *list, u_int32_t startposition, int numberOfBlocks, int startnumber) {
     LOG("getFatList() START");
     LOGF("startposition: %d, Startnumber: %d", startposition, startnumber);
     u_int32_t aktuallPosition = startposition;
@@ -969,7 +969,6 @@ int MyFS::createNewFile(const char *path, mode_t mode) {
     if (!isDirPathCorrect(path) || !isFilenameCorrect(path)) {
         return -ENOTDIR;
     } else if (isFileExisting(path)) {
-        LOG("FILE EXISTIERT SCHON");
         return -EEXIST;
     } else if (numberOfFiles >= 64) {
         return -ENOSPC;
@@ -978,24 +977,23 @@ int MyFS::createNewFile(const char *path, mode_t mode) {
     char rootBlock[BLOCK_SIZE];
     clearCharArray(rootBlock, BLOCK_SIZE);
     u_int32_t freePosition = 0;
-    const char* filename = remDirPath(path);
+    const char *filename = remDirPath(path);
     size_t lentghOFFilename = getSizeOfCharArray(filename);
 
-    for(;FILENAME[freePosition][0] != '\0'; freePosition++);
+    for (; FILENAME[freePosition][0] != '\0'; freePosition++);
 
-    //S_IFREG | 0644 -> mode ?
     intToChar(S_IFREG | 0644, rootBlock + START_ACCESS_RIGHT_BYTE, NUM_ACCESS_RIGHT_BYTE);
 
     transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
-    transferBytes(filename, lentghOFFilename + 1, 0 ,rootBlock, START_FILENAME_BYTE);
+    transferBytes(filename, lentghOFFilename + 1, 0, rootBlock, START_FILENAME_BYTE);
     numberOfFiles++;
 
     intToChar((int) time(nullptr), rootBlock + START_FIRST_TIMESTAMP_BYTE, NUM_TIMESTAMP_BYTE);
     transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_FIRST_TIMESTAMP_BYTE,rootBlock, START_SECOND_TIMESTAMP_BYTE);
     transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_FIRST_TIMESTAMP_BYTE,rootBlock, START_THIRD_TIMESTAMP_BYTE);
 
-    intToChar(geteuid(),rootBlock + START_USERID_BYTE, NUM_USERID_BYTE);
-    intToChar(getegid(),rootBlock + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
+    intToChar(geteuid(), rootBlock + START_USERID_BYTE, NUM_USERID_BYTE);
+    intToChar(getegid(), rootBlock + START_GROUPID_BYTE, NUM_GROUPID_BYTE);
 
     int returnValue = writeRoot(freePosition, rootBlock);
     RETURN(returnValue);
