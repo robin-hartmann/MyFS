@@ -347,13 +347,6 @@ int MyFS::fuseRemovexattr(const char *path, const char *name) {
 
 int MyFS::fuseOpendir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-
-    if(!isDirPathCorrect(path)) {
-        RETURN(-ENOTDIR);
-    }
-
-    isDirOpen = true;
-    
     LOG("not implemented");
     RETURN(0);
 }
@@ -362,9 +355,6 @@ int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
     LOGM();
     LOGF("Args: path: %s", path);
 
-    if(!isDirOpen) {
-        RETURN(-EPERM);
-    }
     if(!isDirPathCorrect(path)) {
         RETURN(-ENOTDIR);
     }
@@ -385,15 +375,6 @@ int MyFS::fuseReaddir(const char *path, void *buf, fuse_fill_dir_t filler, off_t
 
 int MyFS::fuseReleasedir(const char *path, struct fuse_file_info *fileInfo) {
     LOGM();
-
-    if(!isDirPath(path)) {
-        RETURN(-ENOTDIR);
-    }
-
-    isDirOpen = false;
-    writeSBLOCK();
-    writeDMap();
-    writeFAT();
     LOG("not implemented");
     RETURN(0);
 }
