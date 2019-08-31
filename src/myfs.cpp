@@ -566,15 +566,15 @@ u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
  * @return Dateiname
  */
 const char *MyFS::remDirPath(const char *path) {
-    int laeufer = strlen(path) + 1;
-    for (; laeufer > 0 && *(path + laeufer - 1) != '/'; laeufer--);
-    if (*(path + laeufer) == '.' && *(path + laeufer + 1) == '\0') {
-        laeufer += 1;
-    } else if (*(path + laeufer) == '.' && *(path + laeufer + 1) == '.' &&
-               *(path + laeufer + 2) == '\0') {
-        laeufer += 2;
+    int index = strlen(path) + 1;
+    for (; index > 0 && *(path + index - 1) != '/'; index--);
+    if (*(path + index) == '.' && *(path + index + 1) == '\0') {
+        index += 1;
+    } else if (*(path + index) == '.' && *(path + index + 1) == '.' &&
+               *(path + index + 2) == '\0') {
+        index += 2;
     }
-    return (path + laeufer);
+    return (path + index);
 }
 
 /**
