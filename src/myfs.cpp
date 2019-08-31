@@ -551,13 +551,14 @@ void MyFS::transferBytes(const char *firstBuf, size_t size, off_t firstOff, char
  * @param buf pointer auf das char Array
  * @return size of the Array
  */
+ /**
 u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
     u_int32_t size = 0;
     while (buf[size] != '\0') {
         size++;
     }
     return size;
-}
+*/
 
 /**
  * Entfernt den Dateipfad vom Dateinamen.
@@ -565,7 +566,7 @@ u_int32_t MyFS::getSizeOfCharArray(const char *buf) {
  * @return Dateiname
  */
 const char *MyFS::remDirPath(const char *path) {
-    int laeufer = getSizeOfCharArray(path) + 1;
+    int laeufer = strlen(path) + 1;
     for (; laeufer > 0 && *(path + laeufer - 1) != '/'; laeufer--);
     if (*(path + laeufer) == '.' && *(path + laeufer + 1) == '\0') {
         laeufer += 1;
@@ -583,7 +584,7 @@ const char *MyFS::remDirPath(const char *path) {
  * @return true, wenn Dateiname + DateiPfad korrekt ist
  */
 bool MyFS::isFilenameCorrect(const char *path) {
-    return (isDirPathCorrect(path) && !isDirPath(path) && getSizeOfCharArray(remDirPath(path)) <= NAME_LENGTH);
+    return (isDirPathCorrect(path) && !isDirPath(path) && strlen(remDirPath(path)) <= NAME_LENGTH);
 }
 
 /**
@@ -1009,7 +1010,7 @@ int MyFS::createNewFile(const char *path, mode_t mode) {
     clearCharArray(rootBlock, BLOCK_SIZE);
     u_int32_t freePosition = 0;
     const char *filename = remDirPath(path);
-    size_t lentghOFFilename = getSizeOfCharArray(filename);
+    size_t lentghOFFilename = strlen(filename);
 
     for (; FILENAME[freePosition][0] != '\0'; freePosition++);
 

@@ -85,7 +85,7 @@ public:
     void fuseDestroy();
     // TODO: Add methods of your file system here
     int getFilePosition(const char *path);
-    u_int32_t getSizeOfCharArray(const char *buf);
+   // u_int32_t getSizeOfCharArray(const char *buf);
     int readBlock(u_int32_t blockNo,char *buf, size_t size, off_t offset);
     void transferBytes(char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff);
     void transferBytes(const char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff);
