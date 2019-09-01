@@ -742,9 +742,8 @@ void MyFS::writeSectionByList(u_int32_t *list, const char *buf, size_t size, off
     }
 }
 
-//fehler. letzter Block wird nicht gelöscht
-void MyFS::setDataBlocksUnused(
-        u_int32_t position) { // auf basis der position wird das FAT durchgesucht nach des restlichen Blöcken und diese werden auf unused gestzt. -> Rekursiv lösen
+
+void MyFS::setDataBlocksUnused(u_int32_t position) {
     u_int32_t aktuallPosition = position;
     int i = 0;
 
