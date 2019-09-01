@@ -17,7 +17,7 @@
 #include "myfs-structs.h"
 #include <unistd.h>
 #include <sys/types.h>
-
+#include <string>
 
 
 class MyFS {
@@ -99,7 +99,6 @@ public:
     void intToChar(int number, char* buffer, int numberOfChars);
     void readDMap();
     void writeDMap();
-    void setBitinChar(int position, bool value, char* buffer);
     void setDataBlocksUnused(u_int32_t position);
     void searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer);
     int readSectionByList(int filePosition, u_int32_t* list, char* buf, size_t size, off_t offset);
