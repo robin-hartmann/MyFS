@@ -1,5 +1,9 @@
 # Funktionen
 
+Beim Initialisieren des Blockdevices werden zuerst S-Block, D-Map, FAT und die Namen aus dem Rootverzeichnis ausgelesen und somit im Arbeitspeicher abgelegt. 
+S-Block, D-Map und das FAT werden immer beim Aufruf der Funktion fuseRelease auf das Blockdevice zurück geschrieben mit den aktualisierten Daten. 
+Der Rootverzeichnis wird immer direkt auf dem Blockdevice aktualsiert, wenn an diesem eine Änderung vorgenommen wird. 
+Durch die unten aufgeführten Hilfsfunktionen konnten wir Code mehrfach verwenden. 
 ## Fusefunktionen
 
 | Methode        | Zweck           |
@@ -15,7 +19,6 @@
 | fuseUnlink() | löscht eine Datei   |
 
 ## Hilfsfunktionen: 
-
 
 ### int getFilePosition(const char *path);
 Durch diese Funktion kann die Position der angefragten Datei im Root-Verzeichnis lokalisiert werden.
