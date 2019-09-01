@@ -703,7 +703,6 @@ void MyFS::writeDMap() {
 
 /**
  * Buffer kann auf blockdevice geschrieben werden.
- * ---> noch nicht fertig : ToDo
  * @param startblock
  * @param buffer
  * @param size
@@ -939,7 +938,6 @@ u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, siz
     if (oldFileSize > 0) {
         getFATList(list, startposition, -1, 0);
     }
-    LOG("Checkpoint 2.5");
 
     if (oldNumberOfBlocks > newNumberOfBlocks) {
         if (newNumberOfBlocks > 0) {
@@ -954,7 +952,6 @@ u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, siz
         searchfreeBlocks(newFileSize - oldFileSize, freeBlocks);
         if (freeBlocks != nullptr) {
             if (oldNumberOfBlocks > 0) {
-                LOG("Checkpoint 11");
                 //LOGF("FAT[%d] = %d", list[oldNumberOfBlocks - 1], freeBlocks[0]);
                 FAT[list[oldNumberOfBlocks - 1]] = freeBlocks[0];
             }
@@ -964,7 +961,6 @@ u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, siz
                 FAT[freeBlocks[i]] = freeBlocks[i + 1];
                 DMAP[freeBlocks[i]] = true;
             }
-            LOG("Checkpoint 13");
             //LOGF("FAT[%d] = %d", freeBlocks[i], freeBlocks[i]);
             FAT[freeBlocks[i]] = freeBlocks[i];
             DMAP[freeBlocks[i]] = true;
@@ -973,7 +969,6 @@ u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, siz
             return oldNumberOfBlocks > 0 ? list[0] : freeBlocks[0];
         }
     }
-    LOG("Checkpoint END");
     numberOfwrittenBytes += newFileSize - oldFileSize;
     return startposition;
 }
@@ -981,14 +976,14 @@ u_int32_t MyFS::createFATEntrie(u_int32_t startposition, size_t oldFileSize, siz
 void MyFS::getFATList(u_int32_t *list, u_int32_t startposition, int numberOfBlocks, int startnumber) {
     LOG("getFatList() START");
     LOGF("startposition: %d, Startnumber: %d", startposition, startnumber);
-    u_int32_t aktuallPosition = startposition;
+    u_int32_t currentposition = startposition;
     int i = 0;
 
-    for (; aktuallPosition != FAT[aktuallPosition] && (numberOfBlocks > 0 ? i < numberOfBlocks : true); i++) {
-        list[i] = aktuallPosition + startnumber;
-        aktuallPosition = FAT[aktuallPosition];
+    for (; currentposition != FAT[currentposition] && (numberOfBlocks > 0 ? i < numberOfBlocks : true); i++) {
+        list[i] = currentposition + startnumber;
+        currentposition = FAT[currentposition];
     }
-    list[i] = aktuallPosition + startnumber;
+    list[i] = currentposition + startnumber;
     LOG("END");
 }
 
