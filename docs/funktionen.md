@@ -21,13 +21,35 @@ Durch die unten aufgeführten Hilfsfunktionen konnten wir Code mehrfach verwende
 ## Hilfsfunktionen: 
 
 ### int getFilePosition(const char *path);
-Durch diese Funktion kann die Position der angefragten Datei im Root-Verzeichnis lokalisiert werden.
+__Parameter__
+* const char *path: _Pfad der Datei, von welcher die Position angefragt wird._
+
+
+ Durch diese Funktion kann die Position der angefragten Datei im Root-Verzeichnis lokalisiert werden.
 Dies wird dadurch erreicht, dass alle Einträge des Root-Verzeichnisses an der 
 Position des Datei Namens vergliechen wird, mit dem angefragten Pfad/Datei.
+
+
 ### int readBlock(u_int32_t blockNo,char *buf, size_t size, off_t offset);
-Gibt den angeforderten Block in dem übergebenen char Buffer zurück. 
+__Parameter__
+* u_int32_t blockNo: _Nummer des angeforderten Blocks._
+* char *buf:   _Char Array, in welches der angeforderte Block geschrieben wird._ 
+* size_t size: _Die Menge an Bytes, die aus dem Block gelesen werden sollen._
+* off_t offset: _Der Offset, ab dem die Daten ausgelesen werden sollen im angeforderten Block._
+
+Diese Funktion liest den angeforderten Block aus dem Blockdevice aus und speichert diesen in dem übergebenen char Array ab.
 ### void transferBytes(char *firstBuf, size_t size, off_t firstOff, char* secondBuf, off_t secondOff);
+__Parameter__
+* char *firstBuf: _Char Array, welches in einen zweites Array übertragen werden soll._
+* size_t size: _Die Größe des firstBuf._
+* off_t firstOff: _Der Offset, ab wo die Daten übernommen werden sollen._
+* char* secondBuf: _Das zweite char Array, in welches das erste char Array übertragen wird._ 
+* off_t secondOff: _Der Offset, ab wo die neuen Daten geschrieben werden sollen im zweiten Array._
+
+
 Schreibt den erstem Buffer (firstBuf) in den zweiten Buffer (secondBuf). Es besteht jeweils die Möglichkeit ein Offset anzugeben.
+
+
 ### int getFileSize(int position);
 Liest aus dem Root Verzeichnis die Größe der angefragten Datei aus.
 ### bool isFileExisting(const char *path);

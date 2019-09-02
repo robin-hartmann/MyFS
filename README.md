@@ -29,9 +29,10 @@ Zum Ausführen der funktionalen Tests muss zudem Folgendes installiert sein:
 
 ### [Spezifikation](docs/spec.md)
 
+### [Funktionen](docs/funktionen.md)
+
 ### [Tests](docs/tests.md)
 
-### [Funktionen](docs/funktionen.md)
 
 ### [Notizen zur Aufgabenstellung](docs/notes.md)
 
