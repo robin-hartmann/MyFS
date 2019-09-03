@@ -113,7 +113,7 @@ public:
     int sizeToBlocks(size_t size);
     u_int32_t getFirstPointer(int filePosition);
     void clearCharArray(char* buffer, size_t size);
-    u_int32_t createFATEntrie(u_int32_t startposition, size_t oldFATSize, size_t newFATSize);
+    u_int32_t createFATEntrie(u_int32_t startposition, size_t oldFileSize, size_t newFileSize);
     void getFATList(u_int32_t* list, u_int32_t startposition, int numberOfBlocks, int startnumber);
     int writeRoot(u_int32_t position, char* buf);
     int createNewFile(const char *path, mode_t mode);
