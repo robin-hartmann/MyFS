@@ -113,7 +113,7 @@ __Parameter__
 Die Blöcke einer Dateien werden in der DMap und im FAT freigegeben.
 ### void searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer);
 __Parameter__
-* size_t size: _Anzhal der Blöcke, die angefordert werden._
+* size_t size: _Menge der Byte die angefordert werden._
 * u_int32_t blockAdressBuffer: _Array in welches die Nummern der freien Blöcken gespeichert werden._
 
 
@@ -123,15 +123,15 @@ __Parameter__
 * int filePosition: _Position des Root-Blocks einer Datei im Root-Verzeichnis._
 * u_int32_t* list: _Liste der angefragten Blöcken_
 * char* buf: _char Array, in welches die ausgelesen Daten gespeichert werden_
-* size_t size: _Anzahl der Bytes die in das char Array geschrieben werden sollen.
-* off_t offset: Position ab der von dem Blockdevice gelesen werden soll.
+* size_t size: _Anzahl der Bytes die in das char Array geschrieben werden sollen._
+* off_t offset: _Position ab der von dem Blockdevice gelesen werden soll._
 
 Liest die Blöcke, die in der übergebenen Liste angegeben sind aus dem Blockdevice aus. 
 Dabei wird davor überprüft, ob einer dieser Blöcke schon gecacht wurde. Ausserdem wird am Ende des Lesevorgangs der zuletzt ausgelesene Block gecached.
 ### int readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset);
 __Parameter__
 * u_int32_t startblock: _Erster Block der gelesen werden soll._
-* char* buffer: _char Array, in welches die ausgelesen Daten gespeichert werden_
+* char* buffer: _char Array, in welches die ausgelesen Daten gespeichert werden._
 * size_t size: _Anzahl der Bytes die in das char Array geschrieben werden sollen._
 * off_t offset: _Position ab der von dem Blockdevice gelesen werden soll._
 
@@ -139,18 +139,18 @@ Berechnet sich die zu lesende Blöcke aus und fordert diese über die Funktion r
 ### void writeSection(u_int32_t startblock,const char* buffer, size_t size, off_t offset);
 __Parameter__
 * u_int32_t startblock: _Erster Block der geschrieben werden soll._
-* char* buffer: _char Array, welches auf das Blockdevice geschrieben werden soll_
+* char* buffer: _char Array, welches auf das Blockdevice geschrieben werden soll._
 * size_t size: _Anzahl der Bytes die aus dem char Array auf das Blockdevice geschrieben werden sollen._
-* off_t offset: _Position aber der Daten von dem char Array geschrieben werden sollen._
+* off_t offset: _Ab dieser Position werden die Daten geschrieben auf dem Blockdevice._
 
 
 Die Funktion berechnet, wie viele Blöcke geschrieben werden müssen und übergibt diese an writeSectionByList.
 ### void writeSectionByList(u_int32_t* list, const char* buf, size_t size, off_t offset);
 __Parameter__
 * u_int32_t* list: _Blöcke, die beschrieben werden sollen._
-* char* buffer: _char Array, welches auf das Blockdevice geschrieben werden soll_
+* char* buffer: _char Array, welches auf das Blockdevice geschrieben werden soll._
 * size_t size: _Anzahl der Bytes die aus dem char Array auf das Blockdevice geschrieben werden sollen._
-* off_t offset: _Position aber der Daten von dem char Array geschrieben werden sollen._
+* off_t offset: _Ab dieser Position werden die Daten geschrieben auf dem Blockdevice._
 
 Schreibt den übergebenen Buffer auf das Blockdevice.
 ### void writeFAT();
@@ -170,19 +170,21 @@ __Parameter__
 Berechnet die benötigte Anzahl an Böcken, um die übergebene Größe an Daten zu speichern.
 ### u_int32_t getFirstPointer(int filePosition);
 __Parameter__
-* int filePosition: _Position im des Root-Blocks._
+* int filePosition: _Position des Root-Blocks im Root-Verzeichnis._
 
 Liest den Startblock des Files aus dem Root-Block aus. 
 ### void clearCharArray(char* buffer, size_t size);
 __Parameter__
-* char* buffer: _char Array Pointer._
+* char* buffer: _Char Array Pointer._
+* size_t size: _Größe des char Arrays._
+
 
 Befüllt den übergebenen Buffer mit '\0'. 
-### u_int32_t createFATEntrie(u_int32_t startposition, size_t oldFATSize, size_t newFATSize);
+### u_int32_t createFATEntrie(u_int32_t startposition, size_t oldFileSize, size_t newFileSize);
 __Parameter__
 * u_int32_t startposition: _Nummer des Startblocks._
-* size_t oldFATSize: _Alte Anzhal der Blöcke._
-* size_t newFATSize: _Neue Anzahl der Blöcke._
+* size_t oldFileSize: _Alte Größe der Datei in Bytes._
+* size_t newFileSize: _Neue Größe der Datei in Bytes._
 
 Erzeugt ein FAT Eintrag. 
 ### void getFATList(u_int32_t* list, u_int32_t startposition, int numberOfBlocks, int startnumber);
@@ -192,11 +194,11 @@ __Parameter__
 * int numberOfBlocks: _Anzhal der Blöcke. Bei -1 werden alle Blöcke, der Datei ausgelesen._
 * int startnumber: _Offset = Anfang der Datenblöcke._
 
-Gibt die Nummern der Blöcke in denen die Datei geschrieben ist aus dem FAT zurück. 
+Schreibt die Nummern der Blöcke, in denen die Datei gespeichert ist in das u_int32 Array.
 ### int writeRoot(u_int32_t position, char* buf);
 __Paramter__
 * u_int32_t position: _Position des Root-Blocks._
-* char* buf: _Buffer, in welchem die zu schreibende Daten sind._
+* char* buf: _Buffer in welchem der aktualisierte Root-Block steht._
 
 
 Schreibt in den Root-Block. 
