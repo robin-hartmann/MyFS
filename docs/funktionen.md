@@ -51,31 +51,81 @@ Schreibt den erstem Buffer (firstBuf) in den zweiten Buffer (secondBuf). Es best
 
 
 ### int getFileSize(int position);
+__Parameter__
+* int position: _Position im Root-Verzeichnis_
+
 Liest aus dem Root Verzeichnis die Größe der angefragten Datei aus.
+
 ### bool isFileExisting(const char *path);
-Überprüft, Ob eine Datei beireits existiert. Dies wird durch Aufrufen der getFilePosition() Funktion erreicht, da diese, wenn sie eine Datei nicht findet -1 zurück gibt. 
+__Parameter__
+* const char *path: _Pfad einer Datei_
+
+Überprüft, Ob eine Datei beireits existiert. Dies wird durch Aufrufen der getFilePosition() Funktion erreicht, da diese, wenn sie eine Datei nicht findet -1 zurück gibt.
+ 
 ### const char* remDirPath(const char *path);
+__Parameter__
+* const char *path: _Pfad einer Datei_
+
+
 Entfernt den Dateipfad vom Dateinamen.
+
+
 ### bool isFilenameCorrect(const char* path);
-Überprüft, ob der Filename korrekt ist.
-Achtung: Auf den Dateipfad vorher nicht removeDirPath() ausführen!
+__Parameter__
+* const char* path: _Pfad einer Datei_
+
+
+Überprüft, ob der Dateiname korrekt ist.
 ### bool isDirPathCorrect(const char *path);
+__Parameter__ 
+* const char *path: _Pfad einer Datei_
+
 Überprüft ob der übergebene Dateipfad korrekt ist.
+
 ### bool isDirPath(const char* path);
+__Parameter__
+* const char *path: _Pfad einer Datei_
+
 Überprüft ob der Pfad ein korrekter Verzeichnispfad ist und keine Datei.
+
 ### int charToInt(char* chars, int numberOfChars);
+__Parameter__
+* char* chars: _Char Array, in welchem eine Zahl codiert ist._
+* int numberOfChars: _Größe des char Arrays._
+
 Konvertiert eine in ein Char abgespeicherte Zahl zurück in einen Integer.
 ### void intToChar(int number, char* buffer, int numberOfChars);
-Konvertiert einen Integer in einen Char. Die Zahl wird dabei in das Dualsystem konvertiert. 
+__Parameter__
+* int number: _Die Zahl die konvertiert werden soll_
+* char* buffer: _Ein char Array, in welches die konvertierte Zahl gespeichert werden soll._
+* int numberOfChars: _Anzahl der chars bzw. die Größe in Byte, des char Buffers._
+
+Konvertiert einen Integer in einen Char. Die Zahl wird dabei in das Dualsystem konvertiert.
+ 
 ### void readDMap();
 Liest die DMap aus dem Blockdevice aus. 
 ### void writeDMap();
-Schreibt die DMap auf das Blockdevice.
+Schreibt die im Speicher(Memory) liegende DMap auf das Blockdevice.
 ### void setDataBlocksUnused(u_int32_t position);
-Blöcke im FAT und DMAP werden auf nicht verwendet gesetzt. 
+__Parameter__
+* u_int32_t position: _Start Block einer Datei._
+
+Die Blöcke einer Dateien werden in der DMap und im FAT freigegeben.
 ### void searchfreeBlocks(size_t size, u_int32_t* blockAdressBuffer);
-Sucht nach freien Blöcken und gibt diese zurück. Übergeben wird die angeforderte anzahl von Blöcken und ein Buffer.
+__Parameter__
+* size_t size: _Anzhal der Blöcke, die angefordert werden._
+* u_int32_t blockAdressBuffer: _Array in welches die Nummern der freien Blöcken gespeichert werden._
+
+
+Sucht nach freien Blöcken und gibt die Nummern dieser zurück.
 ### int readSectionByList(int filePosition, u_int32_t* list, char* buf, size_t size, off_t offset);
+__Parameter__
+* int filePosition:
+* u_int32_t* list:
+* char* buf:
+* size_t size:
+* off_t offset:
+
 Liest die Blöcke, die in der übergenen Liste angegeben sind aus dem Blockdevice aus. 
 Dabei wird davor überprüft, ob einer dieser Blöcke schon gecacht wurde. Ausserdem wird am ende des Lesevorgangs der zuletzt ausgelesene Block gecached.
 ### int readSection(u_int32_t startblock, char* buffer, size_t size, off_t offset);
