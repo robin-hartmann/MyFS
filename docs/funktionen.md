@@ -189,8 +189,8 @@ Erzeugt ein FAT Eintrag.
 __Parameter__
 * u_int32_t* list: _unisgned int32 Array, in welches die Nummbern der Blöcke geschrieben werden._
 * u_int32_t startposition: _Nummer des Start-Blocks._
-* int numberOfBlocks: _Anzhal der Blöcke._
-* int startnumber: _
+* int numberOfBlocks: _Anzhal der Blöcke. Bei -1 werden alle Blöcke, der Datei ausgelesen._
+* int startnumber: _Offset = Anfang der Datenblöcke._
 
 Gibt die Nummern der Blöcke in denen die Datei geschrieben ist aus dem FAT zurück. 
 ### int writeRoot(u_int32_t position, char* buf);
