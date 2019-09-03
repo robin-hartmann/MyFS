@@ -37,7 +37,7 @@ public:
     int FAT[NUM_FAT_BLOCKS * NUM_ADRESS_PER_BLOCK] = {};
     fileCacheInfo fileCacheInfos[NUM_ROOT_BLOCKS];
 
-    int numberOfFiles = 0;
+    int number_of_files = 0;
     int numberOfUsedDATABLOCKS = 0;
     u_int64_t numberOfwrittenBytes = 0;
     

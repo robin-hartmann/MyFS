@@ -138,7 +138,7 @@ int MyFS::fuseUnlink(const char *path) {
     }
 
     numberOfwrittenBytes -= getFileSize(filePosition);
-    numberOfFiles--;
+    number_of_files--;
     transferBytes("\0", 1, 0, FILENAME[filePosition], 0);
 
     char rootBlock[BLOCK_SIZE];
@@ -302,9 +302,9 @@ int MyFS::fuseStatfs(const char *path, struct statvfs *statInfo) {
         LOGF("bavail: %d", statInfo->f_bavail);
         statInfo->f_bsize = BLOCK_SIZE;
         LOGF("bsize: %lu", statInfo->f_bsize);
-        statInfo->f_ffree = NUM_DIR_ENTRIES - numberOfFiles;
+        statInfo->f_ffree = NUM_DIR_ENTRIES - number_of_files;
         LOGF("ffree: %d", statInfo->f_ffree);
-        statInfo->f_files = numberOfFiles;
+        statInfo->f_files = number_of_files;
         LOGF("files: %d", statInfo->f_files);
         RETURN(0);
     }
@@ -870,7 +870,7 @@ int MyFS::writeSBLOCK() {
     clearCharArray(buffer, 4);
     clearCharArray(SBLOCK, BLOCK_SIZE);
     transferBytes(NAME_FILESYSTEM, NUM_NAME_FILESYSTEM_BYTE, 0, SBLOCK, START_FILENAME_BYTE);
-    intToChar(numberOfFiles, buffer, NUM_RESERVED_ENTRIES_BYTE);
+    intToChar(number_of_files, buffer, NUM_RESERVED_ENTRIES_BYTE);
     transferBytes(buffer, NUM_RESERVED_ENTRIES_BYTE, 0, SBLOCK, START_RESERVED_ENTRIES_BYTE);
     intToChar(numberOfUsedDATABLOCKS, buffer, NUM_RESERVED_BLOCKS_BYTE);
     transferBytes(buffer, NUM_RESERVED_BLOCKS_BYTE, 0, SBLOCK, START_RESERVED_BLOCKS_BYTE);
@@ -892,7 +892,7 @@ int MyFS::readSBlock() {
     }
     char numOfFiles[NUM_RESERVED_ENTRIES_BYTE];
     transferBytes(SBLOCK, NUM_RESERVED_ENTRIES_BYTE, NUM_FILE_SIZE_BYTE, numOfFiles, 0);
-    numberOfFiles = charToInt(numOfFiles, NUM_RESERVED_ENTRIES_BYTE);
+    number_of_files = charToInt(numOfFiles, NUM_RESERVED_ENTRIES_BYTE);
 
     char numOfDataBlocks[NUM_RESERVED_BLOCKS_BYTE];
     transferBytes(SBLOCK, NUM_RESERVED_BLOCKS_BYTE, NUM_FILE_SIZE_BYTE + NUM_RESERVED_ENTRIES_BYTE, numOfDataBlocks, 0);
@@ -979,7 +979,7 @@ void MyFS::getFATList(u_int32_t *list, u_int32_t startposition, int numberOfBloc
     u_int32_t currentposition = startposition;
     int i = 0;
 
-    for (; currentposition != FAT[currentposition] && (numberOfBlocks > 0 ? i < numberOfBlocks : true); i++) {
+    for (; currentposition != FAT[currentposition] && (numberOfBlocks <= 0 || i < numberOfBlocks ); i++) {
         list[i] = currentposition + startnumber;
         currentposition = FAT[currentposition];
     }
@@ -996,7 +996,7 @@ int MyFS::createNewFile(const char *path, mode_t mode) {
         return -ENOTDIR;
     } else if (isFileExisting(path)) {
         return -EEXIST;
-    } else if (numberOfFiles >= 64) {
+    } else if (number_of_files >= 64) {
         return -ENOSPC;
     }
 
@@ -1012,7 +1012,7 @@ int MyFS::createNewFile(const char *path, mode_t mode) {
 
     transferBytes(filename, lentghOFFilename + 1, 0, FILENAME[freePosition], 0);
     transferBytes(filename, lentghOFFilename + 1, 0, rootBlock, START_FILENAME_BYTE);
-    numberOfFiles++;
+    number_of_files++;
 
     intToChar((int) time(nullptr), rootBlock + START_ATIME_BYTE, NUM_TIMESTAMP_BYTE);
     transferBytes(rootBlock, NUM_TIMESTAMP_BYTE, START_ATIME_BYTE, rootBlock, START_MTIME_BYTE);
