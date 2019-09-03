@@ -3,9 +3,9 @@
 ## Aufgabenstellung
 
 Im Rahmen des Betriebsysteme Labors im 3. Semester an der Hochschule Karlsruhe - Technik und Wirtschaft war es die Aufgabe ein Dateisystem zu implementieren.
-Dieses ist in der Lage Dateien zu öffnen, zu schreiben, zu lesen, zu verändern und zu löschen. 
-Um diese Aufgabe zu bewerkstelligen, wurde auf [FUSE-Filesystem in Userpsace](https://de.wikipedia.org/wiki/Filesystem_in_Userspace) zurückgegriffen, da ansonsten Kernel-Programmierung notwendig ist. 
-Die Programmierung des Dateisystems ist in C++. 
+Dieses sollte in der Lage sein Dateien zu öffnen, zu schreiben, zu lesen, zu verändern und zu löschen. 
+Um diese Aufgabe zu bewerkstelligen, wurde auf [FUSE-Filesystem in Userpsace](https://de.wikipedia.org/wiki/Filesystem_in_Userspace) zurückgegriffen, da ansonsten Kernel-Programmierung notwendig gewesen wäre. 
+Das Dateisystem wurde in C++ geschrieben.
 
 Der erste Schritt war es sich das [Design](docs/design.md) des Dateisystems zu überlegen. Danach wurde das Design in Code umgesetzt. Ausserdem wurden zum Testen des Dateisystems ausführliche [Tests](docs/tests.md) geschrieben.
 
