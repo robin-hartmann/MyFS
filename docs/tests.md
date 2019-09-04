@@ -2,7 +2,13 @@
 
 ## Unittests
 
-@todo
+Mit den [Unittests](../tests/unit/test-myfs.cpp) wurden die Hilfsfunktionen getestet.
+
+### TEST_CASE( "intToChar / charToInt" )
+Mit diesem Test wurden die Hilfsfunktionen [charToInt](./funktionen.md#int-chartointchar-chars-int-numberofchars) und [intToChar](./funktionen.md#void-inttocharint-number-char-buffer-int-numberofchars). 
+Überprüft wurde ob jeweils die richtigen Werte zurückgegeben werden von den zwei Funktionen, bei einem spezifischen Input.
+
+
 
 ## Funktionale Tests
 
