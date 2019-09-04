@@ -8,12 +8,15 @@
 
 #include "catch.hpp"
 
-
+#include <iostream>
 #include "helper.hpp"
 #include "myfs.h"
 
 #include <stdio.h>
 #include <string.h>
+
+
+using namespace std;
 
 // TODO: Implement your helper functions here!
 
@@ -77,22 +80,20 @@ TEST_CASE( "intToChar / charToInt" ) {
     REQUIRE(testnumber == myfs.charToInt(testBuffer, 4));
 }
 
+TEST_CASE("remDirPath"){
+    MyFS myfs;
 
-TEST_CASE( "isFileExisting / getFilePosition" ) {
+    char* testDirectoryPath = "./test/lukas/newfile";
+    REQUIRE(strcmp(myfs.remDirPath(testDirectoryPath), "newfile") == 0);
+
 
 }
 
+TEST_CASE("sizeToBlocks"){
+    MyFS myfs;
+    REQUIRE(myfs.sizeToBlocks(1000) == 2);
 
-TEST_CASE( "readBlock" ) {
-
-}
-
-
-TEST_CASE( "getFileSize" ) {
+    REQUIRE(myfs.sizeToBlocks(2000) == 4);
 
 }
 
-
-TEST_CASE( "transferBytes" ) {
-
-}
