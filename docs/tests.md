@@ -5,10 +5,14 @@
 Mit den [Unittests](../tests/unit/test-myfs.cpp) wurden die Hilfsfunktionen getestet.
 
 ### TEST_CASE( "intToChar / charToInt" )
-Mit diesem Test wurden die Hilfsfunktionen [charToInt](./funktionen.md#int-chartointchar-chars-int-numberofchars) und [intToChar](./funktionen.md#void-inttocharint-number-char-buffer-int-numberofchars). 
-Überprüft wurde ob jeweils die richtigen Werte zurückgegeben werden von den zwei Funktionen, bei einem spezifischen Input.
+Mit diesem Test werden die Hilfsfunktionen [charToInt](./funktionen.md#int-chartointchar-chars-int-numberofchars) und [intToChar](./funktionen.md#void-inttocharint-number-char-buffer-int-numberofchars) getestet. 
+Überprüft wird ob jeweils die richtigen Werte zurückgegeben werden, bei einem spezifischen Input.
 
+### TEST_CASE("remDirPath")
+Mit diesem Test wird überprüft ob [remDirPath](./funktionen.md#const-char-remdirpathconst-char-path) den Verzeichnispfad einer Datei richtig entfernt.
 
+### TEST_CASE("sizeToBlocks")
+Mit diesem Test wird überprüft ob [sizeToBlocks](./funktionen.md#int-sizetoblockssize_t-size) die richtige Anzhal an Blöcken zurückgibt, für eine gegebene Anzahl an Bytes. 
 
 ## Funktionale Tests
 
