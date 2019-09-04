@@ -2,8 +2,8 @@
 
 Beim Initialisieren des Blockdevices werden zuerst S-Block, D-Map, FAT und die Namen aus dem Rootverzeichnis ausgelesen und somit im Arbeitspeicher abgelegt. 
 S-Block, D-Map und das FAT werden immer beim Aufruf der Funktion fuseRelease auf das Blockdevice zurück geschrieben mit den aktualisierten Daten. 
-Der Rootverzeichnis wird immer direkt auf dem Blockdevice aktualsiert, wenn an diesem eine Änderung vorgenommen wird. 
-Durch die unten aufgeführten Hilfsfunktionen konnten wir Code mehrfach verwenden. 
+Das Root-Verzeichnis wird immer direkt auf dem Blockdevice aktualsiert, sobald an diesem eine Änderung vorgenommen wird. 
+Durch die unten aufgeführten Hilfsfunktionen konnten wir unseren Code mehrfach verwenden. 
 ## Fusefunktionen
 
 | Methode        | Zweck           |
