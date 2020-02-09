@@ -24,7 +24,7 @@ Die funktionalen Tests sind in dem separaten Repository [myfs-test](https://gith
 |-|-|-|
 | Sprache | [Typescript](https://www.typescriptlang.org/) | Typisiertes Superset von JavaScript, das zu JavaScript kompiliert
 | Laufzeitumgebung | [Node.js](https://nodejs.org/) | Eine JavaScript Laufzeitumgebung, die auf Chromes V8 JavaScript Engine aufbaut
-| Framework | [AVA](https://github.com/avajs/ava) | Ein futuristischer Testausführer für Node.js
+| Framework | [AVA](https://github.com/avajs/ava) | Ein futuristischer Testausführer für Node.js
 
 ### Integration mit MyFS
 
