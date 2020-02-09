@@ -74,7 +74,7 @@ Hängt das Block Device ein.
             - nur wenn notwendig
     - Dateiinhalt (über)schreiben
         - `MyFS::write()`
-            - die Datie muss zuvor geöffnet sein, es sollte also `fileInfo` verwendet werden
+            - die Datei muss zuvor geöffnet sein, es sollte also `fileInfo` verwendet werden
             - muss gepuffert werden
             - wirft `EBADF` falls `fileInfo->fh` auf keine offene Datei zeigt
             - wirft `ENOSPC`falls nicht genügend Speicherplatz vorhanden ist
