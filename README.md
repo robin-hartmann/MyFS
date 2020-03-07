@@ -60,7 +60,7 @@ npm run test-functional-manual
 npm test
 ```
 
-## 🔧 Built With
+## 🧰 Built With
 
 - [libfuse](https://github.com/libfuse/libfuse)
 
