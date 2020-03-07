@@ -7,10 +7,10 @@
     "doc": "docs",
     "test": "tests"
   },
-  "homepage": "https://github.com/luluhue/betriebsysteme#readme",
+  "homepage": "https://github.com/robin-hartmann/MyFS#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/luluhue/betriebsysteme.git"
+    "url": "git+https://github.com/robin-hartmann/MyFS.git"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
