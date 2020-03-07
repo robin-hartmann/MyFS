@@ -2,7 +2,7 @@
   "name": "myfs",
   "version": "0.1.0",
   "description": "FUSE-based file system",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "directories": {
     "doc": "docs",
     "test": "tests"
