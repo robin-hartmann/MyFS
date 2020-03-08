@@ -25,7 +25,7 @@ For running the functional tests, the following needs to be installed additional
    `brew install pkg-config`
 1. (Optional) Install [Node.js](https://nodejs.org)
 
-## 📚 Documentation
+## 📘 Documentation
 
 ⚠️ Written in German
 
@@ -91,7 +91,7 @@ npm test
 
 ## 📃 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👍 Acknowledgments
 
