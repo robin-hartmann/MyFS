@@ -2,7 +2,7 @@
 
 ## Teil 1: Read-Only Dateisystem
 
-### [Spezifikation](spec.md#Teil-1:-Read-Only-Dateisystem)
+### [Spezifikation](spec.md#Teil-1-Read-Only-Dateisystem)
 
 ### Teil 1a
 
@@ -33,7 +33,7 @@ Ausgiebiges Testen
 
 ## Teil 2: Read-Write Dateisystem
 
-### [Spezifikation](spec.md#Teil-2:-Read-Write-Dateisystem)
+### [Spezifikation](spec.md#Teil-2-Read-Write-Dateisystem)
 
 ## Teil 3: Dokumentation
 
