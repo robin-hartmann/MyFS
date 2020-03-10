@@ -62,7 +62,7 @@ npm test
 
 ## 🧰 Built With
 
-- [libfuse](https://github.com/libfuse/libfuse)
+- [libfuse](https://github.com/libfuse/libfuse) - The reference implementation of the Linux FUSE (Filesystem in Userspace) interface
 
 ## 👨‍💻 Authors
 
