@@ -1,7 +1,7 @@
 {
   "name": "myfs",
   "version": "0.1.0",
-  "description": "FUSE-based file system",
+  "description": "FUSE-based file system, which stores all data in a single file while emulating a block device (educational project)",
   "license": "MIT",
   "directories": {
     "doc": "docs",
