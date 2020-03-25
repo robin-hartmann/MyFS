@@ -1,6 +1,6 @@
 # 📁 MyFS
 
-FUSE-based file system, which stores all data in a single file while emulating a block device (educational project)
+FUSE-based file system, which stores all data in a single file while emulating a block device
 
 ## 🛠️ Development
 
