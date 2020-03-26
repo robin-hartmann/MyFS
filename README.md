@@ -25,21 +25,7 @@ For running the functional tests, the following needs to be installed additional
    `brew install pkg-config`
 1. (Optional) Install [Node.js](https://nodejs.org)
 
-## 📘 Documentation
-
-⚠️ Written in German
-
-### [Design](docs/design.md)
-
-### [Specification](docs/spec.md)
-
-### [Functions](docs/funktionen.md)
-
-### [Tests](docs/tests.md)
-
-### [Notes](docs/notes.md)
-
-## 📋 Running the Tests
+### 🚀 Getting Started
 
 ⚠️ The MyFS binaries are not built automatically before running the tests. So if the sources of MyFS have changed or haven't been built at all, make sure you run the build before running the tests. Otherwise the old binaries will be tested or the tests will fail altogether.
 
@@ -59,6 +45,21 @@ npm run test-functional-manual
 # all tests except manual
 npm test
 ```
+
+
+## 📘 Documentation
+
+⚠️ Written in German
+
+### [Design](docs/design.md)
+
+### [Specification](docs/spec.md)
+
+### [Functions](docs/funktionen.md)
+
+### [Tests](docs/tests.md)
+
+### [Notes](docs/notes.md)
 
 ## 🧰 Built With
 
