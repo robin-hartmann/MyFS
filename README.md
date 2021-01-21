@@ -13,7 +13,7 @@ To be able to build and run this project, the following software has to be insta
 - fuse (only available for UNIX systems)
 - pkg-config
 
-For running the functional tests, the following needs to be installed additionally:
+For running the tests, the following needs to be installed additionally:
 
 - [Node.js](https://nodejs.org) - JavaScript run-time environment
 
@@ -23,7 +23,7 @@ For running the functional tests, the following needs to be installed additional
 1. Install [Homebrew](https://brew.sh/) as described [here](https://docs.brew.sh/Installation)
 1. Use Homebrew to install the package [`pkg-config`](https://brewformulas.org/Pkg-config):<br>
    `brew install pkg-config`
-1. (Optional) Install [Node.js](https://nodejs.org)
+1. Install [Node.js](https://nodejs.org)
 
 ### 🚀 Getting Started
 
